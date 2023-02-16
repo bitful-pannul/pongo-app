@@ -1,0 +1,97 @@
+@use '../styles/colors.scss' as colors;
+@use '../styles/border.scss' as border;
+
+.lobby-view {
+  height: 100%;
+  width: 100%;
+  position: relative;
+
+  .header {
+    height: 80px;
+    background: linear-gradient(0deg, #868686, #686868);
+    justify-content: space-between;
+    z-index: 4;
+
+    .branding {
+      img {
+        height: 48px;
+        margin: auto 16px;
+      }
+      span {
+        color: white;
+        font-size: 40px;
+      }
+    }
+
+    .host {
+      color: white;
+      margin: auto 16px;
+    }
+  }
+
+  .background {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-size: cover;
+    opacity: 0.6;
+    z-index: 0;
+  }
+
+  .main {
+    z-index: 1;
+    height: calc(100% - 80px);
+    width: 100%;
+
+    form {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+
+      button {
+        width: 165.5px;
+      }
+    }
+
+    h2, h3 {
+      font-weight: 500;
+      // color: colors.$charcoal;
+      text-align: center;
+      margin: 12px 0 0;
+    }
+  }
+
+  .modal {
+    form {
+      select {
+        min-width: 120px;
+      }
+      input {
+        width: 120px;
+      }
+    }
+  }
+}
+
+form.create-table {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+
+  .row {
+    margin-top: 8px;
+
+    label {
+      width: 160px;
+    }
+  }
+
+  button {
+    align-self: center;
+    margin-top: 16px;
+    width: 120px;
+  }
+}

@@ -1,0 +1,35 @@
+.loading-overlay {
+  background-color: rgba(0, 0, 0, 0.3);
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.loading-overlay .solid {
+  width: 300px;
+  min-height: 160px;
+  background-color: #5b5b5b;
+  padding: 1rem 2rem 2rem;
+  border-radius: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.loading-overlay .loader-text {
+  color: white;
+  margin-bottom: 2rem;
+  width: 200px;
+  text-align: center;
+  line-height: 1.5rem;
+}
+.loading-overlay svg {
+  height: 60px;
+  width: 60px;
+}

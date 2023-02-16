@@ -1,0 +1,425 @@
+@use '../styles/colors.scss' as colors;
+@use '../styles/border.scss' as border;
+
+$players-circle-size: calc(min(74vw, 74vh) - 60px);
+$players-circle-radius: calc(min(37vw, 37vh) - 30px);
+
+@mixin on-circle($item-count, $circ-size, $circ-radius, $item-size) {
+  position: relative;
+  width:  calc($circ-size - 32px);
+  height: calc($circ-size - 32px);
+  margin-bottom: 32px;
+  padding: 0;
+  border-radius: 50%; 
+  list-style: none;
+  
+  > * {
+    display: block;
+    position: absolute;
+    top:  50%; 
+    left: 50%;
+    width:  $item-size;
+    height: $item-size;
+    margin: -($item-size / 2);
+  
+    $angle: (360 / $item-count);
+    $rot: 90;
+
+    @for $i from 1 through $item-count {
+      &:nth-of-type(#{$i}) {
+        transform: 
+          rotate($rot * 1deg) 
+          translate($circ-radius) 
+          rotate($rot * -1deg);
+      }
+
+      $rot: $rot + $angle;
+    }
+  }
+}
+
+.game-view {
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  position: relative;
+  background: radial-gradient(circle at center, #000000 0, #535353);
+
+  // &.game-over {
+    
+  // }
+
+  .game-actions {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+  }
+
+  .top-nav {
+    position: fixed;
+    top: 0;
+    padding: 8px;
+    width: 100%;
+    z-index: 1;
+    justify-content: space-between;
+    align-items: flex-start;
+
+    .game-id {
+      color: white;
+      border-radius: 4px;
+      padding: 8px;
+      font-weight: bold;
+    }
+  }
+
+  .content, .game-end-popup {
+    z-index: 1;
+    border-radius: 8px;
+    background: rgba(255,255,255,1);
+    width: 500px;
+    height: 300px;
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+
+    h2, h3, h4 {
+      font-weight: 500;
+      text-align: center;
+      margin: 0;
+    }
+  }
+
+  .game-end-popup {
+    position: absolute;
+    top: calc(50% - 200px);
+    margin: 0 auto;
+    z-index: 2;
+  }
+
+  .game {
+    z-index: 1;
+    height: 100%;
+    width: 100%;
+    align-items: center;
+    justify-content: flex-start;
+    position: relative;
+    padding-top: 80px;
+
+    .center-table {
+      position: absolute;
+      top: 14%;
+      justify-content: center;
+      left: 30%;
+      z-index: 1;
+      width: 40%;
+      height: 60%;
+      align-items: center;
+
+      .branding {
+        height: 30%;
+        position: absolute;
+        top: 44%;
+        z-index: 0;
+
+        img {
+          height: 100%;
+          margin-right: 16px;
+        }
+        span {
+          color: white;
+          font-weight: 500;
+          font-size: 6vw;
+        }
+      }
+
+      .pots {
+        min-height: 80px;
+        z-index: 1;
+
+        .pot {
+          text-align: center;
+          font-weight: bold;
+          font-size: 20px;
+          color: white;
+        }
+      }
+
+      .cards {
+        display: flex;
+        flex-direction: row;
+        width: 95%;
+        z-index: 1;
+        
+        .card-container {
+          width: 100%;
+        }
+    
+        .card-container-enter {
+          opacity: 0;
+          transform: translateX(100%);
+        }
+        .card-container-enter-active {
+          opacity: 1;
+          transform: translateX(0);
+          transition: all 700ms ease-in-out;
+        }
+        .card-container-exit {
+    
+        }
+        .card-container-exit-active {
+          opacity: 0;
+          transition: all 1000ms ease-out;
+        }
+      }
+    }
+
+    .players {
+      width: calc(100vw - 160px);
+      max-width: 940px;
+      max-height: calc(100vh - 200px);
+      aspect-ratio: 2/1;
+      position: relative;
+      border: 6px solid #353535;
+      border-radius: 25vw;
+      
+      .table-background {
+        border-radius: 25vw;
+      }
+
+      .player-display {
+        justify-content: space-between;
+        width: 64px;
+        position: absolute;
+        align-items: center;
+
+        .turn-timer {
+          position: absolute;
+          top: 0;
+          z-index: 2;
+        }
+
+        .bet {
+          color: white;
+          font-weight: bold;
+          position: absolute;
+          white-space: nowrap;
+
+          .button-indicator {
+            background: #353535;
+            border: 1px solid gold;
+            color: gold;
+            font-size: 12px;
+            border-radius: 50%;
+            padding: 4px;
+            margin-right: 4px;
+            width: 26px;
+            text-align: center;
+
+            &.dealer {
+              background: white;
+              border-color: black;
+              color: black;
+            }
+          }
+        }
+
+        &.pp-1 {
+          top: -50px;
+          right: calc(24% - 32px);
+          flex-direction: row-reverse;
+          .player-info {
+            box-shadow: -1px 3px 5px rgb(15, 15, 15);
+          }
+
+          .bet {
+            bottom: -40px;
+            left: 6px;
+          }
+        }
+        &.pp-2 {
+          top: calc(18% - 55px);
+          right: calc(7% - 44px);
+
+          .bet {
+            bottom: -28px;
+            left: -80px;
+          }
+        }
+        &.pp-3 {
+          right: -50px;
+          top: calc(50% - 30px);
+
+          .bet {
+            bottom: 50px;
+            left: -120px;
+          }
+        }
+        &.pp-4 {
+          top: calc(88% - 32px);
+          right: calc(7% - 44px);
+
+          .bet {
+            bottom: 118px;
+            left: -60px;
+          }
+        }
+        &.pp-5 {
+          top: calc(100% - 16px);
+          right: calc(24% - 32px);
+          flex-direction: row-reverse;
+
+          .player-info {
+            box-shadow: -1px 3px 5px rgb(15, 15, 15);
+          }
+
+          .bet {
+            bottom: 80px;
+            left: 6px;
+          }
+        }
+        &.pp-6 {
+          top: calc(100% - 16px);
+          left: calc(24% - 32px);
+          flex-direction: row;
+
+          .bet {
+            bottom: 80px;
+          }
+        }
+        &.pp-7 {
+          top: calc(88% - 32px);
+          left: calc(7% - 44px);
+
+          .bet {
+            bottom: 118px;
+            right: -54px;
+          }
+        }
+        &.pp-8 {
+          left: -48px;
+          top: calc(50% - 30px);
+
+          .bet {
+            bottom: 50px;
+            right: -120px;
+          }
+        }
+        &.pp-9 {
+          top: calc(18% - 55px);
+          left: calc(7% - 44px);
+
+          .bet {
+            bottom: -28px;
+            right: -54px;
+          }
+        }
+        &.pp-10 {
+          top: -50px;
+          left: calc(24% - 32px);
+          flex-direction: row;
+
+          .bet {
+            bottom: -40px;
+            left: 6px;
+          }
+        }
+
+        .avatar-sigil {
+          height: 64px !important;
+          width: 64px !important;
+          border-radius: 60px;
+          border: 3px solid #545454;
+          box-shadow: 3px 3px 5px rgb(36, 36, 36);
+        }
+
+        .player-info {
+          border-radius: 4px;
+          text-align: center;
+          color: white;
+          padding: 2px 8px;
+          height: fit-content;
+          box-shadow: 3px 3px 5px rgb(36, 36, 36);
+          background: linear-gradient(90deg, #868686, #686868 50%, #868686);
+
+          &.current-turn {
+            animation: blinkingBackground 2s infinite;
+          }
+
+          &.winner {
+            animation: blinkingBackground 1s infinite;
+          }
+
+          &.folded {
+            color: lightgray;
+
+            .player {
+              border-bottom-color: lightgray;
+            }
+          }
+
+          .player {
+            border-bottom: 1px solid white;
+
+            .ship {
+              margin: 0;
+              text-align: center;
+              width: 100%;
+              font-weight: 500;
+              font-size: 12px;
+              white-space: nowrap;
+            }
+          }
+
+          .stack {
+            text-align: center;
+            width: 100%;
+          }
+        }
+
+        .player-name {
+          &.current {
+            background-color: white;
+            border-radius: 4px;
+            padding: 2px 4px;
+            width: fit-content;
+          }
+        }
+
+        .blank-card {
+          height: 45px;
+          width: 32px;
+          background: url('../assets/img/card-back-red.png');
+          background-size: cover;
+          border-radius: 2px;
+
+          &:first-of-type {
+            margin-right: 4px;
+          }
+        }
+
+        .bet {
+          .bet-text {
+            color: white;
+          }
+        }
+
+        .hand-rank {
+          font-size: 16px;
+          color: white;
+          font-weight: 600;
+          text-align: center;
+          position: absolute;
+          bottom: -24px;
+          width: 200px;
+        }
+      }
+    }
+  }
+}
+
+@keyframes blinkingBackground{
+  0%		{ background: linear-gradient(90deg, #6e6e6e, #4d4d4d 50%, #6e6e6e); }
+  50%		{ background: linear-gradient(90deg, #969696, #828282 50%, #969696); }
+  100%	{ background: linear-gradient(90deg, #6e6e6e, #4d4d4d 50%, #6e6e6e); }
+}
