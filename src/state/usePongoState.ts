@@ -147,6 +147,7 @@ const usePongoStore = create<PongoStore>((set, get) => ({
       const messageMap = new Map<string, Message>()
       newMessages.forEach(msg => messageMap.set(msg.id, { ...msg, status: 'delivered' }))
       chat.messages = Array.from(messageMap.values())
+      // chat.messages = newMessages.map(msg => ({ ...msg, status: 'delivered' }))
       set({ chats })
       return chat.messages
     }

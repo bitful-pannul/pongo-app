@@ -95,13 +95,19 @@ export default function ChatsScreen({  }: ChatsScreenProps) {
       })
   }, [chats])
 
+  const startNew = useCallback(() => {
+    navigation.navigate('NewChat')
+  }, [navigation])
+
   const { width } = window
 
   return (
     <Col style={{ height: '100%', width: isLargeDevice ? width / 4 : '100%', borderRightWidth: 1, borderColor: light_gray }}>
       {!sortedChats.length ? (
-        <Col style={{ alignSelf: 'center', marginTop: 32 }}>
+        <Col style={{ alignSelf: 'center', alignItems: 'center', marginTop: 32 }}>
           <H2 text='No Chats' />
+          <Text style={{ margin: 16, fontSize: 18, textAlign: 'center' }}>Start a chat here or with the button in the bottom right:</Text>
+          <Button title='New Chat' onPress={startNew} />
         </Col>
       ) : (
         <ScrollView refreshControl={<RefreshControl refreshing={false} onRefresh={onRefresh} />} keyboardShouldPersistTaps='handled'>

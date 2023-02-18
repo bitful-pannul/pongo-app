@@ -1,5 +1,5 @@
 import { GetState, SetState } from "zustand"
-import { sortChats } from "../../util/ping"
+import { dedupeAndSort, sortChats, sortMessages } from "../../util/ping"
 import { deSig } from "../../util/string"
 import { Message, MessageStatus, Update } from "../../types/Pongo"
 import { PongoStore } from "../types/pongo"
@@ -29,8 +29,6 @@ export const messageSub = (set: SetState<PongoStore>, get: GetState<PongoStore>)
     }
 
     // Check that the chat is the current chat and the message is the next one in order
-    const appendMessage = Boolean(messages && Number(messages[0]?.id || 0) === (Number(id) - 1) && isMostRecent)
-
     if (deSig(author) === deSig(get().api?.ship || '')) {
       chat.unreads = 0
     } else if (isMostRecent) {
@@ -44,7 +42,7 @@ export const messageSub = (set: SetState<PongoStore>, get: GetState<PongoStore>)
       }
 
       const existing = messages?.find(m =>
-        m?.id && (m.id === id || (m.id[0] === '-' && m.kind === kind && m.content === content)))
+        m && (m.id === id || (m.id[0] === '-' && m.kind === kind && m.content === content)))
 
       if (existing) {
         existing.id = id
@@ -53,9 +51,10 @@ export const messageSub = (set: SetState<PongoStore>, get: GetState<PongoStore>)
         existing.reactions = reactions
         existing.reference = reference
         existing.timestamp = timestamp
-      } else if (appendMessage || !chat.messages || chat.messages.length === 0) {
+      } else if (isMostRecent || !chat.messages || chat.messages.length === 0) {
         chat.messages = [{ ...update.message.message, status: 'delivered' as MessageStatus } as Message].concat(messages)
       }
+      chat.messages = dedupeAndSort(chat.messages)
       set({ chats })
     }
     
@@ -80,12 +79,14 @@ export const messageSub = (set: SetState<PongoStore>, get: GetState<PongoStore>)
     if (existing) {
       existing.status = 'sent'
       existing.identifier = existing.id
+      chats[update.sending.conversation_id].messages = dedupeAndSort(chats[update.sending.conversation_id].messages)
     }
   } else if ('delivered' in update) {
     const { chats } = get()
     const existing = chats[update.delivered.conversation_id]?.messages?.find(m => m.identifier === update.delivered.identifier)
     if (existing) {
       existing.status = 'delivered'
+      chats[update.delivered.conversation_id].messages = dedupeAndSort(chats[update.delivered.conversation_id].messages)
     }
   } else if ('conversations' in update) {
 

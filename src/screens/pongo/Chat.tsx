@@ -8,7 +8,6 @@ import {
   KeyboardAvoidingView,
   NativeScrollEvent,
   NativeSyntheticEvent,
-  Platform,
   Pressable,
   RefreshControl,
   StyleSheet,
@@ -19,6 +18,8 @@ import {
   View as DefaultView,
 } from 'react-native'
 import * as Clipboard from 'expo-clipboard'
+// import { FlatList } from "@stream-io/flat-list-mvcp";
+// import { BidirectionalFlatList } from './Bidirectional'
 
 import usePongoStore from '../../state/usePongoState'
 import useStore from '../../state/useStore'
@@ -41,7 +42,7 @@ import { PongoStackParamList } from '../../types/Navigation'
 import { Message } from '../../types/Pongo'
 import useKeyboard from '../../hooks/useKeyboard'
 
-const RETRIEVAL_NUM = 40
+const RETRIEVAL_NUM = 50
 
 interface ChatScreenProps {
   navigation: NavigationProp<PongoStackParamList>
@@ -67,7 +68,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
   const [gettingMessages, setGettingMessages] = useState(false)
   const [showMentions, setShowMentions] = useState(false)
   const [initialLoad, setInitialLoad] = useState(false)
-  const [initialLoading, setInitialLoading] = useState(false)
+  const [initialLoading, setInitialLoading] = useState(true)
   const [potentialMentions, setPotentialMentions] = useState<string[]>([])
   const [unreadInfo, setUnreadInfo] = useState<{unreads: number; lastRead: string} | undefined>()
   const { isKeyboardVisible, keyboardHeight } = useKeyboard()
@@ -108,6 +109,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
      else if (chatId && chatPositions[chatId]?.offset && chatPositions[chatId]?.offset > 0 && !initialLoad) {
       const wait = new Promise(resolve => setTimeout(resolve, 100));
       wait.then(() => {
+        console.log(1)
         listRef.current?.scrollToOffset({ offset: chatPositions[chatId].offset, animated: false });
       })
       setInitialLoad(true)
@@ -117,37 +119,39 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
   // Get initial message
   useEffect(() => {
     const getInitialMessages = async () => {
-      setInitialLoading(true)
-      if (chatId && chat) {
+      if (chatId && chat && initialLoading) {
         try {
           setGettingMessages(true)
           // come to msg from push notification
           if (msgId) {
             await getMessages({ chatId, msgId, numBefore: RETRIEVAL_NUM, numAfter: RETRIEVAL_NUM })
           // open with no messages
-          } else if (!messages?.length) {
+          } else if (!messages || messages.length < 1) {
+            let msgs : Message[] | undefined
             // console.log(2)
             if (chat.conversation.last_read === '0' && chat.last_message?.id) {
               // console.log(3)
-              const msgs = await getMessages({ chatId, msgId: chat.last_message?.id, numBefore: 50, numAfter: 5 })
-              msgs[0]?.id && setLastReadMsg(chatId, msgs[0].id).catch(console.warn)
-            } else if (chat.conversation.last_read !== '0') {
+              msgs = await getMessages({ chatId, msgId: chat.last_message?.id, numBefore: 50, numAfter: 5 })
+            } else {
               // console.log(4)
-              const msgs = await getMessages({ chatId, msgId: chat.conversation.last_read, numBefore: RETRIEVAL_NUM, numAfter: RETRIEVAL_NUM })
-              setUnreadIndicator({ unreads: chat.unreads, lastRead: chat.conversation.last_read }, msgs.find(({ id }) => id === chat.conversation.last_read))
+              msgs = await getMessages({ chatId, msgId: chat.conversation.last_read, numBefore: RETRIEVAL_NUM, numAfter: RETRIEVAL_NUM })
+              setUnreadIndicator({ unreads: chat?.unreads || 0, lastRead: chat.conversation.last_read }, msgs.find(({ id }) => id === chat.conversation.last_read))
+            }
+
+            if (msgs?.length) {
               msgs[0]?.id && setLastReadMsg(chatId, msgs[0].id).catch(console.warn)
             }
           // if the most recent message in our chat is also the last one we read (i.e. we were previously caught up)
           } else if (messages[0]?.id === chat.conversation.last_read) {
             // console.log(5)
             await getMessagesOnScroll({ prepend: true })()
-            setUnreadIndicator({ unreads: chat.unreads, lastRead: chat.conversation.last_read })
+            setUnreadIndicator({ unreads: chat?.unreads || 0, lastRead: chat.conversation.last_read })
           // if we're near the bottom
           } else if (!chatPositions[0]?.offset || chatPositions[0].offset < 50) {
             // console.log(6)
-            setUnreadIndicator({ unreads: chat.unreads, lastRead: chat.conversation.last_read })
+            setUnreadIndicator({ unreads: chat?.unreads || 0, lastRead: chat.conversation.last_read })
           // if we have fewer than 30 messages
-          } else if (messages.length < 30 && chat.last_message) {
+          } else if (chat.last_message) {
             // console.log(7)
             const msgs = await getMessages({ chatId, msgId: chat.last_message.id, numBefore: 50, numAfter: 5 })
             setUnreadIndicator({ unreads: chat.unreads, lastRead: chat.conversation.last_read }, msgs.find(({ id }) => id === chat.conversation.last_read))
@@ -172,16 +176,17 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
 
   // Get messages that are coming in but not showing up, might be unnecessary
   useEffect(() => {
-    if (atEnd && chat.unreads > 0) {
+    if (atEnd && chat?.unreads && chat.unreads > 0) {
       getMessagesOnScroll({ prepend: true })()
     }
-  }, [atEnd, chat.unreads])
+  }, [atEnd, chat])
 
   useEffect(() => {
     if (focused) {
       const message = messages.find(({ id }) => id === focused)
       if (message) {
-        listRef.current?.scrollToItem({ item: message, animated: true, viewPosition: 0.6 })
+        console.log(2)
+        listRef.current?.scrollToItem({ item: message, animated: true, viewPosition: 0.3 })
         setFocused(undefined)
       }
     }
@@ -189,8 +194,9 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
 
   const setUnreadIndicator = useCallback((data: { unreads: number; lastRead: string }, message?: Message) => {
     setUnreadInfo(data)
-    message && setTimeout(() => listRef.current?.scrollToItem({ item: message, animated: true, viewPosition: 0.8 }), ONE_SECOND)
-    setTimeout(() => setUnreadInfo(undefined), ONE_SECOND * 5)
+    console.log(3)
+    message && setTimeout(() => listRef.current?.scrollToItem({ item: message, animated: true, viewPosition: 0.5 }), ONE_SECOND)
+    setTimeout(() => setUnreadInfo(undefined), ONE_SECOND * 15)
   }, [])
 
   const send = useCallback(async () => {
@@ -226,7 +232,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
       } else {
         await getMessages({ chatId, msgId, numBefore: RETRIEVAL_NUM, numAfter: RETRIEVAL_NUM })
         setHighlighted(msgId)
-        setTimeout(() => setHighlighted(null), 3000)
+        setTimeout(() => setHighlighted(null), 3 * ONE_SECOND)
       }
     }
   }, [listRef, messages, setHighlighted])
@@ -291,6 +297,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
   const scrollToEnd = useCallback(async () => {
     lastFetch.current = Date.now()
     setTimeout(() => setAtEnd(true), 100)
+    console.log(4)
     listRef.current?.scrollToOffset({ offset: 0, animated: false })
     
     setGettingMessages(true)
@@ -313,7 +320,6 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
     setGettingMessages(true)
     lastFetch.current = Date.now()
 
-    // console.log(0.4, msgId, prepend, append)
     const msgs = await getMessages({ chatId, msgId, numBefore: append ? RETRIEVAL_NUM : 0, numAfter: prepend ? RETRIEVAL_NUM : 0, append, prepend })
     if (msgs[0]?.id && prepend) {
       setLastReadMsg(chatId, msgs[0].id).catch(console.warn)
@@ -321,13 +327,13 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
     setTimeout(() => setGettingMessages(false), ONE_SECOND / 2)
   }, [chatId, chat, messages, getMessages])
 
-  const onScrollList = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+  const onScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const { nativeEvent: { contentOffset: { y } } } = event
-    const atTheEnd = y <= 50
+    const atTheEnd = y <= 40
     setAtEnd(atTheEnd)
     const fetchedRecently = (Date.now() - lastFetch.current) < ONE_SECOND / 2
 
-    if (!fetchedRecently && y <= height && y <= scrollYRef.current) {
+    if (!fetchedRecently && !atTheEnd && y <= (height * 2) && y <= scrollYRef.current) {
       getMessagesOnScroll({ prepend: true })()
     }
     scrollYRef.current = y
@@ -366,7 +372,9 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
 
   const onScrollToIndexFailed = useCallback(({ index }: any) => {
     try {
-      setTimeout(() => listRef.current?.scrollToIndex({ index, viewPosition: 0.8, animated: true }), ONE_SECOND)
+      console.log('SCROLL TO INDEX FAILED')
+      console.log(6)
+      setTimeout(() => listRef.current?.scrollToIndex({ index, viewPosition: 0.5, animated: true }), ONE_SECOND)
     } catch {}
   }, [])
 
@@ -466,7 +474,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
           style={{ paddingBottom: 4, backgroundColor: chatBackground, borderBottomWidth: 0 }}
           inverted
           scrollEventThrottle={50}
-          onScroll={onScrollList}
+          onScroll={onScroll}
           windowSize={15}
           renderItem={renderMessage}
           keyExtractor={keyExtractor}
@@ -477,7 +485,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
           onViewableItemsChanged={onViewableItemsChanged}
           onScrollToIndexFailed={onScrollToIndexFailed}
           refreshControl={<RefreshControl refreshing={false} onRefresh={getMessagesOnScroll({ prepend: true })} />}
-          maintainVisibleContentPosition={{ minIndexForVisible: 0, autoscrollToTopThreshold: 50 }}
+          maintainVisibleContentPosition={{ autoscrollToTopThreshold: 10, minIndexForVisible: 1 }}
         />
         {showMentions && (
           <SwipeList style={{ position: 'absolute', bottom: 0, backgroundColor }} minHeight={potentialMentions.length > 1 ? 100 : 50}>
@@ -509,7 +517,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
           <TouchableOpacity onPress={scrollToEnd} style={[styles.goToEndButton, { bottom: goToEndButtonBottom }]}>
             <Col style={{ width: 48, height: 48, borderRadius: 36, justifyContent: 'center', alignItems: 'center' }}>
               <Ionicons name='chevron-down' size={36} color={uq_purple} style={{ marginTop: 4 }} />
-              {chat.unreads > 0 && <View style={styles.unreadIndicator}>
+              {!!chat?.unreads && chat.unreads > 0 && <View style={styles.unreadIndicator}>
                 <Text style={{ color: 'white', fontSize: 12, fontWeight: '600' }}>{chat.unreads}</Text>
               </View>}
             </Col>

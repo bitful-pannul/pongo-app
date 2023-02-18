@@ -7,13 +7,15 @@ import { Text, View } from "../components/Themed";
 import useStore from "../state/useStore";
 import { URBIT_HOME_REGEX } from "../util/regex";
 import Button from "../components/form/Button";
-import { keyboardAvoidBehavior, keyboardOffset } from "../constants/Layout";
+import { isIos, keyboardAvoidBehavior, keyboardOffset } from "../constants/Layout";
 import { gray_overlay } from "../constants/Colors";
+import CreateAccountScreen from "./CreateAccount";
+import useColors from "../hooks/useColors";
 
 const SHIP_COOKIE_REGEX = /(~)[a-z\-]+?(\=)/;
 const getShipFromCookie = (cookie: string) => cookie.match(SHIP_COOKIE_REGEX)![0].slice(0, -1);
 
-type LoginType = 'scan' | 'url' | null
+type LoginType = 'scan' | 'url' | 'create-account' | 'email-login' | null
 
 export default function LoginScreen() {
   const { ships, ship, shipUrl, authCookie, addShip, clearShip, setShipUrl, setShip, loadStore, setNeedLogin } = useStore();
@@ -25,6 +27,7 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
   const [loginType, setLoginType] = useState<LoginType>(null);
+  const { color } = useColors()
 
   // const connectToShip = useCallback(() => {
   //   if (shipUrl) {
@@ -147,7 +150,7 @@ export default function LoginScreen() {
 
   if (formLoading) {
     return <View style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
-      <ActivityIndicator size="large" color="#000000" />
+      <ActivityIndicator size="large" color={color} />
     </View>
   }
 
@@ -271,10 +274,11 @@ export default function LoginScreen() {
               placeholder="sampel-ticlyt-migfun-falmel"
               maxLength={27}
               secureTextEntry={!showPassword}
-              keyboardType={"visible-password"}
+              keyboardType={showPassword ? 'default' : "default"}
               autoComplete='off'
               autoCapitalize="none"
               autoFocus
+              textContentType="password"
             />
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.showPassword}>
               <Text style={styles.showPasswordText}>{showPassword ? 'Hide' : 'Show'}</Text>
@@ -293,13 +297,22 @@ export default function LoginScreen() {
 
     return (
       <>
-        <Text style={styles.label}>Login via:</Text>
-        <Button title="URL" onPress={() => setLoginType('url')} />
-        <Button style={{ marginTop: 16 }} title="QR Code" onPress={() => setLoginType('scan')} />
-        <Text style={{ marginTop: 16 }}>Already Logged In?</Text>
-        <View style={{ height: 8 }} />
-        <Button title="Refresh Connection" onPress={loadStorage} />
+        <Button style={{ marginTop: isIos ? 48 : 24 }} title="Login with URL" onPress={() => setLoginType('url')} />
+        <Button style={{ marginTop: 16 }} title="Login with Email" onPress={() => setLoginType('email-login')} />
+        <Button style={{ marginTop: 16 }} title="Create Account" onPress={() => setLoginType('create-account')} />
+        {/* <Text style={{ marginTop: 16 }}>Already Logged In?</Text>
+        <Button title="Refresh Connection" onPress={loadStorage} /> */}
       </>
+    )
+  }
+
+  if (loginType === 'create-account') {
+    return (
+      <CreateAccountScreen method="create" goBack={() => setLoginType(null)} />
+    )
+  } else if (loginType === 'email-login') {
+    return (
+      <CreateAccountScreen method="login" goBack={() => setLoginType(null)} />
     )
   }
 
@@ -310,7 +323,7 @@ export default function LoginScreen() {
           style={styles.logo}
           source={require('../../assets/images/pongo-logo.png')}
         />
-        <Text style={styles.welcome}>Welcome to Pongo by Uqbar</Text>
+        <Text style={styles.welcome}>Pongo by Uqbar</Text>
       </View>
       {renderContent()}
       {(ships.length > 0 && !authCookie) && (
@@ -339,7 +352,7 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   welcome: {
-    marginTop: 24,
+    marginTop: 16,
     fontSize: 24,
     fontWeight: "600",
   },

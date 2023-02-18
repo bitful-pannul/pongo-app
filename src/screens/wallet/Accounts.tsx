@@ -167,11 +167,11 @@ export default function WalletAccounts() {
         hide={hideModal}
         style={{ minWidth: 300 }}
       >
-        <Col style={{ justifyContent: 'center', height: '100%', width: '300px' }}>
+        <Col style={{ justifyContent: 'center', width: 300, marginVertical: 16 }}>
           <Text mono>{seedData?.mnemonic}</Text>
           {seedData?.password && (
             <>
-              <Text bold>Password:</Text>
+              <Text bold style={{ marginTop: 16 }}>Password:</Text>
               <Text mono>{seedData?.password}</Text>
             </>
           )}
@@ -183,9 +183,9 @@ export default function WalletAccounts() {
         hide={hideModal}
         style={{ minWidth: 300 }}
       >
-        <Col style={{ justifyContent: 'center', alignItems: 'center', height: '100%', width: '100%' }}>
-          <Button style={{  marginBottom: 16 }} onPress={() => setShowAddWallet('create')}>Create New Wallet</Button>
-          <Button onPress={() => setShowAddWallet('restore')}>Restore Wallet From Seed</Button>
+        <Col style={{ justifyContent: 'center', alignItems: 'center', width: '100%', marginVertical: 16 }}>
+          <Button style={{  marginBottom: 16 }} onPress={() => setShowAddWallet('create')} title='Create New Wallet' />
+          <Button onPress={() => setShowAddWallet('restore')} title='Restore From Seed' />
         </Col>
       </Modal>
       <Modal 
@@ -194,12 +194,12 @@ export default function WalletAccounts() {
         hide={hideModal}
         style={{ minWidth: 300 }}
       >
-        <Col style={{ justifyContent: 'center', alignItems: 'center', height: '100%', width: '100%' }}>
+        <Col style={{ justifyContent: 'center', alignItems: 'center', width: '100%', marginVertical: 16 }}>
           <Input
             onChangeText={(text) => setNick(text)}
             placeholder='Nickname'
             style={{ width: '100%' }}
-            containerStyle={{ width: '100%', marginBottom: 16 }}
+            containerStyle={{ width: '90%', marginBottom: 8 }}
             value={nick}
             // minLength={3}
             // required
@@ -208,23 +208,23 @@ export default function WalletAccounts() {
           {showAddWallet === 'restore' && (<Input
             onChangeText={(text) => setMnemonic(text)}
             placeholder='Enter seed phrase'
-            containerStyle={{ width: '100%', marginBottom: 16 }}
+            containerStyle={{ width: '90%', marginBottom: 8 }}
             style={{ width: '100%', height: 80 }}
             multiline
           />)}
           <Input
             onChangeText={(text) => setPassword(text)}
             placeholder='Enter password'
-            style={{ width: '100%', marginBottom: 16 }}
-            containerStyle={{ width: '100%' }}
+            style={{ width: '100%', marginBottom: 8 }}
+            containerStyle={{ width: '90%' }}
             keyboardType='visible-password'
             value={password}
             />
           <Input
             onChangeText={(text) => setConfirmPassword(text)}
             placeholder='Confirm password'
-            style={{ width: '100%', marginBottom: 16 }}
-            containerStyle={{ width: '100%' }}
+            style={{ width: '100%', marginBottom: 8 }}
+            containerStyle={{ width: '90%' }}
             keyboardType='visible-password'
             value={confirmPassword}
           />
@@ -238,7 +238,7 @@ export default function WalletAccounts() {
         style={{ minWidth: 300 }}
       >
         <Col style={{ justifyContent: 'space-evenly', alignItems: 'center', height: '100%', width: '100%' }}>
-          {isFirefox && <Col style={{alignItems:'center', marginBottom:'1em'}}>
+          {isFirefox && <Col style={{ alignItems:'center', marginBottom: 16 }}>
             <FontAwesome5 name='exclamation-triangle' size={24} color='goldenrod' /> 
             <Text>
               Hardware wallets may not work in Firefox. 
@@ -268,7 +268,7 @@ export default function WalletAccounts() {
             onChangeText={(text) => setNick(text)}
             placeholder={`Nickname, i.e. ${capitalize(importType || '')} primary`}
             style={{ width: '100%' }}
-            containerStyle={{ width: '100%', marginBottom: '1em' }}
+            containerStyle={{ width: '100%', marginBottom: 16 }}
             value={nick}
           />
           <Button onPress={doImport} style={{ width: '100%' }} title='Connect' />
@@ -280,7 +280,7 @@ export default function WalletAccounts() {
         hide={hideModal}
         style={{ minWidth: 300 }}
       >
-        <Col style={{ justifyContent: 'center', alignItems: 'center', height: '100%', width: 300, maxWidth: '100%', backgroundColor: 'white' }}>
+        <Col style={{ justifyContent: 'center', alignItems: 'center', width: 300, maxWidth: '100%', backgroundColor: 'white', marginVertical: 16 }}>
           {/* {addHardwareAddress && (
             <Picker style={{ width: '80%', height: isIos ? 100: 32, borderRadius: 8, alignItems: 'center', color }} dropdownIconColor={color} selectedValue={addAddressType}
               itemStyle={{ fontSize: 16, textAlign: 'center', alignSelf: 'center' }}

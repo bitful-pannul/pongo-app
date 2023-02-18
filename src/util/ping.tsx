@@ -58,3 +58,24 @@ export function throttle(fn: Function, wait: number) {
     }
   }
 }
+
+export const dedupeMessages = (messages: Message[]) => {
+  const messageMap = new Map<string, Message>()
+  messages.forEach(msg => messageMap.set(msg.id, { ...msg, status: 'delivered' }))
+  return Array.from(messageMap.values())
+}
+
+export const sortMessages = (messages: Message[]) =>
+  messages.sort((a, b) => {
+    if (a.id[0] === '-' && b.id[0] === '-') {
+      return Number(a) - Number(b)
+    } else if (a.id[0] === '-') {
+      return -1
+    } else if (b.id[0] === '-') {
+      return 1
+    } else {
+      return Number(b.id.replace(/\./g, '')) - Number(a.id.replace(/\./g, ''))
+    }
+  })
+
+export const dedupeAndSort = (messages: Message[]) => sortMessages(dedupeMessages(messages))

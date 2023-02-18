@@ -1,4 +1,5 @@
-import { Text, View, Image, Pressable, Linking } from "react-native";
+import { useMemo } from "react";
+import { Text, View, Image, Pressable, Linking, StyleSheet } from "react-native";
 import { window } from "../../../constants/Layout";
 import useColors from "../../../hooks/useColors";
 import { IMAGE_URL_REGEX, splitByImage, splitByUrl, SPLIT_BY_URL_REGEX } from "../../../util/string";
@@ -14,8 +15,10 @@ interface ContentProps {
 export default function Content({ content, color, isOwn, depth = 0 }: ContentProps) {
   const { link } = useColors()
   const { width } = window
-  const textStyle = { color, fontSize: 16, flexShrink: 1 }
-  const linkStyle = { color: isOwn ? 'rgb(220,220,255)' : link, fontSize: 16, flexShrink: 1 }
+  const styles = useMemo(() => StyleSheet.create({
+    textStyle: { color, fontSize: 16, flexShrink: 1 }
+    linkStyle: { color: isOwn ? 'rgb(220,220,255)' : link, fontSize: 16, flexShrink: 1, textDecorationLine: 'underline' }
+  }), [])
 
   const hasImage = IMAGE_URL_REGEX.test(content)
 
@@ -36,12 +39,10 @@ export default function Content({ content, color, isOwn, depth = 0 }: ContentPro
   }
 
   return (
-    <Text style={textStyle}>
+    <Text style={styles.textStyle}>
       {splitByUrl(content).map((c, i) => SPLIT_BY_URL_REGEX.test(c) ?
-        <Pressable onPress={() => Linking.openURL(c)} key={`${i}-${depth}`}>
-          <Text style={linkStyle}>{c.toLowerCase()}</Text>
-        </Pressable> :
-        <Text style={textStyle} key={`${i}-${depth}`}>{c}</Text>
+        <Text onPress={() => Linking.openURL(c)} key={`${i}-${depth}`} style={styles.linkStyle}>{c.toLowerCase()}</Text>:
+        <Text style={styles.textStyle} key={`${i}-${depth}`}>{c}</Text>
       )}
     </Text>
   )  

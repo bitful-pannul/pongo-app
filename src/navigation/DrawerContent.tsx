@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar"
-import React, { useCallback, useState } from "react"
+import React, { useCallback, useEffect, useState } from "react"
 import { Alert, Image, Linking, Platform, Pressable, StyleSheet, TouchableOpacity } from "react-native"
 
 import { Text, View } from "../components/Themed"
@@ -12,27 +12,38 @@ import { uq_darkpurple, uq_purple } from "../constants/Colors"
 import useColors from "../hooks/useColors"
 import { ESCAPE_APP_LINK } from "../constants/Escape"
 import usePongoStore from "../state/usePongoState"
+import { useApi } from "../hooks/useApi"
 
 export default function DrawerContent({
   navigation,
 }: DrawerContentComponentProps) {
   const { ships, ship, setShip, removeShip, removeAllShips, setNeedLogin } = useStore()
+  const { api } = useApi()
   const { set } = usePongoStore()
   const backgroundShips = ships.filter((s) => s.ship !== ship)
   const [showManageShips, setShowManageShips] = useState(false)
+  const [showUqbarWallet, setShowUqbarWallet] = useState(false)
 
-  const handleAdd = () => {
+  useEffect(() => {
+    if (api) {
+      api.scry({ app: 'wallet', path: '/accounts' })
+        .then(() => setShowUqbarWallet(true))
+        .catch(() => setShowUqbarWallet(false))
+    }
+  }, [ship, api])
+
+  const handleAdd = useCallback(() => {
     setShip('none')
     setNeedLogin(true)
-  }
+  }, [])
 
-  const handleClear = () => {
+  const handleClear = useCallback(() => {
     removeAllShips()
     setNeedLogin(true)
     navigation.closeDrawer()
-  }
+  }, [])
 
-  const showClearAlert = () => Alert.alert(
+  const showClearAlert = useCallback(() => Alert.alert(
     "Clear All Ships",
     "Are you sure you want to clear all ship info?",
     [
@@ -49,12 +60,9 @@ export default function DrawerContent({
     ],
     {
       cancelable: true,
-      onDismiss: () =>
-        Alert.alert(
-          "This alert was dismissed by tapping outside of the alert dialog."
-        ),
+      onDismiss: () => null,
     }
-  )
+  ), [handleClear])
 
   const selectShip = useCallback((ship: string) => () => {
     setShip(ship)
@@ -128,15 +136,21 @@ export default function DrawerContent({
         <TouchableOpacity onPress={() => navigation.navigate('Grid')} style={{ marginTop: 16 }}>
           <View style={{ ...styles.row, ...styles.rowStart }}>
             <Ionicons name="grid" size={24} color={color} />
-            <Text style={styles.app}>Grid</Text>
+            <Text style={styles.app}>Apps</Text>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('UqbarWallet')} style={{ marginTop: 16 }}>
+        <TouchableOpacity onPress={() => navigation.navigate('Grid', { path: '/apps/pokur' })} style={{ marginTop: 16 }}>
+          <View style={{ ...styles.row, ...styles.rowStart }}>
+            <Text style={{ fontSize: 24, color }}>♠</Text>
+            <Text style={styles.app}>Pokur</Text>
+          </View>
+        </TouchableOpacity>
+        {showUqbarWallet && <TouchableOpacity onPress={() => navigation.navigate('UqbarWallet')} style={{ marginTop: 16 }}>
           <View style={{ ...styles.row, ...styles.rowStart }}>
             <Ionicons name="wallet-outline" size={24} color={color} />
             <Text style={styles.app}>Uqbar Wallet</Text>
           </View>
-        </TouchableOpacity>
+        </TouchableOpacity>}
         <TouchableOpacity onPress={() => navigation.navigate('Handshake')} style={{ marginTop: 16 }}>
           <View style={{ ...styles.row, ...styles.rowStart }}>
             <Ionicons name="qr-code" size={24} color={color} />

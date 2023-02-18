@@ -2,7 +2,7 @@
   "expo": {
     "name": "Pongo",
     "slug": "ping-app",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon-filled.png",
     "notification": {
@@ -42,7 +42,7 @@
       },
       "supportsTablet": true,
       "bundleIdentifier": "network.uqbar.ping",
-      "buildNumber": "23"
+      "buildNumber": "2"
     },
     "android": {
       "adaptiveIcon": {
