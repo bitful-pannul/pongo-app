@@ -226,7 +226,7 @@ export default function MessageEntry({
                     <ActivityIndicator color={color} style={{ alignSelf: 'flex-start', marginLeft: 2, marginBottom: 14, marginTop: 13 }} />
                     ))}
                   <MessageWrapper {...{ message, color, showStatus, addReaction }}>
-                    <Content isOwn={isSelf} content={content} color={color} />
+                    <Content content={content} color={color} />
                   </MessageWrapper>
                 {/* </Swipeable> */}
             </Animated.View>

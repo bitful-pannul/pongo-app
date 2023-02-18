@@ -109,7 +109,6 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
      else if (chatId && chatPositions[chatId]?.offset && chatPositions[chatId]?.offset > 0 && !initialLoad) {
       const wait = new Promise(resolve => setTimeout(resolve, 100));
       wait.then(() => {
-        console.log(1)
         listRef.current?.scrollToOffset({ offset: chatPositions[chatId].offset, animated: false });
       })
       setInitialLoad(true)
@@ -185,7 +184,6 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
     if (focused) {
       const message = messages.find(({ id }) => id === focused)
       if (message) {
-        console.log(2)
         listRef.current?.scrollToItem({ item: message, animated: true, viewPosition: 0.3 })
         setFocused(undefined)
       }
@@ -194,7 +192,6 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
 
   const setUnreadIndicator = useCallback((data: { unreads: number; lastRead: string }, message?: Message) => {
     setUnreadInfo(data)
-    console.log(3)
     message && setTimeout(() => listRef.current?.scrollToItem({ item: message, animated: true, viewPosition: 0.5 }), ONE_SECOND)
     setTimeout(() => setUnreadInfo(undefined), ONE_SECOND * 15)
   }, [])
@@ -297,7 +294,6 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
   const scrollToEnd = useCallback(async () => {
     lastFetch.current = Date.now()
     setTimeout(() => setAtEnd(true), 100)
-    console.log(4)
     listRef.current?.scrollToOffset({ offset: 0, animated: false })
     
     setGettingMessages(true)
@@ -372,8 +368,6 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
 
   const onScrollToIndexFailed = useCallback(({ index }: any) => {
     try {
-      console.log('SCROLL TO INDEX FAILED')
-      console.log(6)
       setTimeout(() => listRef.current?.scrollToIndex({ index, viewPosition: 0.5, animated: true }), ONE_SECOND)
     } catch {}
   }, [])

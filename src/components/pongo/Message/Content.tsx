@@ -8,16 +8,14 @@ import ScaledImage from "./ScaledImage";
 interface ContentProps {
   content: string;
   color: string;
-  isOwn: boolean;
   depth?: number;
 }
 
-export default function Content({ content, color, isOwn, depth = 0 }: ContentProps) {
-  const { link } = useColors()
+export default function Content({ content, color, depth = 0 }: ContentProps) {
   const { width } = window
   const styles = useMemo(() => StyleSheet.create({
-    textStyle: { color, fontSize: 16, flexShrink: 1 }
-    linkStyle: { color: isOwn ? 'rgb(220,220,255)' : link, fontSize: 16, flexShrink: 1, textDecorationLine: 'underline' }
+    textStyle: { color, fontSize: 16, flexShrink: 1 },
+    linkStyle: { color, fontSize: 16, textDecorationLine: 'underline' }
   }), [])
 
   const hasImage = IMAGE_URL_REGEX.test(content)
@@ -32,7 +30,7 @@ export default function Content({ content, color, isOwn, depth = 0 }: ContentPro
             <Pressable onPress={() => Linking.openURL(c)} key={`${i}-i-${depth}`}>
               <ScaledImage uri={c} width={width * 0.84 - 56} height={400} />
             </Pressable> :
-            <Content isOwn={isOwn} content={c} color={color} depth={depth + 1} key={`${i}-i-${depth}`} />
+            <Content content={c} color={color} depth={depth + 1} key={`${i}-i-${depth}`} />
         ))}
       </View>
     )

@@ -34,7 +34,7 @@ export default function SettingsScreen({ navigation, route }: SettingsScreenProp
     if (notifLevel !== notificationLevel) {
       setNotifications({ shipUrl, level: notificationLevel })
     }
-  }, [notifLevel])
+  }, [notifLevel, notificationLevel])
 
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState([
