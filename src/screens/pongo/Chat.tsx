@@ -18,8 +18,7 @@ import {
   View as DefaultView,
 } from 'react-native'
 import * as Clipboard from 'expo-clipboard'
-// import { FlatList } from "@stream-io/flat-list-mvcp";
-// import { BidirectionalFlatList } from './Bidirectional'
+import { BidirectionalFlatList } from './Bidirectional'
 
 import usePongoStore from '../../state/usePongoState'
 import useStore from '../../state/useStore'
@@ -50,7 +49,7 @@ interface ChatScreenProps {
 }
 
 export default function ChatScreen({ navigation, route }: ChatScreenProps) {
-  const listRef = useRef<FlatList>(null)
+  const listRef = useRef<BidirectionalFlatList>(null)
   const inputRef = useRef<TextInput>(null)
   const scrollYRef = useRef<number>(0)
   const indexRef = useRef<number>(0)
@@ -67,7 +66,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
   const [atEnd, setAtEnd] = useState(true)
   const [gettingMessages, setGettingMessages] = useState(false)
   const [showMentions, setShowMentions] = useState(false)
-  const [initialLoad, setInitialLoad] = useState(false)
+  const [initialPositionLoad, setInitialPositionLoad] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
   const [potentialMentions, setPotentialMentions] = useState<string[]>([])
   const [unreadInfo, setUnreadInfo] = useState<{unreads: number; lastRead: string} | undefined>()
@@ -102,18 +101,18 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
   }, [chatId, ship])
 
   useEffect(() => {
-    if (msgId && !initialLoad) {
+    if (msgId && !initialPositionLoad) {
       setFocused(msgId)
-      setInitialLoad(true)
+      setInitialPositionLoad(true)
     }
-     else if (chatId && chatPositions[chatId]?.offset && chatPositions[chatId]?.offset > 0 && !initialLoad) {
+     else if (chatId && chatPositions[chatId]?.offset && chatPositions[chatId]?.offset > 0 && !initialPositionLoad) {
       const wait = new Promise(resolve => setTimeout(resolve, 100));
       wait.then(() => {
         listRef.current?.scrollToOffset({ offset: chatPositions[chatId].offset, animated: false });
       })
-      setInitialLoad(true)
+      setInitialPositionLoad(true)
     }
-  }, [msgId, chatPositions, chatId, initialLoad])
+  }, [msgId, chatPositions, chatId, initialPositionLoad])
 
   // Get initial message
   useEffect(() => {
@@ -127,12 +126,9 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
           // open with no messages
           } else if (!messages || messages.length < 1) {
             let msgs : Message[] | undefined
-            // console.log(2)
             if (chat.conversation.last_read === '0' && chat.last_message?.id) {
-              // console.log(3)
               msgs = await getMessages({ chatId, msgId: chat.last_message?.id, numBefore: 50, numAfter: 5 })
             } else {
-              // console.log(4)
               msgs = await getMessages({ chatId, msgId: chat.conversation.last_read, numBefore: RETRIEVAL_NUM, numAfter: RETRIEVAL_NUM })
               setUnreadIndicator({ unreads: chat?.unreads || 0, lastRead: chat.conversation.last_read }, msgs.find(({ id }) => id === chat.conversation.last_read))
             }
@@ -140,18 +136,16 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
             if (msgs?.length) {
               msgs[0]?.id && setLastReadMsg(chatId, msgs[0].id).catch(console.warn)
             }
+            
           // if the most recent message in our chat is also the last one we read (i.e. we were previously caught up)
           } else if (messages[0]?.id === chat.conversation.last_read) {
-            // console.log(5)
             await getMessagesOnScroll({ prepend: true })()
             setUnreadIndicator({ unreads: chat?.unreads || 0, lastRead: chat.conversation.last_read })
           // if we're near the bottom
           } else if (!chatPositions[0]?.offset || chatPositions[0].offset < 50) {
-            // console.log(6)
             setUnreadIndicator({ unreads: chat?.unreads || 0, lastRead: chat.conversation.last_read })
           // if we have fewer than 30 messages
           } else if (chat.last_message) {
-            // console.log(7)
             const msgs = await getMessages({ chatId, msgId: chat.last_message.id, numBefore: 50, numAfter: 5 })
             setUnreadIndicator({ unreads: chat.unreads, lastRead: chat.conversation.last_read }, msgs.find(({ id }) => id === chat.conversation.last_read))
             msgs[0]?.id && setLastReadMsg(chatId, msgs[0].id).catch(console.warn)
@@ -461,7 +455,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
           source={require('../../../assets/images/uqbar-retro-background.jpg')}
           style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.3, width: '100%', height: '100%' }}
         />
-        <FlatList
+        <BidirectionalFlatList
           ref={listRef}
           data={messages}
           contentContainerStyle={{ paddingVertical: 4 }}
@@ -472,14 +466,17 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
           windowSize={15}
           renderItem={renderMessage}
           keyExtractor={keyExtractor}
-          onEndReached={getMessagesOnScroll({ append: true })}
-          onEndReachedThreshold={1.5}
           keyboardShouldPersistTaps="handled"
+          onEndReached={getMessagesOnScroll({ append: true })}
+          onEndReachedThreshold={2}
           initialNumToRender={initialNumToRender}
           onViewableItemsChanged={onViewableItemsChanged}
           onScrollToIndexFailed={onScrollToIndexFailed}
-          refreshControl={<RefreshControl refreshing={false} onRefresh={getMessagesOnScroll({ prepend: true })} />}
-          maintainVisibleContentPosition={{ autoscrollToTopThreshold: 10, minIndexForVisible: 1 }}
+          refreshControl={<RefreshControl refreshing={gettingMessages} onRefresh={getMessagesOnScroll({ prepend: true })} />}
+          refreshing={gettingMessages}
+          enableAutoscrollToTop={atEnd && !initialLoading}
+          autoscrollToTopThreshold={40}
+          activityIndicatorColor={color}
         />
         {showMentions && (
           <SwipeList style={{ position: 'absolute', bottom: 0, backgroundColor }} minHeight={potentialMentions.length > 1 ? 100 : 50}>

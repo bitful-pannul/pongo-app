@@ -177,9 +177,9 @@ export const BidirectionalFlatList = (React.forwardRef(
         maybeCallOnStartReached();
       }
 
-      if (isScrollAtEnd) {
-        maybeCallOnEndReached();
-      }
+      // if (isScrollAtEnd) {
+      //   maybeCallOnEndReached();
+      // }
     };
 
     const renderHeaderLoadingIndicator = () => {
@@ -234,7 +234,7 @@ export const BidirectionalFlatList = (React.forwardRef(
           progressViewOffset={50}
           ListHeaderComponent={renderHeaderLoadingIndicator}
           ListFooterComponent={renderFooterLoadingIndicator}
-          onEndReached={null}
+          // onEndReached={null}
           onScroll={handleScroll}
           maintainVisibleContentPosition={{
             autoscrollToTopThreshold: enableAutoscrollToTop

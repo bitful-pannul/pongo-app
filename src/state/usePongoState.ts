@@ -3,10 +3,10 @@ import create from "zustand"
 import Urbit from "@uqbar/react-native-api";
 
 import { resetSubscriptions } from "./util";
-import { Chats, Message, NotifSettings, SendMessagePayload, SetNotifParams, GetMessagesParams } from "../types/Pongo";
+import { Chats, Message, NotifSettings, SendMessagePayload, SetNotifParams, GetMessagesParams, MessageKind, MessageStatus } from "../types/Pongo";
 import { addSig, deSig } from "../util/string";
 import { ONE_SECOND } from "../util/time";
-import { sortChats } from "../util/ping";
+import { sortChats, sortMessages } from "../util/ping";
 import { getPushNotificationToken } from "../util/notification";
 import { HAS_MENTION_REGEX } from "../constants/Regex";
 import { PongoStore } from './types/pongo';
@@ -139,14 +139,14 @@ const usePongoStore = create<PongoStore>((set, get) => ({
       let newMessages = message_list
 
       if (append) {
-        newMessages = (chat.messages.slice(-100) || []).concat(newMessages)
+        newMessages = (chat.messages.slice(-120) || []).concat(newMessages)
       } else if (prepend) {
-        newMessages = (newMessages).concat((chat.messages || []).slice(0, 100))
+        newMessages = (newMessages).concat((chat.messages || []).slice(0, 120))
       }
 
       const messageMap = new Map<string, Message>()
-      newMessages.forEach(msg => messageMap.set(msg.id, { ...msg, status: 'delivered' }))
-      chat.messages = Array.from(messageMap.values())
+      newMessages.forEach(msg => messageMap.set(msg.id, { ...msg, status: msg.status || 'delivered' }))
+      chat.messages = sortMessages(Array.from(messageMap.values()))
       // chat.messages = newMessages.map(msg => ({ ...msg, status: 'delivered' }))
       set({ chats })
       return chat.messages
@@ -208,7 +208,7 @@ const usePongoStore = create<PongoStore>((set, get) => ({
     const mentions = (kind === 'text' ? content.match(HAS_MENTION_REGEX) || [] : []).map(m => addSig(m.trim())).filter(isValidPatp)
     chat.unreads = 0
 
-    chat.messages = resend ? chat.messages.map(m => m.id === resend.id ? { ...m, status: undefined } : m) :
+    chat.messages = resend ? chat.messages.map(m => m.id === resend.id ? { ...m, status: 'pending' } : m) :
       [{
         id: identifier,
         author: self,
@@ -218,7 +218,8 @@ const usePongoStore = create<PongoStore>((set, get) => ({
         reactions: {},
         edited: false,
         reference: ref || null,
-      }].concat(chat.messages)
+        status: 'pending' as MessageStatus,
+      } as Message].concat(chat.messages)
 
     set({ chats })
 

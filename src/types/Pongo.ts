@@ -9,7 +9,7 @@ export interface Reactions {
   [emoji: string]: string[];
 }
 
-export type MessageStatus = 'sent' | 'delivered' | 'failed'
+export type MessageStatus = 'pending' | 'sent' | 'delivered' | 'failed'
 
 export type NotifLevel = 'off' | 'low' | 'medium' | 'high'
 
