@@ -60,6 +60,8 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
     setDraft, sendMessage, getMessages, setReply, setEdit, setLastReadMsg, editMessage, sendReaction, setChatPosition
   } = usePongoStore()
   const { color, chatBackground, backgroundColor } = useColors()
+  const { isKeyboardVisible, keyboardHeight } = useKeyboard()
+  
   const [selected, setSelected] = useState<{ msg: Message; offsetY: number; height: number } | undefined>()
   const [highlighted, setHighlighted] = useState<string | null>()
   const [focused, setFocused] = useState<string | undefined>()
@@ -70,7 +72,6 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
   const [initialLoading, setInitialLoading] = useState(true)
   const [potentialMentions, setPotentialMentions] = useState<string[]>([])
   const [unreadInfo, setUnreadInfo] = useState<{unreads: number; lastRead: string} | undefined>()
-  const { isKeyboardVisible, keyboardHeight } = useKeyboard()
 
   const chatId = route.params.id
   const msgId = route.params.msgId

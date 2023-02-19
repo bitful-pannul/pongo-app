@@ -16,7 +16,7 @@ export default function Content({ content, color, depth = 0 }: ContentProps) {
   const styles = useMemo(() => StyleSheet.create({
     textStyle: { color, fontSize: 16, flexShrink: 1 },
     linkStyle: { color, fontSize: 16, textDecorationLine: 'underline' }
-  }), [])
+  }), [color])
 
   const hasImage = IMAGE_URL_REGEX.test(content)
 

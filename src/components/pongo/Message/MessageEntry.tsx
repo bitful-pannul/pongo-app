@@ -64,7 +64,7 @@ export default function MessageEntry({
 
   const { id, author, content, kind, reference } = message
   const isSelf = useMemo(() => deSig(author) === deSig(self), [author, self])
-  const color = useMemo(() => isSelf ? 'white' : defaultColor, [isSelf]) 
+  const color = useMemo(() => isSelf ? 'white' : defaultColor, [isSelf, defaultColor]) 
   const differentAuthor = useMemo(() => messages[index + 1]?.author !== author, [messages, author])
   const showAvatar = useMemo(() => !isDm && !isSelf && !isAdminMsg(message) && differentAuthor, [isDm, isSelf, differentAuthor])
   const showStatus = useMemo(() => isSelf && message.status !== null && !messages[index - 1]?.status, [isSelf, message, messages])

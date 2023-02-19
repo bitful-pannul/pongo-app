@@ -74,8 +74,10 @@ export default function App() {
   }, [lastNotificationResponse])
 
   const checkNetwork = useCallback(async () => {
-    const networkState = await Network.getNetworkStateAsync()
-    setConnected(Boolean(networkState.isInternetReachable))
+    try {
+      const networkState = await Network.getNetworkStateAsync()
+      setConnected(Boolean(networkState.isInternetReachable))
+    } catch {}
   }, [setConnected])
 
   useEffect(() => {
