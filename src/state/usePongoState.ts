@@ -6,7 +6,7 @@ import { resetSubscriptions } from "./util";
 import { Chats, Message, NotifSettings, SendMessagePayload, SetNotifParams, GetMessagesParams, MessageKind, MessageStatus } from "../types/Pongo";
 import { addSig, deSig } from "../util/string";
 import { ONE_SECOND } from "../util/time";
-import { sortChats, sortMessages } from "../util/ping";
+import { dedupeAndSort, sortChats, sortMessages } from "../util/ping";
 import { getPushNotificationToken } from "../util/notification";
 import { HAS_MENTION_REGEX } from "../constants/Regex";
 import { PongoStore } from './types/pongo';
@@ -136,18 +136,15 @@ const usePongoStore = create<PongoStore>((set, get) => ({
         { app: 'pongo', path: `/messages/${chatId}/${msgId}/${numBefore}/${numAfter}` }
       )
       
-      let newMessages = message_list
+      let newMessages: Message[] = message_list.map(msg => ({ ...msg, status: 'delivered' }))
 
       if (append) {
         newMessages = (chat.messages.slice(-120) || []).concat(newMessages)
       } else if (prepend) {
         newMessages = (newMessages).concat((chat.messages || []).slice(0, 120))
       }
-
-      const messageMap = new Map<string, Message>()
-      newMessages.forEach(msg => messageMap.set(msg.id, { ...msg, status: msg.status || 'delivered' }))
-      chat.messages = sortMessages(Array.from(messageMap.values()))
-      // chat.messages = newMessages.map(msg => ({ ...msg, status: 'delivered' }))
+      
+      chat.messages = dedupeAndSort(newMessages)
       set({ chats })
       return chat.messages
     }

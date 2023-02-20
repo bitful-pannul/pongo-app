@@ -61,7 +61,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
   } = usePongoStore()
   const { color, chatBackground, backgroundColor } = useColors()
   const { isKeyboardVisible, keyboardHeight } = useKeyboard()
-  
+
   const [selected, setSelected] = useState<{ msg: Message; offsetY: number; height: number } | undefined>()
   const [highlighted, setHighlighted] = useState<string | null>()
   const [focused, setFocused] = useState<string | undefined>()
@@ -432,12 +432,9 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
 
   const onKeyPress = useCallback((e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
     if (e.nativeEvent.key === 'Enter' && isLargeDevice) {
+      setDraft(chatId, '')
+      setShowMentions(false)
       send()
-
-      setTimeout(() => {
-        setDraft(chatId, '')
-        setShowMentions(false)
-      }, 50)
     }
   }, [send, chatId])
   
@@ -473,8 +470,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
           initialNumToRender={initialNumToRender}
           onViewableItemsChanged={onViewableItemsChanged}
           onScrollToIndexFailed={onScrollToIndexFailed}
-          refreshControl={<RefreshControl refreshing={gettingMessages} onRefresh={getMessagesOnScroll({ prepend: true })} />}
-          refreshing={gettingMessages}
+          refreshControl={<RefreshControl refreshing={false} onRefresh={getMessagesOnScroll({ prepend: true })} />}
           enableAutoscrollToTop={atEnd && !initialLoading}
           autoscrollToTopThreshold={40}
           activityIndicatorColor={color}

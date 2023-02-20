@@ -78,4 +78,15 @@ export const sortMessages = (messages: Message[]) =>
     }
   })
 
-export const dedupeAndSort = (messages: Message[]) => sortMessages(dedupeMessages(messages))
+export const removePending = (messages: Message[]) =>
+  messages.filter(m => {
+    if (m.id[0] === '-') {
+      return !Boolean(
+        messages.find(t => m.kind === t.kind && m.content === t.content && m.author === t.author)
+      )
+    }
+
+    return true
+  })
+
+export const dedupeAndSort = (messages: Message[]) => sortMessages(dedupeMessages(removePending(messages)))
