@@ -49,6 +49,8 @@ export const getAdminMsgText = (kind: MessageKind, content: string) => {
   }
 }
 
+export const idNum = (id: string) => Number(id.replace(/\./, ''))
+
 export function throttle(fn: Function, wait: number) {
   let time = Date.now();
   return function() {

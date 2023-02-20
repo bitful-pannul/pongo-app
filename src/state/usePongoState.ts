@@ -39,7 +39,7 @@ const usePongoStore = create<PongoStore>((set, get) => ({
     ])
     
     await get().getChats(api, !clearState)
-    await get().getBlocklist(api)
+    // await get().getBlocklist(api)
     const notifSettings = await api.scry<{ 'notif-settings': NotifSettings }>({ app: 'pongo', path: '/notif-settings' })
     const { expo_token, level } = notifSettings['notif-settings']
 
@@ -116,11 +116,6 @@ const usePongoStore = create<PongoStore>((set, get) => ({
     set({ chats, sortedChats })
     return chats
   },
-  getBlocklist: async () => {
-    const { blocklist } = await api.scry<{ blocklist: string[] }>({ app: 'pongo', path: '/blocklist' })
-    set({ blocklist })
-    return blocklist
-  },
   getMessages: async ({ chatId, msgId, numBefore, numAfter, append, prepend }: GetMessagesParams) => {
     // console.log('MSGS:', chatId, msgId, numBefore, numAfter, append, prepend)
     if (isNaN(Number(msgId)) || Number(msgId) < 0) {
@@ -139,12 +134,12 @@ const usePongoStore = create<PongoStore>((set, get) => ({
       let newMessages: Message[] = message_list.map(msg => ({ ...msg, status: 'delivered' }))
 
       if (append) {
-        newMessages = (chat.messages.slice(-120) || []).concat(newMessages)
+        newMessages = dedupeAndSort((chat.messages.slice(-120) || []).concat(newMessages))
       } else if (prepend) {
-        newMessages = (newMessages).concat((chat.messages || []).slice(0, 120))
+        newMessages = dedupeAndSort((newMessages).concat((chat.messages || []).slice(0, 120)))
       }
       
-      chat.messages = dedupeAndSort(newMessages)
+      chat.messages = newMessages
       set({ chats })
       return chat.messages
     }
@@ -198,6 +193,7 @@ const usePongoStore = create<PongoStore>((set, get) => ({
     } })
   },
   sendMessage: async ({ self, convo, kind, content, ref, resend }: SendMessagePayload) => {
+    const reference = ref?.replace(/\./g, '') || null
     const chats = { ...get().chats }
     const chat = chats[convo]
     const timesent = new Date().getTime()
@@ -223,8 +219,8 @@ const usePongoStore = create<PongoStore>((set, get) => ({
     setTimeout(async () => {
       try {
         const json = resend ?
-          { 'send-message': { ...resend, convo, identifier, reference: resend?.reference || null, mentions } } :
-          { 'send-message': { convo, kind, content, identifier, reference: ref || null, mentions } }
+          { 'send-message': { ...resend, convo, identifier, reference: resend.reference?.replace(/\./g, ''), mentions } } :
+          { 'send-message': { convo, kind, content, identifier, reference, mentions } }
         await get().api?.poke({ app: 'pongo', mark: 'pongo-action', json })
       } catch (err) {
         chat.messages = chat.messages.map(m => m.id === identifier ? { ...m, status: 'failed' } : m)
@@ -306,25 +302,7 @@ const usePongoStore = create<PongoStore>((set, get) => ({
 
     return false
   },
-
-  block: async (who: string) => {
-    const { api, getBlocklist } = get()
-    if (api) {
-      await api.poke({ app: 'pongo', mark: 'pongo-action', json: {
-        'block': { who }
-      } })
-      await getBlocklist(api)
-    }
-  },
-  unblock: async (who: string) => {
-    const { api, getBlocklist } = get()
-    if (api) {
-      await api.poke({ app: 'pongo', mark: 'pongo-action', json: {
-        'unblock': { who }
-      } })
-      await getBlocklist(api)
-    }
-  },
+  
   set,
 }));
 

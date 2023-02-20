@@ -1,5 +1,5 @@
 import { GetState, SetState } from "zustand"
-import { dedupeAndSort, sortChats, sortMessages } from "../../util/ping"
+import { dedupeAndSort, idNum, sortChats, sortMessages } from "../../util/ping"
 import { deSig } from "../../util/string"
 import { Message, MessageStatus, Update } from "../../types/Pongo"
 import { PongoStore } from "../types/pongo"
@@ -13,7 +13,7 @@ export const messageSub = (set: SetState<PongoStore>, get: GetState<PongoStore>)
     const chats = { ...get().chats }
     const chatId = update.message.conversation_id
     const chat = chats[chatId]
-    const { messages } = chat
+    const messages = chat.messages || []
 
     if (!chat) {
       return
@@ -22,7 +22,7 @@ export const messageSub = (set: SetState<PongoStore>, get: GetState<PongoStore>)
     const { id, kind, content, edited, reactions, reference, timestamp, author } = update.message.message
 
     chat.conversation.last_active = timestamp
-    const isMostRecent = chat.messages[0]?.id && Number(id) > Number(chat.messages[0].id)
+    const isMostRecent = chat.messages?.[0]?.id && idNum(id) > idNum(chat.messages[0]?.id || '0')
 
     if (isMostRecent) {
       chat.last_message = update.message.message
@@ -86,8 +86,10 @@ export const messageSub = (set: SetState<PongoStore>, get: GetState<PongoStore>)
     const { chats } = get()
     const existing = chats[update.delivered.conversation_id]?.messages?.find(m => m.identifier === update.delivered.identifier)
     if (existing) {
+      if (update.delivered.message_id) {
+        existing.id = update.delivered.message_id
+      }
       existing.status = 'delivered'
-      
       chats[update.delivered.conversation_id].messages = dedupeAndSort(chats[update.delivered.conversation_id].messages)
     }
   } else if ('conversations' in update) {

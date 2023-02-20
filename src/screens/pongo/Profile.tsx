@@ -31,7 +31,7 @@ interface ProfileScreenProps {
 
 export default function ProfileScreen({ navigation, route }: ProfileScreenProps) {
   const { ship: self } = useStore()
-  const { set, block, unblock, createConversation, sortedChats, loading, blocklist } = usePongoStore()
+  const { set, createConversation, sortedChats, loading, blocklist } = usePongoStore()
   const { tags, getTags, addTag, deleteTag } = usePosseState()
   const { color, backgroundColor, shadedBackground } = useColors()
   const { ship } = route.params
@@ -84,14 +84,6 @@ export default function ProfileScreen({ navigation, route }: ProfileScreenProps)
     setError('')
   }, [setError, setTag])
 
-  const blockUser = useCallback(() => {
-    block(ship)
-  }, [ship])
-
-  const unblockUser = useCallback(() => {
-    unblock(ship)
-  }, [ship])
-
   if (!ship) {
     return null
   }
@@ -119,7 +111,6 @@ export default function ProfileScreen({ navigation, route }: ProfileScreenProps)
         <Col style={{ width: '100%', alignItems: 'center', paddingHorizontal: 32, marginTop: 4 }}>
 
           <Button title='Send Message' onPress={startDm} style={{ marginBottom: 16 }} />
-          <Button title={`${isBlocked ? 'Unb' : 'B'}lock ${ship}`} onPress={isBlocked ? unblockUser : blockUser} />
 
           <View style={{ marginTop: 16, padding: 2, borderBottomColor: uq_darkpink, borderBottomWidth: 2 }}>
             <H3 text='Posse Tags' />

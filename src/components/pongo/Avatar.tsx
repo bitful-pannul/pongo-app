@@ -6,7 +6,7 @@ import { deSig, Contact, cite, uxToHex } from '@urbit/api'
 import { darken, lighten, parseToHsla } from 'color2k'
 
 import { useContact } from '../../state/useContactState'
-import { isValidUrl } from '../../util/string'
+import { addSig, isValidUrl } from '../../util/string'
 import { normalizeUrbitColor } from '../../util/color'
 import useColorScheme from '../../hooks/useColorScheme'
 import Sigil from '../Sigil'
@@ -107,18 +107,27 @@ function getSigilElement(
   if (
     !ship ||
     ship === 'undefined' ||
-    !isValidPatp(ship) ||
-    citedShip.match(/[_]/) ||
-    citedShip.length > 14
+    !isValidPatp(addSig(ship)) ||
+    citedShip.match(/[_]/)
   ) {
+    console.log('HERE', ship)
     return null
   }
 
   if (ship.length > 14) {
     return <View>
       <Sigil size={sigilSize} ship={deSig(ship)?.slice(-13) || ''} color={bg} icon />
-      <Text style={{
-        color,
+      <View style={{
+        backgroundColor: 'white',
+        height: sigilSize / 6,
+        width: sigilSize / 6,
+        position: 'absolute',
+        alignSelf: 'center',
+        borderRadius: sigilSize / 6,
+        top: sigilSize / 2 - sigilSize / 12,
+      }} />
+      {/* <Text style={{
+        color: 'white',
         fontSize: sigilSize / 3,
         fontWeight: '600',
         position: 'absolute',
@@ -126,7 +135,7 @@ function getSigilElement(
         left: sigilSize / 16
       }}>
         moon
-      </Text>
+      </Text> */}
     </View>
   }
 

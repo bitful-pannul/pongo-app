@@ -13,6 +13,7 @@ import useColors from "../hooks/useColors"
 import { ESCAPE_APP_LINK } from "../constants/Escape"
 import usePongoStore from "../state/usePongoState"
 import { useApi } from "../hooks/useApi"
+import { configureApi } from "@uqbar/react-native-api/configureApi"
 
 export default function DrawerContent({
   navigation,
@@ -74,6 +75,16 @@ export default function DrawerContent({
     navigation.closeDrawer()
   }, [])
 
+  const logoutShip = useCallback((targetShip: string) => () => {
+    const shipInfo = ships.find(sc => sc.ship === targetShip)
+    if (shipInfo) {
+      const tempApi = configureApi(shipInfo.ship, shipInfo.shipUrl)
+      // [%set-notif-token (ot ~[[%expo-token so] [%ship-url so]])]
+      tempApi.poke({ app: 'pongo', mark: 'pongo-action', json: { 'set-notif-token': { 'expo-token': '', 'ship-url': '' } } }).catch(console.log)
+      removeShip(targetShip)
+    }
+  }, [ships])
+
   const { color, backgroundColor } = useColors()
   const styles = getStyles(color)
 
@@ -91,7 +102,7 @@ export default function DrawerContent({
               <Text style={styles.secondaryShip}>{ship}</Text>
             </View>
           </Pressable>
-          <TouchableOpacity onPress={() => removeShip(ship)}>
+          <TouchableOpacity onPress={logoutShip(ship)}>
             <Ionicons name="trash" size={20} color={color} />
           </TouchableOpacity>
         </View>)}

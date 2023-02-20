@@ -29,7 +29,6 @@ export interface PongoStore extends DefaultStore {
   refresh: (shipUrl: string) => Promise<void>;
   setNotifications: (params: SetNotifParams) => Promise<void>;
   getChats: (api: Urbit, maintainMessages?: boolean) => Promise<Chats>;
-  getBlocklist: (api: Urbit) => Promise<string[]>;
   getMessages: (params: GetMessagesParams) => Promise<Message[]>;
 
   createConversation: (chatName: string, members: string[], isOpen?: boolean) => Promise<Chat | void>;
@@ -45,9 +44,6 @@ export interface PongoStore extends DefaultStore {
   acceptInvite: (convo: string) => Promise<void>;
   rejectInvite: (convo: string) => Promise<void>;
   makeInviteRequest: (convo: string, to: string) => Promise<boolean>;
-
-  block: (who: string) => Promise<void>;
-  unblock: (who: string) => Promise<void>;
 
   set: SetState<PongoStore>;
 }

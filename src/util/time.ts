@@ -34,3 +34,8 @@ export const getRelativeTime = (timestamp: number) =>
     lastWeek: 'ddd',
     sameElse: 'DD/MM/YYYY'
   })
+
+export const getRelativeDate = (timestamp: number) =>
+  new Date(timestamp).getFullYear() !== new Date().getFullYear() ?
+  moment(timestamp).format('MMMM Do, YYYY') :
+  moment(timestamp).format('MMMM Do')

@@ -103,6 +103,7 @@ export interface SendingUpdate {
 export interface DeliveredUpdate {
   delivered: {
     conversation_id: string;
+    message_id: string;
     identifier: string;
   }
 }

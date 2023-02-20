@@ -325,7 +325,7 @@ export default function CreateAccountScreen({ method, goBack } : { method: 'logi
           keyboardType='email-address'
         />
         <Text style={styles.error}>{emailError}</Text>
-        <Row style={{ marginHorizontal: '10%', marginVertical: 8 }}>
+        {method === 'create' && <Row style={{ marginHorizontal: '10%', marginVertical: 8 }}>
           <Checkbox
             style={styles.checkbox}
             value={termsChecked}
@@ -333,7 +333,7 @@ export default function CreateAccountScreen({ method, goBack } : { method: 'logi
             color={termsChecked ? uq_purple : undefined}
           />
           <Text style={styles.agreement}>I agree to receive critical updates and support emails regarding my account</Text>
-        </Row>
+        </Row>}
 
         <Button style={styles.button} onPress={submitEmail} title='Submit' />
         <Button style={styles.button} onPress={onBack} title='Back' />

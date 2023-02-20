@@ -248,6 +248,10 @@ export default function MessageEntry({
     return null
   }
 
+  if (message.content === '' && message.edited) {
+    return null
+  }
+
   return (
     <Animated.View style={[styles.container, {
       backgroundColor: highlight.interpolate({

@@ -32,14 +32,15 @@ import Avatar from '../../components/pongo/Avatar'
 import ShipName from '../../components/pongo/ShipName'
 import MessageMenu from '../../components/pongo/Message/MessageMenu'
 import { addSig } from '../../util/string'
-import { checkIsDm, isAdminMsg } from '../../util/ping'
-import { ONE_SECOND } from '../../util/time'
+import { checkIsDm, idNum, isAdminMsg } from '../../util/ping'
+import { getRelativeDate, ONE_SECOND } from '../../util/time'
 import { MENTION_REGEX } from '../../constants/Regex'
 import { isIos, isLargeDevice, keyboardAvoidBehavior, keyboardOffset, window } from '../../constants/Layout'
-import { blue_overlay, light_gray, uq_pink, uq_purple } from '../../constants/Colors'
+import { blue_overlay, gray_overlay, light_gray, uq_pink, uq_purple } from '../../constants/Colors'
 import { PongoStackParamList } from '../../types/Navigation'
 import { Message } from '../../types/Pongo'
 import useKeyboard from '../../hooks/useKeyboard'
+import moment from 'moment'
 
 const RETRIEVAL_NUM = 50
 
@@ -261,8 +262,8 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
         inputRef.current?.focus()
       } else if (act === 'resend') {
         sendMessage({ self: ship, convo: chatId, kind: 'text', content: text, ref: reply?.id, resend: selected.msg })
-      } else {
-
+      } else if (act === 'delete') {
+        editMessage(chatId, selected.msg.id, '')
       }
     }
 
@@ -407,6 +408,10 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
   }), [])
 
   const renderMessage = useCallback(({ item, index }: { item: Message; index: number }) => {
+    const daySent = moment(item.timestamp * ONE_SECOND).format('YYYYMMDD')
+    const previous = messages[index + 1] && moment(messages[index + 1].timestamp * ONE_SECOND).format('YYYYMMDD')
+    const showDateIndicator = previous !== daySent
+
     return <>
       <MessageEntry
         onPress={onTapMessage(item)} messages={messages}
@@ -418,9 +423,14 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
         onSwipe={swipeToReply}
         chatId={chatId}
       />
-      {unreadInfo && unreadInfo?.unreads > 0 && Number(unreadInfo?.lastRead) === Number(item.id) - 1 && (
+      {unreadInfo && unreadInfo?.unreads > 0 && Number(unreadInfo?.lastRead) === idNum(item.id) - 1 && (
         <View style={{ maxWidth: '84%', alignSelf: 'center', marginHorizontal: '8%', marginVertical: 4, backgroundColor: blue_overlay, borderRadius: 8, padding: 4, paddingHorizontal: 32 }}>
           <Text style={{ fontSize: 16, color: 'white' }}>{unreadInfo?.unreads} Unread{unreadInfo?.unreads && unreadInfo?.unreads > 1 ? 's' : ''}</Text>
+        </View>
+      )}
+      {showDateIndicator && (
+        <View style={{ maxWidth: '84%', alignSelf: 'center', marginHorizontal: '8%', marginBottom: 4, marginTop: 8, backgroundColor: gray_overlay, borderRadius: 8, padding: 4, paddingHorizontal: 32 }}>
+          <Text style={{ fontSize: 16, color: 'white' }}>{getRelativeDate(item.timestamp * ONE_SECOND)}</Text>
         </View>
       )}
     </>
@@ -432,9 +442,14 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
 
   const onKeyPress = useCallback((e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
     if (e.nativeEvent.key === 'Enter' && isLargeDevice) {
-      setDraft(chatId, '')
-      setShowMentions(false)
+      e.preventDefault()
+      e.stopPropagation()
       send()
+
+      setTimeout(() => {
+        setDraft(chatId, '')
+        setShowMentions(false)
+      }, 10)
     }
   }, [send, chatId])
   
