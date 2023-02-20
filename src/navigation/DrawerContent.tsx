@@ -168,7 +168,7 @@ export default function DrawerContent({
             <Text style={styles.app}>Handshake</Text>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => Linking.openURL(ESCAPE_APP_LINK)} style={{ marginTop: 16 }}>
+        <TouchableOpacity onPress={() => navigation.navigate('Grid', { path: '/apps/escape' })} style={{ marginTop: 16 }}>
           <View style={{ ...styles.row, ...styles.rowStart }}>
             <Image style={{ width: 24, height: 24 }} source={require('../../assets/images/escape-icon.png')} />
             <Text style={styles.app}>EScape</Text>

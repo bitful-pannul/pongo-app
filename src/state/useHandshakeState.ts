@@ -67,8 +67,8 @@ const useHandshakeStore = create<HandshakeStore>((set, get) => ({
     }
 
     resetSubscriptions(set, api, get().subscriptions, [
-      api.subscribe(createSubscription('scan', '/signer-updates', handleSignerUpdate)),
-      api.subscribe(createSubscription('scan', '/reader-updates', handleReaderUpdate)),
+      api.subscribe(createSubscription('handshake', '/signer-updates', handleSignerUpdate)),
+      api.subscribe(createSubscription('handshake', '/reader-updates', handleReaderUpdate)),
     ])
 
     get().createCode()
@@ -83,7 +83,7 @@ const useHandshakeStore = create<HandshakeStore>((set, get) => ({
   createCode: async () => {
     set({ loading: true })
     await get().api?.poke({
-      app: 'scan',
+      app: 'handshake',
       mark: 'action',
       json: { create: true }
     })
@@ -91,7 +91,7 @@ const useHandshakeStore = create<HandshakeStore>((set, get) => ({
   },
   verifyCode: async (code: string) => {
     await get().api?.poke({
-      app: 'scan',
+      app: 'handshake',
       mark: 'action',
       json: { verify: { code } }
     })
