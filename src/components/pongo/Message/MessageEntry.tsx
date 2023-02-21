@@ -58,6 +58,7 @@ export default function MessageEntry({
   const navigation = useNavigation<NavigationProp<PongoStackParamList>>()
   const { api } = usePongoStore()
   const [quotedMsg, setQuotedMsg] = useState<Message | undefined>()
+  const [quotedMsgNotFound, setQuotedMsgNotFound] = useState(false)
 
   const onSwipeLeft = useCallback(() => {
   }, [])
@@ -65,7 +66,7 @@ export default function MessageEntry({
   const { id, author, content, kind, reference } = message
   const isSelf = useMemo(() => deSig(author) === deSig(self), [author, self])
   const color = useMemo(() => isSelf ? 'white' : defaultColor, [isSelf, defaultColor]) 
-  const differentAuthor = useMemo(() => messages[index + 1]?.author !== author, [messages, author])
+  const differentAuthor = useMemo(() => !messages[index + 1] || isAdminMsg(messages[index + 1]) || messages[index + 1]?.author !== author, [messages, author])
   const showAvatar = useMemo(() => !isDm && !isSelf && !isAdminMsg(message) && differentAuthor, [isDm, isSelf, differentAuthor])
   const showStatus = useMemo(() => isSelf && message.status !== null && !messages[index - 1]?.status, [isSelf, message, messages])
   const isSelected = useMemo(() => selected === id, [selected, id])
@@ -79,8 +80,15 @@ export default function MessageEntry({
         try {
           const msg = messages?.find(m => m.id === reference) ||
             processReference(await api.scry({ app: 'pongo', path: `/notification/${chatId}/${reference}` }), reference)
+          
           setQuotedMsg(msg)
-        } catch {}
+
+          if (!msg) {
+            setQuotedMsgNotFound(true)
+          }
+        } catch {
+          setQuotedMsgNotFound(true)
+        }
       }
     }
     getQuotedMsg()
@@ -113,7 +121,7 @@ export default function MessageEntry({
 
   const { width } = window
 
-  const styles = StyleSheet.create({
+  const styles = useMemo(() => StyleSheet.create({
     container: {
       marginBottom: index === 0 ? 8 : 0,
       marginTop: differentAuthor ? 6 : 0,
@@ -174,7 +182,7 @@ export default function MessageEntry({
     image: {
       width: '100%',
     },
-  })
+  }), [differentAuthor, isSelected, isSelf, ownChatBackground, backgroundColor, width])
 
   const pressReply = useCallback(() => {
     focusReply(reference)
@@ -222,9 +230,13 @@ export default function MessageEntry({
                         <Text numberOfLines={1} style={[styles.text, { fontSize: 14 }]}>{quotedMsg?.content}</Text>
                       </Col>
                     </TouchableOpacity>
-                  ): (
+                  ) : quotedMsgNotFound ? (
+                    <Col style={[styles.reply, { height: 20 }]}>
+                      <Text style={[styles.text, { fontSize: 14, marginTop: 2 }]}>Message not found</Text>
+                    </Col>
+                  ) : (
                     <ActivityIndicator color={color} style={{ alignSelf: 'flex-start', marginLeft: 2, marginBottom: 14, marginTop: 13 }} />
-                    ))}
+                  ))}
                   <MessageWrapper {...{ message, color, showStatus, addReaction }}>
                     <Content content={content} color={color} />
                   </MessageWrapper>

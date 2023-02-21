@@ -31,7 +31,7 @@ export default function HandshakeTabNavigator() {
         clearPosse()
       }
     }
-  }, [ship])
+  }, [ship, api])
 
   return (
     <BottomTab.Navigator

@@ -83,7 +83,6 @@ type MessageWrapperProps = View['props'] & {
   color: string;
   message: Message;
   showStatus?: boolean;
-  showAvatar?: boolean;
   addReaction?: (emoji: string) => void;
 }
 
@@ -96,7 +95,6 @@ const MessageWrapper = ({
     status,
   },
   showStatus = false,
-  showAvatar = false,
   addReaction,
   style,
   ...props

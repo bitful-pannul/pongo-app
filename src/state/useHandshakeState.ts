@@ -2,13 +2,13 @@ import create, { SetState } from "zustand"
 
 import Urbit from "@uqbar/react-native-api";
 import { Guest } from "../types/Handshake";
-import { hoonToJSDate } from "../util/time";
+import { hoonToJSDate, ONE_SECOND } from "../util/time";
 import { DefaultStore } from "./types/types";
 import { resetSubscriptions } from "./util";
 
 interface CodeData {
   code: string
-  expires_at: string
+  expires_at: number
 }
 
 export interface HandshakeStore extends DefaultStore {
@@ -55,7 +55,7 @@ const useHandshakeStore = create<HandshakeStore>((set, get) => ({
   setLoading: (loading) => set({ loading }),
   init: async (api: Urbit) => {
     const handleSignerUpdate = ({ code, expires_at }: CodeData) => {
-      const expiresAt = hoonToJSDate(expires_at)
+      const expiresAt = new Date(expires_at * ONE_SECOND)
       set({ code, expiresAt })
     }
     const handleReaderUpdate = (data: { [key: string]: string }) => {
@@ -84,15 +84,15 @@ const useHandshakeStore = create<HandshakeStore>((set, get) => ({
     set({ loading: true })
     await get().api?.poke({
       app: 'handshake',
-      mark: 'action',
-      json: { create: true }
+      mark: 'handshake-action',
+      json: { create: null }
     })
     setTimeout(() => set({ loading: false }), 1000)
   },
   verifyCode: async (code: string) => {
     await get().api?.poke({
       app: 'handshake',
-      mark: 'action',
+      mark: 'handshake-action',
       json: { verify: { code } }
     })
   },
