@@ -13,7 +13,7 @@ export const messageSub = (set: SetState<PongoStore>, get: GetState<PongoStore>)
     const chats = { ...get().chats }
     const chatId = update.message.conversation_id
     const chat = chats[chatId]
-    const messages = chat.messages || []
+    const messages = chat?.messages || []
 
     if (!chat) {
       return

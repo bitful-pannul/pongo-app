@@ -1,6 +1,6 @@
 import { isValidPatp } from 'urbit-ob'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { AppState, AppStateStatus, Pressable, RefreshControl } from 'react-native'
+import { AppState, AppStateStatus, Pressable, RefreshControl, StyleSheet } from 'react-native'
 import { NavigationProp, useNavigation } from '@react-navigation/native'
 import { getPresentedNotificationsAsync, dismissNotificationAsync, setBadgeCountAsync, Notification } from 'expo-notifications'
 
@@ -12,7 +12,7 @@ import { Text, ScrollView, TextInput } from '../../components/Themed'
 import H2 from '../../components/text/H2'
 import { PongoStackParamList } from '../../types/Navigation'
 import { MaterialIcons } from '@expo/vector-icons'
-import { light_gray, uq_pink } from '../../constants/Colors'
+import { light_gray, uq_darkpink, uq_pink } from '../../constants/Colors'
 import Button from '../../components/form/Button'
 import Modal from '../../components/popup/Modal'
 import { isLargeDevice, window } from '../../constants/Layout'
@@ -101,6 +101,23 @@ export default function ChatsScreen({  }: ChatsScreenProps) {
 
   const { width } = window
 
+  const styles = StyleSheet.create({
+    floatButton: {
+      width: 54,
+      height: 54,
+      borderRadius: 30,
+      backgroundColor: uq_pink,
+      position: 'absolute',
+      padding: 11,
+      right: 24,
+      elevation: 1,
+      shadowColor: uq_darkpink,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.7,
+      shadowRadius: 1,
+    }
+  })
+
   return (
     <Col style={{ height: '100%', width: isLargeDevice ? width / 4 : '100%', borderRightWidth: 1, borderColor: light_gray }}>
       {!sortedChats.length ? (
@@ -115,17 +132,10 @@ export default function ChatsScreen({  }: ChatsScreenProps) {
         </ScrollView>
       )}
 
-      <Pressable
-        onPress={() => navigation.navigate('NewChat')}
-        style={{ width: 60,
-        height: 60,
-        borderRadius: 30,
-        backgroundColor: uq_pink,
-        position: 'absolute',
-        padding: 14,
-        bottom: 40,                            
-        right: 24, }}
-      >
+      <Pressable onPress={() => navigation.navigate('Contacts')} style={[styles.floatButton, { bottom: 120 }]}>
+        <MaterialIcons name='group' color='white' size={32} />
+      </Pressable>
+      <Pressable onPress={() => navigation.navigate('NewChat')} style={[styles.floatButton, { bottom: 40 }]}>
         <MaterialIcons name='edit' color='white' size={32} />
       </Pressable>
 

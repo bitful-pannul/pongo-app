@@ -1,6 +1,6 @@
 import { NavigationProp, useNavigation } from "@react-navigation/native"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { Pressable, StyleSheet, Text, View, Animated, ActivityIndicator, Keyboard, TouchableOpacity } from "react-native"
+import { Pressable, StyleSheet, Text, View, Animated, ActivityIndicator, Keyboard, TouchableOpacity, Linking } from "react-native"
 import * as Haptics from 'expo-haptics'
 
 import { PongoStackParamList } from "../../../types/Navigation"
@@ -8,7 +8,7 @@ import { blue_overlay, blue_overlay_transparent, medium_gray, uq_pink } from "..
 import { window } from "../../../constants/Layout"
 import useColors from "../../../hooks/useColors"
 import { Message } from "../../../types/Pongo"
-import { getAdminMsgText, isAdminMsg } from "../../../util/ping"
+import { getAdminMsgText, getAppLinkText, isAdminMsg } from "../../../util/ping"
 import { addSig, deSig } from "../../../util/string"
 import { ONE_SECOND } from "../../../util/time"
 import Col from "../../spacing/Col"
@@ -55,7 +55,7 @@ export default function MessageEntry({
   const msgRef = useRef<View | null>(null)
   const swipeRef = useRef<Swipeable | null>(null)
   const { color: defaultColor, backgroundColor, ownChatBackground } = useColors()
-  const navigation = useNavigation<NavigationProp<PongoStackParamList>>()
+  const navigation = useNavigation<NavigationProp<any>>()
   const { api } = usePongoStore()
   const [quotedMsg, setQuotedMsg] = useState<Message | undefined>()
   const [quotedMsgNotFound, setQuotedMsgNotFound] = useState(false)
@@ -189,6 +189,10 @@ export default function MessageEntry({
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)
   }, [reference])
 
+  const goToAppLink = useCallback((path: string) => () => {
+    navigation.navigate('Grid', { path })
+  }, [])
+
   const measure = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)
     msgRef.current?.measure((fx, fy, width, height, px, py) => { onPress(py, height) })
@@ -241,6 +245,35 @@ export default function MessageEntry({
                     <Content content={content} color={color} />
                   </MessageWrapper>
                 {/* </Swipeable> */}
+            </Animated.View>
+          </Pressable>
+        </View>
+      )
+    } else if (kind === 'app-link') {
+      return (
+        <View style={styles.authorWrapper}>
+          {!isDm && !isSelf && (
+            <View style={{ marginLeft: '2%', marginTop: 2, width: 40 }}>
+              {showAvatar && (
+                <Pressable onPress={() => navigation.navigate('Profile', { ship: author })}>
+                  <Avatar ship={author} size="group-chat" />
+                </Pressable>
+              )}
+            </View>
+          )}
+
+          <Pressable ref={msgRef} onLongPress={measure} onPress={dismissKeyboard}>
+            <Animated.View style={[styles.message, { transform: [{translateX: shakeAnimation}] }]}>
+              {/* <Swipeable ref={swipeRef} rightThreshold={100} onSwipeableWillOpen={swipeReply}
+                renderRightActions={() => <Ionicons name="chatbubble" color={backgroundColor} size={20} style={{ marginRight: 16 }} />}
+                overshootFriction={8}
+              > */}
+                {showAvatar && <ShipName name={author} style={{ fontSize: 16, fontWeight: '600', color: getShipColor(author) }} />}
+                <MessageWrapper {...{ message, color, showStatus, addReaction }}>
+                  {content.includes('/apps/pokur') && <Text style={styles.text}>Join my Pokur table: </Text>}
+                  <Text onPress={goToAppLink(content)} style={[styles.text, { textDecorationLine: 'underline' }]}>{getAppLinkText(content)}</Text>
+                </MessageWrapper>
+              {/* </Swipeable> */}
             </Animated.View>
           </Pressable>
         </View>

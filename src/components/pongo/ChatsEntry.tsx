@@ -64,7 +64,7 @@ export default function ChatsEntry({ chat, navigation }: ChatProps) {
             <Text style={{ fontSize: 14 }}>{getRelativeTime(last_active * ONE_SECOND)}</Text>
           </Row>
           <Row style={{ flex: 1, justifyContent: 'space-between', marginTop: 4 }}>
-            <Row style={{ maxWidth: (isLargeDevice ? width / 4 : width) - (2 * 24 + 12 + 48 + 8) }}>
+            <Row style={{ maxWidth: (isLargeDevice ? width / 4 : width) - (2 * 24 + 12 + 48 + 32) }}>
               {messageDisplay}
             </Row>
             {unreads > 0 && (

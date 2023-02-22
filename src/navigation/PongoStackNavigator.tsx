@@ -36,6 +36,7 @@ import SettingsScreen from '../screens/pongo/Settings'
 import Button from '../components/form/Button'
 import { Ionicons } from '@expo/vector-icons'
 import ShipTitle from '../components/header/ShipTitle'
+import ContactsScreen from '../screens/pongo/Contacts'
 
 let checkAppsInstalledInterval: NodeJS.Timer | undefined
 
@@ -185,6 +186,16 @@ export default function PongoStackNavigator() {
           headerLeft: NavBackButton,
           headerTitle: () => <ChatHeader chatId={(route as RouteProp<PongoStackParamList, 'Chat'>).params.id} />,
           headerRight: () => isSearching ? <CloseSearch /> : <ChatMenu id={(route as RouteProp<PongoStackParamList, 'Chat'>).params.id} />
+        })}
+      />
+      <Stack.Screen name="Contacts" component={ContactsScreen}
+        options={({ navigation } : NavHeaderProps) => ({
+          headerStyle: { backgroundColor: uq_purple },
+          headerBackVisible: false,
+          headerTitleAlign: 'center',
+          headerLeft: NavBackButton,
+          headerTitle: () => isSearching ? <SearchHeader searchType='ship' /> : <H3 style={{ color: 'white' }} text='Contacts' />,
+          headerRight: () => isSearching ? <CloseSearch /> : <OpenSearch />
         })}
       />
       <Stack.Screen name="NewChat" component={NewChatScreen}

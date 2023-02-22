@@ -38,6 +38,7 @@ export type PongoStackParamList = {
   Chat: { id: string; msgId?: string };
   Profile: { ship: string };
   Group: { id: string };
+  Contacts: undefined;
   NewChat: undefined;
   NewGroup: undefined;
   NewPosseGroup: undefined;

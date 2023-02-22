@@ -8,6 +8,10 @@ export const sortChats = (chats: Chats) =>
     .reduce((acc, cur) => acc.concat([chats[cur]]), [] as Chat[])
     .sort((a, b) => b.conversation.last_active - a.conversation.last_active)
 
+export const isAdminMsg = (msg: Message) => 
+  msg.kind === 'member-add' || msg.kind === 'member-remove' || msg.kind === 'change-name' ||
+  msg.kind === 'leader-add' || msg.kind === 'leader-remove' || msg.kind === 'change-router'
+
 export const checkIsDm = (chat: Chat) => {
   if (!chat) {
     return false
@@ -15,10 +19,6 @@ export const checkIsDm = (chat: Chat) => {
   const { conversation: { members, name } } = chat
   return name.split(DM_DIVIDER).length === 2 && members.reduce((acc, mem) => acc && name.split(DM_DIVIDER).includes(addSig(mem)), true)
 }
-
-export const isAdminMsg = (msg: Message) => 
-  msg.kind === 'member-add' || msg.kind === 'member-remove' || msg.kind === 'change-name' ||
-  msg.kind === 'leader-add' || msg.kind === 'leader-remove' || msg.kind === 'change-router'
 
 export const getChatName = (self: string, chat?: Chat) => {
   if (!chat) {
@@ -48,6 +48,8 @@ export const getAdminMsgText = (kind: MessageKind, content: string) => {
     return content
   }
 }
+
+export const getAppLinkText = (link: string) => `urbit:/${link}`
 
 export const idNum = (id: string) => Number(id.replace(/\./, ''))
 
@@ -84,7 +86,7 @@ export const removePending = (messages: Message[]) =>
   messages.filter(m => {
     if (m.id[0] === '-') {
       return !Boolean(
-        messages.find(t => m.kind === t.kind && m.content === t.content && m.author === t.author)
+        messages.find(t => t.id[0] !== '-' && m.kind === t.kind && m.content === t.content && m.author === t.author)
       )
     }
 

@@ -69,7 +69,7 @@ export const Sigil = memo(
       }}>
         <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
           <Text style={{ fontSize: size / 3, fontWeight: '600', color: foregroundColor }}>{first}</Text>
-          <Text style={{ fontSize: size / 3, fontWeight: '600', color: foregroundColor }}>{fourth}</Text>
+          {Boolean(fourth) && <Text style={{ fontSize: size / 3, fontWeight: '600', color: foregroundColor }}>{fourth}</Text>}
         </View>
         {Boolean(seventh && tenth) && (
           <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
