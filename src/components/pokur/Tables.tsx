@@ -19,7 +19,12 @@ import './Tables.scss'
 
 const TableRow = ({ table, selected, onClick }: { table: Table, selected: boolean, onClick: () => void }) => {
   const { id, leader, game_type, players, max_players, tokenized, turn_time_limit } = table
-  const buyIn = tokenized ? `${tokenAmount(tokenized?.amount)} ${tokenized.symbol}` : 'none'
+  const buyIn = tokenized ? (
+    game_type.type === 'cash' ? `${tokenAmount(game_type.min_buy)} - ${tokenAmount(game_type.max_buy)} ${tokenized.symbol}` :
+    `${tokenAmount(tokenized?.amount)} ${tokenized.symbol}`
+  ) : 'none'
+
+  const startingStack = game_type.starting_stack ? game_type.starting_stack : `x${game_type.chips_per_token}`
 
   const blindDisplay = 'blinds_schedule' in game_type ?
     `${game_type.blinds_schedule[0][0]} / ${game_type.blinds_schedule[0][1]} ${game_type.round_duration}` :
@@ -29,7 +34,7 @@ const TableRow = ({ table, selected, onClick }: { table: Table, selected: boolea
       <td className='field'>{leader}...{id.slice(-4)}</td>
       <td className='field'>{getGameType(game_type.type)}</td>
       <td className='field'>{buyIn}</td>
-      <td className='field'>{game_type.starting_stack}</td>
+      <td className='field'>{startingStack}</td>
       <td className='field'>{blindDisplay}</td>
       <td className='field'>{players.length} / {max_players}</td>
       <td className='field'>{formatTimeLimit(turn_time_limit)}</td>

@@ -109,9 +109,15 @@ export default function CreateAccountScreen({ method, goBack } : { method: 'logi
   }, [accountDetails, authCookie])
 
   const changeInvite = useCallback((text: string) => {
-    setInvite(text)
+    if ((invite.length === 3 && text.length === 4) || (invite.length === 8 && text.length === 9)) {
+      setInvite(`${text}-`.toUpperCase())
+    } else if ((/[A-Z0-9]{4}/.test(invite) && /[A-Z0-9]{5}/.test(text)) || (/[A-Z0-9]{4}-[A-Z0-9]{4}/.test(invite) && /[A-Z0-9]{4}-[A-Z0-9]{5}/.test(text))) {
+      setInvite(`${invite}-${text.slice(-1)}`.toUpperCase())
+    } else {
+      setInvite(text.toUpperCase())
+    }
     setInviteError('')
-  }, [])
+  }, [invite])
 
   const submitEmail = useCallback(async () => {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {

@@ -162,6 +162,20 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
     getInitialMessages()
   }, [chatId, ship, msgId])
 
+  useEffect(() => {
+    if (chat?.conversation?.last_read && atEnd && chat.conversation.last_read === messages[0]?.id) {
+      const getMessagesInterval = setInterval(() => {
+        
+        getMessages({ chatId, msgId: chat.conversation.last_read, numBefore: 0, numAfter: 5, prepend: true })
+          .catch(() => {
+            // TODO: if this fails, set an indicator that the connection is broken
+          })
+      }, ONE_SECOND * 5)
+
+      return () => clearInterval(getMessagesInterval)
+    }
+  }, [atEnd, chat?.conversation?.last_read, messages[0]?.id])
+
   // Set last_read message ID
   useEffect(() => {
     if (messages[0] && messages[0].id[0] !== '-' && chat && Number(messages[0].id || 0) > Number(chat.conversation.last_read)) {
@@ -377,7 +391,8 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
   const canResend = useMemo(() => isOwnMsg && selected?.msg.kind === 'text' && selected?.msg.status === 'failed', [selected, isOwnMsg])
   const initialNumToRender = useMemo(() => Math.max((chatPositions[chatId]?.index || 0) + 1, 25), [chatPositions, chatId])
   const goToEndButtonBottom = useMemo(() => isIos ? (isKeyboardVisible ? 60 + keyboardHeight : 100) :  60, [isKeyboardVisible, keyboardHeight])
-  const showDownButton = gettingMessages || !atEnd
+  const showDownButton = !atEnd
+    // || gettingMessages
     // || (messages.length > 0 && Number(messages[0]?.id) < Number(chat.last_message?.id) && messages[0]?.id.slice(0, 1) !== '-')
 
   const styles = useMemo(() => StyleSheet.create({
@@ -436,9 +451,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
     </>
   }, [highlighted, messages, unreadInfo])
 
-  const keyExtractor = useCallback((item: Message) => {
-    return `${item?.id || 'missing'}-${item?.timestamp}`
-  }, [])
+  const keyExtractor = useCallback((item: Message) => `${item?.id || 'missing'}-${item?.timestamp}`, [])
 
   const onKeyPress = useCallback((e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
     if (e.nativeEvent.key === 'Enter' && isLargeDevice) {
@@ -512,11 +525,11 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
       </DefaultView>
 
       {showDownButton && (
-        gettingMessages ? (
-          <View style={[styles.goToEndButton, { padding: 4, borderRadius: 20, bottom: goToEndButtonBottom }]}>
-            <ActivityIndicator color={color} />
-          </View>
-        ) : (
+        // gettingMessages ? (
+        //   <View style={[styles.goToEndButton, { padding: 4, borderRadius: 20, bottom: goToEndButtonBottom }]}>
+        //     <ActivityIndicator color={color} />
+        //   </View>
+        // ) : (
           <TouchableOpacity onPress={scrollToEnd} style={[styles.goToEndButton, { bottom: goToEndButtonBottom }]}>
             <Col style={{ width: 48, height: 48, borderRadius: 36, justifyContent: 'center', alignItems: 'center' }}>
               <Ionicons name='chevron-down' size={36} color={uq_purple} style={{ marginTop: 4 }} />
@@ -525,7 +538,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
               </View>}
             </Col>
           </TouchableOpacity>
-        )
+        // )
       )}
       
       <Col>

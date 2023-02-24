@@ -123,7 +123,6 @@ export default function MessageEntry({
 
   const styles = useMemo(() => StyleSheet.create({
     container: {
-      marginBottom: index === 0 ? 8 : 0,
       marginTop: differentAuthor ? 6 : 0,
       paddingVertical: 1,
       paddingBottom: 1,

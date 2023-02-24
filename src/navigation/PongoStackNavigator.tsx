@@ -168,7 +168,7 @@ export default function PongoStackNavigator() {
           headerLeft: () => <Pressable onPress={openDrawer(navigation)}>
             <Ionicons style={{ padding: 2, paddingBottom: 4 }} name='menu' size={24} color='white' />
           </Pressable>,
-          headerTitle: () => isSearching ? <SearchHeader searchType='chat' /> : <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+          headerTitle: () => isSearching ? <SearchHeader searchType='message' /> : <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
             <View style={{ marginTop: 2 }}>
               <ShipTitle navigation={navigation} color='white' />
             </View>

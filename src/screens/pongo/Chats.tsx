@@ -1,6 +1,5 @@
-import { isValidPatp } from 'urbit-ob'
-import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { AppState, AppStateStatus, Pressable, RefreshControl, StyleSheet } from 'react-native'
+import React, { useCallback, useEffect, useMemo, useRef } from 'react'
+import { AppState, AppStateStatus, FlatList, Pressable, RefreshControl, StyleSheet } from 'react-native'
 import { NavigationProp, useNavigation } from '@react-navigation/native'
 import { getPresentedNotificationsAsync, dismissNotificationAsync, setBadgeCountAsync, Notification } from 'expo-notifications'
 
@@ -8,28 +7,26 @@ import useStore from '../../state/useStore'
 import usePongoStore from '../../state/usePongoState'
 import ChatsEntry from '../../components/pongo/ChatsEntry'
 import Col from '../../components/spacing/Col'
-import { Text, ScrollView, TextInput } from '../../components/Themed'
+import { Text, ScrollView, View } from '../../components/Themed'
 import H2 from '../../components/text/H2'
 import { PongoStackParamList } from '../../types/Navigation'
 import { MaterialIcons } from '@expo/vector-icons'
 import { light_gray, uq_darkpink, uq_pink } from '../../constants/Colors'
 import Button from '../../components/form/Button'
-import Modal from '../../components/popup/Modal'
 import { isLargeDevice, window } from '../../constants/Layout'
+import JoinChatModal from '../../components/pongo/JoinChatModal'
+import H3 from '../../components/text/H3'
+import { Message } from '../../types/Pongo'
+import MessageSearchResults from '../../components/pongo/MessageSearchResults'
 
 interface ChatsScreenProps {
 }
 
 export default function ChatsScreen({  }: ChatsScreenProps) {
-  const { chats, init, set, makeInviteRequest, refresh, sortedChats, showJoinChatModal } = usePongoStore()
+  const { chats, showJoinChatModal, set, init, refresh, sortedChats, isSearching } = usePongoStore()
   const { api, shipUrl } = useStore()
   const navigation = useNavigation<NavigationProp<PongoStackParamList>>()
   const appState = useRef(AppState.currentState)
-
-  const [joinId, setJoinId] = useState('')
-  const [joinShip, setJoinShip] = useState('~')
-  const [joinIdError, setJoinIdError] = useState('')
-  const [joinShipError, setJoinShipError] = useState('')
 
   const onRefresh = useCallback(async () => {
     try {
@@ -38,36 +35,6 @@ export default function ChatsScreen({  }: ChatsScreenProps) {
       }
     } catch {}
   }, [api])
-
-  const inputJoinId = useCallback((text: string) => {
-    setJoinId(text)
-    setJoinIdError('')
-  }, [])
-
-  const inputJoinShip = useCallback((text: string) => {
-    setJoinShip(text)
-    setJoinShipError('')
-  }, [])
-
-  const joinChat = useCallback(async () => {
-    if (!joinId) {
-      setJoinIdError('Please enter a hex num ID')
-    } else if (!isValidPatp(joinShip)) {
-      setJoinShipError('Please enter a valid @p (username)')
-    } else {
-      try {
-        const success = await makeInviteRequest(joinId, joinShip)
-        if (success) {
-          navigation.navigate('Chat', { id: joinId })
-        }
-        setJoinId('')
-        setJoinShip('~')
-        set({ showJoinChatModal: false })
-      } catch (err) {
-        setJoinShipError('Error joining the chat, please try again')
-      }
-    }
-  }, [joinId, joinShip, makeInviteRequest])
 
   useEffect(() => {
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
@@ -101,7 +68,7 @@ export default function ChatsScreen({  }: ChatsScreenProps) {
 
   const { width } = window
 
-  const styles = StyleSheet.create({
+  const styles = useMemo(() => StyleSheet.create({
     floatButton: {
       width: 54,
       height: 54,
@@ -116,11 +83,13 @@ export default function ChatsScreen({  }: ChatsScreenProps) {
       shadowOpacity: 0.7,
       shadowRadius: 1,
     }
-  })
+  }), [])
 
   return (
     <Col style={{ height: '100%', width: isLargeDevice ? width / 4 : '100%', borderRightWidth: 1, borderColor: light_gray }}>
-      {!sortedChats.length ? (
+      {isSearching ? (
+        <MessageSearchResults />
+      ) : !sortedChats.length ? (
         <Col style={{ alignSelf: 'center', alignItems: 'center', marginTop: 32 }}>
           <H2 text='No Chats' />
           <Text style={{ margin: 16, fontSize: 18, textAlign: 'center' }}>Start a chat here or with the button in the bottom right:</Text>
@@ -139,30 +108,7 @@ export default function ChatsScreen({  }: ChatsScreenProps) {
         <MaterialIcons name='edit' color='white' size={32} />
       </Pressable>
 
-      <Modal show={showJoinChatModal} hide={() => set({ showJoinChatModal: false })}>
-        <Col style={{ alignItems: "center" }}>
-          <Text style={{ fontSize: 18 }}>
-            Enter the chat ID and any {'\n'} ship (user) in the chat
-          </Text>
-          <TextInput
-            placeholder="Chat ID"
-            value={joinId}
-            onChangeText={inputJoinId}
-            autoFocus
-            style={{ marginTop: 8, width: '80%' }}
-          />
-          {Boolean(joinIdError) && <Text style={{ fontSize: 16, color: 'red', margin: 4 }}>{joinIdError}</Text>}
-          <TextInput
-            placeholder="Any ship (user) in the chat"
-            value={joinShip}
-            onChangeText={inputJoinShip}
-            style={{ marginTop: 8, width: '80%' }}
-          />
-          {Boolean(joinShipError) && <Text style={{ fontSize: 16, color: 'red', margin: 4 }}>{joinShipError}</Text>}
-          <Button title='Join' small onPress={joinChat} style={{ marginTop: 16 }} />
-          <Button title='Cancel' small onPress={() => set({ showJoinChatModal: false })} style={{ marginTop: 16, marginBottom: 24 }} />
-        </Col>
-      </Modal>
+      <JoinChatModal show={showJoinChatModal} hide={() => set({ showJoinChatModal: false })} />
     </Col>
   )
 }

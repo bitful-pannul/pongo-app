@@ -1,6 +1,6 @@
 import Urbit from "@uqbar/react-native-api";
 import { SetState } from "zustand";
-import { Chat, Chats, GetMessagesParams, Message, NotifLevel, SendMessagePayload, SetNotifParams } from "../../types/Pongo";
+import { Chat, Chats, GetMessagesParams, Message, NotifLevel, SearchMessagesParams, SendMessagePayload, SetNotifParams } from "../../types/Pongo";
 import { DefaultStore } from "./types";
 
 export interface PongoStore extends DefaultStore {
@@ -13,7 +13,8 @@ export interface PongoStore extends DefaultStore {
   isSearching: boolean;
   searchTerm: string;
   sortedChats: Chat[];
-  searchResults: Chat[] | string[];
+  searchResults: string[];
+  messageSearchResults: Message[];
   drafts: { [chatId: string]: string };
   replies: { [chatId: string]: Message };
   edits: { [chatId: string]: Message };
@@ -30,6 +31,7 @@ export interface PongoStore extends DefaultStore {
   setNotifications: (params: SetNotifParams) => Promise<void>;
   getChats: (api: Urbit, maintainMessages?: boolean) => Promise<Chats>;
   getMessages: (params: GetMessagesParams) => Promise<Message[]>;
+  searchMessages: (params: SearchMessagesParams) => Promise<void>;
 
   createConversation: (chatName: string, members: string[], isOpen?: boolean) => Promise<Chat | void>;
   createConversationFromPosse: (chatName: string, tag: string) => Promise<Chat | void>;

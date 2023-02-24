@@ -28,6 +28,13 @@ export interface GetMessagesParams {
   prepend?: boolean;
 }
 
+export interface SearchMessagesParams {
+  uid: string;
+  phrase: string;
+  onlyIn?: string; // chat ID without 0x prefix or dots
+  onlyAuthor?: string; // ship without leading ~ sig
+}
+
 export interface NotifSettings {
   expo_token: string;
   ship_url: string;

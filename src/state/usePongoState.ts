@@ -3,7 +3,7 @@ import create from "zustand"
 import Urbit from "@uqbar/react-native-api";
 
 import { resetSubscriptions } from "./util";
-import { Chats, Message, NotifSettings, SendMessagePayload, SetNotifParams, GetMessagesParams, MessageKind, MessageStatus } from "../types/Pongo";
+import { Chats, Message, NotifSettings, SendMessagePayload, SetNotifParams, GetMessagesParams, MessageKind, MessageStatus, SearchMessagesParams } from "../types/Pongo";
 import { addSig, deSig } from "../util/string";
 import { ONE_SECOND } from "../util/time";
 import { dedupeAndSort, sortChats, sortMessages } from "../util/ping";
@@ -11,6 +11,7 @@ import { getPushNotificationToken } from "../util/notification";
 import { HAS_MENTION_REGEX } from "../constants/Regex";
 import { PongoStore } from './types/pongo';
 import { messageSub } from './subscriptions/pongoSubs';
+import { ALL_MESSAGES_UID } from '../constants/Pongo';
 
 const usePongoStore = create<PongoStore>((set, get) => ({
   loading: null,
@@ -26,6 +27,7 @@ const usePongoStore = create<PongoStore>((set, get) => ({
   replies: {},
   edits: {},
   searchResults: [],
+  messageSearchResults: [],
   subscriptions: [],
   notifLevel: 'medium',
   expoToken: '',
@@ -36,6 +38,10 @@ const usePongoStore = create<PongoStore>((set, get) => ({
         path: '/updates',
         event: messageSub(set, get)
       }),
+      api.subscribe({ app: 'pongo', path: `/search-results/${ALL_MESSAGES_UID}`, event: (result) => {
+        console.log('MESSAGE SEARCH RESULTS:', result)
+        // set({ messageSearchResults: result })
+      } })
     ])
     
     await get().getChats(api, !clearState)
@@ -145,6 +151,11 @@ const usePongoStore = create<PongoStore>((set, get) => ({
     }
 
     return []
+  },
+  searchMessages: async ({ uid, phrase, onlyIn, onlyAuthor }: SearchMessagesParams) => {
+    const json = { search: { uid, phrase, 'only-in': onlyIn || null, 'only-author': onlyAuthor || null } }
+    console.log(0, json)
+    await get().api?.poke({ app: 'pongo', mark: 'pongo-action', json })
   },
   createConversation: async (chatName: string, members: string[], isOpen = false) => {
     const { api } = get()
