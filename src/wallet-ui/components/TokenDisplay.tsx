@@ -40,23 +40,20 @@ const TokenDisplay: React.FC<TokenDisplayProps> = ({
 
   const styles = StyleSheet.create({
     displayStyle: {
-      padding: 8,
+      padding: 4,
       paddingBottom: 0,
-      margin: 8,
+      marginTop: 12,
       borderRadius: 4,
-      flex: 1,
-      marginRight: 0,
       borderWidth: 1,
       borderColor: color,
     },
     smallStyle: small ? {
       margin: 0,
-      borderRadius: 0,
-      fontSize: 14,
+      maxWidth: '94%',
     } : {},
     tokenName: {
-      paddingLeft: 8,
-      marginRight: 8,
+      paddingLeft: 4,
+      marginRight: 4,
       fontWeight: '600',
       fontSize: 16,
     },
@@ -68,7 +65,7 @@ const TokenDisplay: React.FC<TokenDisplayProps> = ({
       padding: 0,
     },
     tokenDetails: {
-      paddingLeft: 24,
+      paddingLeft: 8,
       paddingTop: 8,
     }
   })
@@ -79,15 +76,18 @@ const TokenDisplay: React.FC<TokenDisplayProps> = ({
 
   const { width } = window
 
+  const iconName = tokenMetadata?.data?.symbol.toLowerCase() === 'ueth' ? 'ethereum' :
+    isToken ? 'coins' : 'portrait'
+
   return (
     <Pressable onPress={() => !open && setOpen(true)}>
       <Col style={[styles.displayStyle, styles.smallStyle]}>
         <Pressable onPress={() => setOpen(!open)}>
           <Row between>
-            <Row style={{ flex: 1 }}>
+            <Row>
               <Row style={{ padding: 2, paddingHorizontal: 4 }}>
-                <FontAwesome5 name={open ? 'caret-down' : 'caret-right'} size={24} style={{ marginRight: 12, marginLeft: 8 }} />
-                <FontAwesome5 name={isToken ? 'coins' : 'portrait'} size={24} />
+                <FontAwesome5 name={open ? 'caret-down' : 'caret-right'} size={24} style={{ marginRight: 12, marginLeft: 4 }} />
+                <FontAwesome5 name={iconName} size={20} />
               </Row>
               <Text style={styles.tokenName}>
                 {(isToken ? tokenMetadata?.data?.symbol : tokenMetadata?.data?.name) || <HexNum num={contract} />} -
@@ -98,7 +98,7 @@ const TokenDisplay: React.FC<TokenDisplayProps> = ({
                 <Text># {data.id || ''}</Text>
               )}
             </Row>
-            <Button onPress={select} style={{ marginLeft: 16, marginRight: 8, width: 80 }} small title='Send' />
+            <Button onPress={select} style={{ marginLeft: 16, marginRight: 4 }} small title='Send' />
           </Row>
         </Pressable>
         <Col style={[styles.tokenDetails, styles.tokenClosedDetails]}>
@@ -106,25 +106,25 @@ const TokenDisplay: React.FC<TokenDisplayProps> = ({
           {isToken && tokenMetadata?.data?.name && (
             <Entry>
               <Field name='Name:'>
-                <Text mono>{tokenMetadata?.data?.name}</Text>
+                <Text mono style={{ fontSize: 16, marginTop: 2 }}>{tokenMetadata?.data?.name}</Text>
               </Field>
             </Entry>
           )}
           {isToken && tokenMetadata?.data?.decimals && (
             <Entry>
               <Field name='Decimals:'>
-                <Text style={{ fontSize: 18 }} numberOfLines={1} mono>{tokenMetadata?.data?.decimals}</Text>
+                <Text style={{ fontSize: 16, marginTop: 2 }} numberOfLines={1} mono>{tokenMetadata?.data?.decimals}</Text>
               </Field>
             </Entry>
           )}
           <Entry>
             <Field column name='Contract:'>
-              <HexNum copy mono num={contract} style={{ maxWidth: width * 0.6, marginLeft: width * -0.25 }} />
+              <HexNum copy mono num={contract} style={{ maxWidth: '100%', marginLeft: -8, marginRight: 8 }} />
             </Field>
           </Entry>
           <Entry>
             <Field name='Item:' column>
-              <HexNum copy mono num={id} style={{ maxWidth: width * 0.6, marginLeft: width * -0.25 }} />
+              <HexNum copy mono num={id} style={{ maxWidth: '100%', marginLeft: -8, marginRight: 8 }} />
             </Field>
           </Entry>
           {!isToken && token.data.properties && (

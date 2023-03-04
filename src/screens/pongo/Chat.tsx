@@ -18,8 +18,9 @@ import {
   View as DefaultView,
 } from 'react-native'
 import * as Clipboard from 'expo-clipboard'
-import { BidirectionalFlatList } from './Bidirectional'
+import moment from 'moment'
 
+import { BidirectionalFlatList } from './Bidirectional'
 import usePongoStore from '../../state/usePongoState'
 import useStore from '../../state/useStore'
 import useColors from '../../hooks/useColors'
@@ -36,11 +37,13 @@ import { checkIsDm, idNum, isAdminMsg } from '../../util/ping'
 import { getRelativeDate, ONE_SECOND } from '../../util/time'
 import { MENTION_REGEX } from '../../constants/Regex'
 import { isIos, isLargeDevice, keyboardAvoidBehavior, keyboardOffset, window } from '../../constants/Layout'
-import { blue_overlay, gray_overlay, light_gray, uq_pink, uq_purple } from '../../constants/Colors'
+import { blue_overlay, gray_overlay, light_gray, medium_gray, uq_pink, uq_purple } from '../../constants/Colors'
 import { PongoStackParamList } from '../../types/Navigation'
 import { Message } from '../../types/Pongo'
 import useKeyboard from '../../hooks/useKeyboard'
-import moment from 'moment'
+import SendTokensModal from '../../components/pongo/SendTokensModal'
+// import useMedia from '../../hooks/useMedia'
+// import AudioRecorder from '../../components/pongo/AudioRecorder'
 
 const RETRIEVAL_NUM = 50
 
@@ -73,6 +76,10 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
   const [initialLoading, setInitialLoading] = useState(true)
   const [potentialMentions, setPotentialMentions] = useState<string[]>([])
   const [unreadInfo, setUnreadInfo] = useState<{unreads: number; lastRead: string} | undefined>()
+  const [isRecording, setIsRecording] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [showSendTokensModal, setShowSendTokensModal] = useState(false)
 
   const chatId = route.params.id
   const msgId = route.params.msgId
@@ -83,6 +90,8 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
   const reply = useMemo(() => replies[chatId], [replies, chatId])
   const isDm = useMemo(() => checkIsDm(chat), [chat])
   const { width, height } = window
+
+  // const { pickImage, storeAudio } = useMedia({ ship, chatId, reply, setUploading })
 
   useEffect(() => () => {
     setChatPosition(chatId, scrollYRef.current, indexRef.current)
@@ -163,7 +172,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
   }, [chatId, ship, msgId])
 
   useEffect(() => {
-    if (chat?.conversation?.last_read && atEnd && chat.conversation.last_read === messages[0]?.id) {
+    if (chat?.conversation?.last_read && atEnd && (chat.conversation.last_read === messages[0]?.id || messages[0]?.id[0] === '-')) {
       const getMessagesInterval = setInterval(() => {
         
         getMessages({ chatId, msgId: chat.conversation.last_read, numBefore: 0, numAfter: 5, prepend: true })
@@ -208,6 +217,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
 
   const send = useCallback(async () => {
     if (text.trim().length > 0) {
+      setSending(true)
       try {
         if (edit) {
           editMessage(chatId, edit.id, text)
@@ -219,10 +229,11 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
         setDraft(chatId, '')
         setShowMentions(false)
       } catch {}
+      setSending(false)
     }
-  }, [ship, reply, edit, chatId, text])
+  }, [ship, reply, edit, chatId, text, setSending])
 
-  const onTapMessage = useCallback((msg: Message) => (offsetY: number, height: number) => {
+  const onPressMessage = useCallback((msg: Message) => (offsetY: number, height: number) => {
     if (!isAdminMsg(msg)) {
       setSelected({ msg, offsetY, height })
     }
@@ -401,9 +412,9 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
       padding: 12,
       paddingRight: 8,
       borderRadius: 4,
-      width: width - 48,
       borderWidth: 0,
       fontSize: 16,
+      flex: 6,
     },
     unreadIndicator: {
       position: 'absolute',
@@ -429,7 +440,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
 
     return <>
       <MessageEntry
-        onPress={onTapMessage(item)} messages={messages}
+        onPress={onPressMessage(item)} messages={messages}
         focusReply={focusReply}
         index={index} message={item} self={ship}
         highlighted={highlighted === item.id}
@@ -478,14 +489,14 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
     >
       <DefaultView style={{ flex: 1 }}>
         <Image resizeMode="cover"
-          source={require('../../../assets/images/uqbar-retro-background.jpg')}
+          source={require('../../../assets/images/retro-background-small.jpg')}
           style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.3, width: '100%', height: '100%' }}
         />
         <BidirectionalFlatList
           ref={listRef}
           data={messages}
-          contentContainerStyle={{ paddingVertical: 4 }}
-          style={{ paddingBottom: 4, backgroundColor: chatBackground, borderBottomWidth: 0 }}
+          contentContainerStyle={{ paddingTop: 4, paddingBottom: 12 }}
+          style={{ backgroundColor: chatBackground, borderBottomWidth: 0 }}
           inverted
           scrollEventThrottle={50}
           onScroll={onScroll}
@@ -496,7 +507,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
           onEndReached={getMessagesOnScroll({ append: true })}
           onEndReachedThreshold={2}
           initialNumToRender={initialNumToRender}
-          onViewableItemsChanged={onViewableItemsChanged}
+          // onViewableItemsChanged={onViewableItemsChanged}
           onScrollToIndexFailed={onScrollToIndexFailed}
           refreshControl={<RefreshControl refreshing={false} onRefresh={getMessagesOnScroll({ prepend: true })} />}
           enableAutoscrollToTop={atEnd && !initialLoading}
@@ -552,12 +563,33 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
           </Row>
         )}
         <Row style={{ marginBottom: isIos ? 40 : 0, borderBottomWidth: 1, borderBottomColor: light_gray, backgroundColor: 'white' }}>
-          <TextInput ref={inputRef} placeholder='Message' value={text} onKeyPress={onKeyPress}
-            onChangeText={onChangeTextInput} maxLength={1024} style={styles.textInput} multiline
-          />
-          <Pressable onPress={send}>
-            <MaterialIcons name='send' size={32} style={{ padding: 8 }} color={uq_purple} />
-          </Pressable>
+          {uploading ? (
+            <>
+              <ActivityIndicator size='large' style={{ margin: 8, marginLeft: 16 }} color='black' />
+              <Text style={{ color: 'black', margin: 8 }}>Uploading...</Text>
+            </>
+          ) : (
+            <>
+              {!isRecording && <TextInput ref={inputRef} placeholder='Message' value={text} onKeyPress={onKeyPress}
+                onChangeText={onChangeTextInput} maxLength={1024} style={styles.textInput} multiline
+              />}
+              {text.length > 0 ? (
+                <Pressable onPress={send} disabled={sending}>
+                  <MaterialIcons name='send' size={32} style={{ padding: 8 }} color={sending ? medium_gray : uq_purple} />
+                </Pressable>
+              ) : (
+                <>
+                  {!isRecording && <Pressable onPress={() => setShowSendTokensModal(true)} style={{ marginRight: 4 }}>
+                    <MaterialIcons name='attach-money' size={32} style={{ padding: 8 }} color={uq_purple} />
+                  </Pressable>}
+                  {/* {!isRecording && <Pressable onPress={pickImage} style={{ marginRight: 6 }}>
+                    <Ionicons name='attach' size={32} style={{ padding: 8 }} color={uq_purple} />
+                  </Pressable>}
+                  <AudioRecorder {...{ storeAudio, setIsRecording }} /> */}
+                </>
+              )}
+            </>
+          )}
         </Row>
       </Col>
 
@@ -566,6 +598,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
           <MessageMenu {...{ interactWithSelected, react, selected, color, isOwnMsg, canEdit, canResend, canDelete }} />
         </TouchableOpacity>
       )}
+      {showSendTokensModal && <SendTokensModal convo={chatId} show={showSendTokensModal} hide={() => setShowSendTokensModal(false)} />}
     </KeyboardAvoidingView>
   )
 }

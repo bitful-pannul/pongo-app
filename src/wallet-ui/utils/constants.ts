@@ -35,16 +35,34 @@ export const STATUS_CODES : { [key: number] : string } = {
   101: 'submitted to sequencer',
   102: 'received by sequencer',
   103: 'failure: rejected by sequencer',
+
+  // ::  200-class refers to codes that come from a completed transaction
+  // ::  that sequencer has given us a receipt for,
+  // ::  informed by status codes in smart.hoon
+  // ::
+  // ::  300-class are equivalent, but the transaction has been officially
+  // ::  included in a batch.
   200: 'successfully performed',
-  201: 'submitted with raw id / no account info',
-  202: 'bad signature',
-  203: 'incorrect nonce',
-  204: 'lack zigs to fulfill budget',
-  205: 'couldn\'t find contract',
+  201: 'bad signature',
+  202: 'incorrect nonce',
+  203: 'lack zigs to fulfill budget',
+  204: 'couldn\'t find contract',
+  205: 'data was under contract ID',
   206: 'crash in contract execution',
-  207: 'validation of changed/issued/burned item failed',
-  208: 'ran out of gas',
-  209: 'superceded by another txn in batch',
+  207: 'validation of diff failed',
+  208: 'ran out of gas while executing',
+  209: 'dedicated burn transaction failed',
+
+  300: 'successfully performed',
+  301: 'bad signature',
+  302: 'incorrect nonce',
+  303: 'lack zigs to fulfill budget',
+  304: 'couldn\'t find contract',
+  305: 'data was under contract ID',
+  306: 'crash in contract execution',
+  307: 'validation of diff failed',
+  308: 'ran out of gas while executing',
+  309: 'dedicated burn transaction failed',
 }
 
 export const STATUS_CODES_RAW : { [key: number] : string } = {

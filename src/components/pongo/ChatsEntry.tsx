@@ -1,5 +1,5 @@
 import { NavigationProp } from "@react-navigation/native"
-import { TouchableOpacity } from "react-native"
+import { StyleSheet, TouchableOpacity } from "react-native"
 import moment from 'moment'
 
 import { PongoStackParamList } from "../../types/Navigation"
@@ -8,12 +8,13 @@ import { Chat } from "../../types/Pongo"
 import Col from "../spacing/Col"
 import Row from "../spacing/Row"
 import { Text } from "../Themed"
-import { uq_lightpurple, uq_purple } from "../../constants/Colors"
+import { medium_gray, uq_lightpurple, uq_purple } from "../../constants/Colors"
 import { checkIsDm, getAdminMsgText, getChatName } from '../../util/ping'
 import Avatar from "./Avatar"
 import { isLargeDevice, window } from "../../constants/Layout"
 import { getRelativeTime, ONE_SECOND } from "../../util/time"
 import { addSig, deSig } from "../../util/string"
+import { useMemo } from "react"
 
 interface ChatProps {
   chat: Chat
@@ -22,7 +23,7 @@ interface ChatProps {
 
 export default function ChatsEntry({ chat, navigation }: ChatProps) {
   const { ship } = useStore()
-  const { unreads, last_message, conversation: { id, members, last_active, name, leaders } } = chat
+  const { unreads, last_message, conversation: { id, members, last_active, name, leaders, muted } } = chat
   const chatName = getChatName(ship, chat)
 
   const isDm = checkIsDm(chat)
@@ -49,9 +50,19 @@ export default function ChatsEntry({ chat, navigation }: ChatProps) {
     </Col>
   )
 
+  const styles = useMemo(() => StyleSheet.create({
+    chatsEntry: { width: '100%', padding: 24, paddingVertical: 10, borderBottomWidth: 1, borderColor: uq_lightpurple },
+    unread: {
+      padding: 4, backgroundColor: muted ? medium_gray : uq_purple, borderRadius: 14, minWidth: 28, justifyContent: 'center'
+    },
+    unreadText: {
+      fontSize: 14, color: 'white', fontWeight: '600'
+    },
+  }), [muted])
+
   return (
     <TouchableOpacity onPress={() => navigation.navigate('Chat', { id }) }>
-      <Row style={{ width: '100%', padding: 24, paddingVertical: 10, borderBottomWidth: 1, borderColor: uq_lightpurple }}>
+      <Row style={styles.chatsEntry}>
         {isDm ? (
           <Avatar size='huge' ship={chatName} />
         ) : (
@@ -68,12 +79,8 @@ export default function ChatsEntry({ chat, navigation }: ChatProps) {
               {messageDisplay}
             </Row>
             {unreads > 0 && (
-              <Row style={{
-                  padding: 4, backgroundColor: uq_purple, borderRadius: 14, minWidth: 28, justifyContent: 'center'
-                }}>
-                <Text style={{
-                  fontSize: 14, color: 'white', fontWeight: '600'
-                }}>
+              <Row style={styles.unread}>
+                <Text style={styles.unreadText}>
                   {unreads}
                 </Text>
               </Row>

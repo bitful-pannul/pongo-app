@@ -39,3 +39,10 @@ export const getRelativeDate = (timestamp: number) =>
   new Date(timestamp).getFullYear() !== new Date().getFullYear() ?
   moment(timestamp).format('MMMM Do, YYYY') :
   moment(timestamp).format('MMMM Do')
+
+export const formatRecordTime = (rt: number) => {
+  const minutes = Math.floor(rt / (60 * ONE_SECOND))
+  const seconds = Math.floor((rt % (60 * ONE_SECOND)) / ONE_SECOND)
+
+  return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`
+}

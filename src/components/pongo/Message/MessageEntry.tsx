@@ -3,13 +3,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Pressable, StyleSheet, Text, View, Animated, ActivityIndicator, Keyboard, TouchableOpacity, Linking } from "react-native"
 import * as Haptics from 'expo-haptics'
 
-import { PongoStackParamList } from "../../../types/Navigation"
 import { blue_overlay, blue_overlay_transparent, medium_gray, uq_pink } from "../../../constants/Colors"
 import { window } from "../../../constants/Layout"
 import useColors from "../../../hooks/useColors"
 import { Message } from "../../../types/Pongo"
-import { getAdminMsgText, getAppLinkText, isAdminMsg } from "../../../util/ping"
-import { addSig, deSig } from "../../../util/string"
+import { formatTokenContent, getAdminMsgText, getAppLinkText, isAdminMsg } from "../../../util/ping"
+import { addSig, AUDIO_URL_REGEX, deSig, IMAGE_URL_REGEX } from "../../../util/string"
 import { ONE_SECOND } from "../../../util/time"
 import Col from "../../spacing/Col"
 import Avatar from "../Avatar"
@@ -206,7 +205,7 @@ export default function MessageEntry({
   const dismissKeyboard = useCallback(() => Keyboard.dismiss(), [])
 
   const renderContent = () => {
-    if (kind === 'text' || kind === 'code') {
+    if (kind === 'text' || kind === 'code' || kind === 'send-tokens') {
       return (
         <View style={styles.authorWrapper}>
           {!isDm && !isSelf && (
@@ -219,7 +218,7 @@ export default function MessageEntry({
             </View>
           )}
 
-          <Pressable ref={msgRef} onLongPress={measure} onPress={dismissKeyboard}>
+          <Pressable ref={msgRef} onLongPress={measure} onPress={dismissKeyboard} delayLongPress={200}>
             <Animated.View style={[styles.message, { transform: [{translateX: shakeAnimation}] }]}>
                 {/* <Swipeable ref={swipeRef} rightThreshold={100} onSwipeableWillOpen={swipeReply}
                   renderRightActions={() => <Ionicons name="chatbubble" color={backgroundColor} size={20} style={{ marginRight: 16 }} />}
@@ -230,7 +229,11 @@ export default function MessageEntry({
                     <TouchableOpacity onPress={pressReply}>
                       <Col style={styles.reply}>
                         <Text style={styles.replyAuthor}>{quotedMsg?.author}</Text>
-                        <Text numberOfLines={1} style={[styles.text, { fontSize: 14 }]}>{quotedMsg?.content}</Text>
+                        <Text numberOfLines={1} style={[styles.text, { fontSize: 14 }]}>
+                          {/* {AUDIO_URL_REGEX.test(quotedMsg?.content) ? 'Voice Note' : */}
+                            {IMAGE_URL_REGEX.test(quotedMsg?.content) ? 'Image' :
+                            quotedMsg?.content}
+                        </Text>
                       </Col>
                     </TouchableOpacity>
                   ) : quotedMsgNotFound ? (
@@ -241,7 +244,7 @@ export default function MessageEntry({
                     <ActivityIndicator color={color} style={{ alignSelf: 'flex-start', marginLeft: 2, marginBottom: 14, marginTop: 13 }} />
                   ))}
                   <MessageWrapper {...{ message, color, showStatus, addReaction }}>
-                    <Content content={content} color={color} />
+                    <Content onLongPress={measure} content={kind !== 'send-tokens' ? content : formatTokenContent(content)} color={color} delayLongPress={200} />
                   </MessageWrapper>
                 {/* </Swipeable> */}
             </Animated.View>

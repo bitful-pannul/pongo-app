@@ -1,10 +1,11 @@
 import Urbit from "@uqbar/react-native-api";
 import { SetState } from "zustand";
-import { Chat, Chats, GetMessagesParams, Message, NotifLevel, SearchMessagesParams, SendMessagePayload, SetNotifParams } from "../../types/Pongo";
+import { Chat, Chats, GetMessagesParams, Message, NotifLevel, SearchMessagesParams, SendMessagePayload, SendTokensPayload, SetNotifParams } from "../../types/Pongo";
 import { DefaultStore } from "./types";
 
 export interface PongoStore extends DefaultStore {
   loading: string | null;
+  connected: boolean;
   showJoinChatModal: boolean;
   currentChat?: string;
   chats: Chats;
@@ -35,12 +36,14 @@ export interface PongoStore extends DefaultStore {
 
   createConversation: (chatName: string, members: string[], isOpen?: boolean) => Promise<Chat | void>;
   createConversationFromPosse: (chatName: string, tag: string) => Promise<Chat | void>;
+  toggleMute: (id: string) => Promise<void>;
   leaveConversation: (id: string) => Promise<void>;
 
   sendMessage: (payload: SendMessagePayload) => Promise<void>;
   editMessage: (convo: string, msgId: string, edit: string) => Promise<void>;
   sendReaction: (convo: string, msgId: string, reaction: string) => Promise<void>;
   setLastReadMsg: (convo: string, msgId: string) => Promise<void>;
+  sendTokens: (payload: SendTokensPayload) => Promise<void>;
 
   makeInvite: (convo: string, ship: string) => Promise<void>;
   acceptInvite: (convo: string) => Promise<void>;

@@ -21,3 +21,5 @@ export const intToRGB = (value: number) => {
 export const getShipColor = (ship: string) => {
   return isValidPatp(addSig(ship)) ? intToRGB(patp2dec(addSig(ship))) : 'black'
 }
+
+export const fromUd = (amount?: string) => amount ? Number(amount.replace(/\./g, '')) : 0

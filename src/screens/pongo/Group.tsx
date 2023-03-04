@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons'
 import { NavigationProp, RouteProp } from '@react-navigation/native'
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import { StyleSheet, TouchableOpacity, ScrollView } from 'react-native'
 import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu'
 import { isValidPatp } from 'urbit-ob'
@@ -30,7 +30,7 @@ interface GroupScreenProps {
 
 export default function GroupScreen({ navigation, route }: GroupScreenProps) {
   const { ship: self } = useStore()
-  const { set, block, unblock, chats, sendMessage, makeInvite } = usePongoStore()
+  const { set, chats, sendMessage, makeInvite, toggleMute } = usePongoStore()
   const { color, backgroundColor } = useColors()
   const [display, setDisplay] = useState<'members' | 'settings'>('members')
   const [newMember, setNewMember] = useState('~')
@@ -54,6 +54,8 @@ export default function GroupScreen({ navigation, route }: GroupScreenProps) {
     setNewGroupName(text)
     setGroupNameError('')
   }, [])
+
+  const changeMute = useCallback(() => toggleMute(convo), [convo])
 
   const addNewMember = useCallback(async () => {
     if (isValidPatp(newMember)) {
@@ -107,8 +109,8 @@ export default function GroupScreen({ navigation, route }: GroupScreenProps) {
   })
 
   const { conversation: { members, leaders } } = chat
-  const canAdmin = leaders?.includes(deSig(self))
   const { width, height } = window
+  const selfIsAdmin = useMemo(() => chat.conversation.leaders.includes(deSig(self)), [chat])
 
   return (
     <View style={{ height: '100%', width: '100%' }}>
@@ -159,7 +161,7 @@ export default function GroupScreen({ navigation, route }: GroupScreenProps) {
                         <ShipName style={styles.shipName} name={addSig(mem)} />
                         {isAdmin && <Text style={{ fontSize: 18, marginLeft: 8 }}>(admin)</Text>}
                       </Row>
-                      {canAdmin && deSig(self) !== deSig(mem) && <Menu>
+                      {selfIsAdmin && deSig(self) !== deSig(mem) && <Menu>
                         <MenuTrigger>
                           <Ionicons name='menu' size={24} color={color} style={{ padding: 4 }} />
                         </MenuTrigger>
@@ -198,19 +200,22 @@ export default function GroupScreen({ navigation, route }: GroupScreenProps) {
         {display === 'settings' && (
           <Col style={{ marginTop: 8 }}>
             {/* TODO: change group name, other permissions that we think of */}
-            <Col style={{ marginTop: 8 }}>
-              <Text style={{ marginBottom: 9, fontSize: 18 }}>Update Group Name</Text>
-              <Row>
-                <TextInput
-                  value={newGroupName}
-                  placeholder='New Group Name'
-                  onChangeText={changeNewGroupName}
-                  style={{ height: 40, width: 200 }}
-                />
-                <Button title='Update' onPress={changeGroupName} style={{ width: undefined, marginLeft: 8, marginRight: 0 }} />
-              </Row>
-              {Boolean(groupNameError) && <Text style={{ fontSize: 16, color: 'red', margin: 4 }}>{groupNameError}</Text>}
-            </Col>
+            <Button onPress={changeMute} style={{ width: width * 0.6 }} title={`${chat.conversation.muted ? 'Unmute' : 'Mute'} Chat`} />
+            {selfIsAdmin && (
+              <Col style={{ marginTop: 8 }}>
+                <Text style={{ marginBottom: 9, fontSize: 18 }}>Update Group Name</Text>
+                <Row>
+                  <TextInput
+                    value={newGroupName}
+                    placeholder='New Group Name'
+                    onChangeText={changeNewGroupName}
+                    style={{ height: 40, width: 200 }}
+                  />
+                  <Button title='Update' onPress={changeGroupName} style={{ width: undefined, marginLeft: 8, marginRight: 0 }} />
+                </Row>
+                {Boolean(groupNameError) && <Text style={{ fontSize: 16, color: 'red', margin: 4 }}>{groupNameError}</Text>}
+              </Col>
+            )}
             {/* kind === 'change-router' */}
           </Col>
         )}

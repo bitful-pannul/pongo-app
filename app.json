@@ -16,6 +16,14 @@
           "icon": "./local/assets/notification-icon.png",
           "color": "#ffffff"
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you share them with your friends.",
+          "cameraPermission": "The app accesses your camera to let you share pictures with your friends.",
+          "microphonePermission": "The app accesses your microphone to let you share voice messages with your friends."
+        }
       ]
     ],
     "scheme": "default",
@@ -34,15 +42,13 @@
     ],
     "ios": {
       "infoPlist": {
-        "NSCameraUsageDescription": "This app uses your camera to confirm other users' usernames via QR code.",
-        "NSMicrophoneUsageDescription": "This app uses your microhpone to input other users' usernames via voice-to-text.",
         "UIBackgroundModes": [
           "remote-notification"
         ]
       },
       "supportsTablet": true,
       "bundleIdentifier": "network.uqbar.ping",
-      "buildNumber": "13"
+      "buildNumber": "21"
     },
     "android": {
       "adaptiveIcon": {

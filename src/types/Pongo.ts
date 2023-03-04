@@ -62,6 +62,8 @@ export interface Chat {
     leaders: string[];
     last_active: number; // hoon timestamp
     last_read: string;
+    muted: boolean;
+    dm: boolean;
   }
   messages: Message[];
   last_message: Message | null;
@@ -86,6 +88,7 @@ export type MessageKind = 'text'
   | 'leader-add'
   | 'leader-remove'
   | 'change-router'
+  | 'send-tokens'
 
 export interface ConversationsUpdate {
   conversations: Chat[]
@@ -146,4 +149,14 @@ export interface SendMessagePayload {
   ref?: string;
   resend?: Message;
   mentions?: string[];
+}
+
+export interface SendTokensPayload {
+  convo: string
+  from: string
+  contract: string
+  town: string
+  to: string
+  amount: string // ud
+  item: string
 }

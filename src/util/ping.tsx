@@ -1,7 +1,9 @@
 import { Text } from "react-native"
 import { DM_DIVIDER } from "../constants/Pongo"
 import { Chat, Chats, Message, MessageKind, Reactions } from "../types/Pongo"
-import { addSig, deSig } from "./string"
+import { displayTokenAmount } from "../wallet-ui/utils/number"
+import { fromUd } from "./number"
+import { addSig, AUDIO_URL_REGEX, deSig, IMAGE_URL_REGEX } from "./string"
 
 export const sortChats = (chats: Chats) =>
   Object.keys(chats)
@@ -16,8 +18,8 @@ export const checkIsDm = (chat: Chat) => {
   if (!chat) {
     return false
   }
-  const { conversation: { members, name } } = chat
-  return name.split(DM_DIVIDER).length === 2 && members.reduce((acc, mem) => acc && name.split(DM_DIVIDER).includes(addSig(mem)), true)
+  
+  return chat.conversation.dm
 }
 
 export const getChatName = (self: string, chat?: Chat) => {
@@ -44,6 +46,12 @@ export const getAdminMsgText = (kind: MessageKind, content: string) => {
     return `${content} removed as an admin`
   } else if (kind === 'change-router') {
     return `Router changed to ${content}`
+  } else if (kind === 'send-tokens') {
+    return formatTokenContent(content)
+  } else if (AUDIO_URL_REGEX.test(content)) {
+    return 'Voice Note'
+  } else if (IMAGE_URL_REGEX.test(content)) {
+    return 'Image'
   } else {
     return content
   }
@@ -94,3 +102,8 @@ export const removePending = (messages: Message[]) =>
   })
 
 export const dedupeAndSort = (messages: Message[]) => sortMessages(dedupeMessages(removePending(messages)))
+
+export const formatTokenContent = (text: string) => {
+  const [amount, symbol, recipient] = text.split(' ')
+  return `Sent ${displayTokenAmount(fromUd(amount), 18, 3)} ${symbol} to ${recipient}`
+}

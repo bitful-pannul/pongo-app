@@ -12,6 +12,7 @@ import H3 from "../components/text/H3";
 import Row from "../components/spacing/Row";
 import { ONE_SECOND } from "../util/time";
 import { uq_purple } from "../constants/Colors";
+import useColors from "../hooks/useColors";
 
 type CreateAccountStep = 'email' | 'otp' | 'invite' | 'success'
 
@@ -40,6 +41,8 @@ export default function CreateAccountScreen({ method, goBack } : { method: 'logi
   const inviteInputRef = useRef<TextInput | null>(null)
   const [step, setStep] = useState<CreateAccountStep>('email')
   const [loading, setLoading] = useState('')
+
+  const { color } = useColors()
 
   const [email, setEmail] = useState('')
   const [otp, setOtp] = useState('')
@@ -122,7 +125,7 @@ export default function CreateAccountScreen({ method, goBack } : { method: 'logi
   const submitEmail = useCallback(async () => {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return setEmailError('Please enter a valid email')
-    } else if (!termsChecked) {
+    } else if (!termsChecked && method === 'create') {
       return setEmailError('Please consent to the terms')
     }
 
@@ -355,7 +358,7 @@ export default function CreateAccountScreen({ method, goBack } : { method: 'logi
             onKeyPress={backspace}
             onChangeText={changeOtp}
             keyboardType='phone-pad'
-            style={styles.otpBox}
+            style={[styles.otpBox, { color }]}
             ref={c => otpInputRefs.current[`box${num}`] = c} autoFocus={num === 0}
           />)}
         </Row>

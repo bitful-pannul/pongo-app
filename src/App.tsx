@@ -1,7 +1,7 @@
 import 'react-native-gesture-handler'
 import { StatusBar } from "expo-status-bar"
 import React, { useCallback, useEffect, useRef, useState } from "react"
-import { ActivityIndicator, AppState, AppStateStatus, Button, StyleSheet, Text, View } from "react-native"
+import { ActivityIndicator, Alert, AppState, AppStateStatus, Button, StyleSheet, Text, View } from "react-native"
 import { SafeAreaProvider } from "react-native-safe-area-context"
 import * as Notifications from 'expo-notifications'
 import * as TaskManager from 'expo-task-manager'
@@ -11,7 +11,7 @@ import { MenuProvider } from 'react-native-popup-menu'
 
 import useCachedResources from "./hooks/useCachedResources"
 import useStore from "./state/useStore"
-import Navigation, { navReset, navTo } from "./navigation"
+import Navigation, { navReset } from "./navigation"
 import LoginScreen from "./screens/Login"
 import storage from "./util/storage"
 import { URBIT_HOME_REGEX } from "./util/regex"
@@ -40,8 +40,8 @@ Notifications.setNotificationHandler({
 
 export default function App() {
   const isLoadingComplete = useCachedResources()
-  const { loading, setLoading, ship: self, shipUrl, authCookie, loadStore, needLogin, setNeedLogin, setShip, ships } = useStore()
-  const { currentChat } = usePongoStore()
+  const { loading, setLoading, ship: self, shipUrl, authCookie, loadStore, needLogin, setNeedLogin, setShip } = useStore()
+  const { currentChat, set } = usePongoStore()
   const { color, backgroundColor } = useColors()
   const colorScheme = useColorScheme()
   const [connected, setConnected] = useState(true)
@@ -77,8 +77,9 @@ export default function App() {
     try {
       const networkState = await Network.getNetworkStateAsync()
       setConnected(Boolean(networkState.isInternetReachable))
+      set({ connected: Boolean(networkState.isInternetReachable) })
     } catch {}
-  }, [setConnected])
+  }, [set, setConnected])
 
   useEffect(() => {
     Notifications.setNotificationHandler({
@@ -104,6 +105,29 @@ export default function App() {
     Notifications.setBadgeCountAsync(0)
     
     const loadStorage = async () => {
+      const networkState = await Network.getNetworkStateAsync()
+      const isConnected = Boolean(networkState.isInternetReachable)
+      setConnected(isConnected)
+
+      if (!isConnected) {
+        return Alert.prompt(
+          'Network Connection Issue',
+          'Do you want to try to reconnect?',
+          [
+            {
+              text: 'Reconnect',
+              onPress: loadStorage,
+              style: 'default',
+            },
+            {
+              text: 'Cancel',
+              onPress: () => null,
+              style: 'cancel',
+            },
+          ],
+        )
+      }
+
       const res = await storage.load({ key: 'store' }).catch(console.error)
       if (res?.shipUrl) {
         const response = await fetch(res.shipUrl).catch(console.error)

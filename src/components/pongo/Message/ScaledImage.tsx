@@ -22,7 +22,7 @@ const ScaledImage = ({ width, uri, ...props }: ScaledImageProps) => {
 
   return (
     height ?
-      <Image source={{ uri }} style={{ height, width }} resizeMode='contain' />
+      <Image source={{ uri, cache: 'force-cache' }} style={{ height, width }} resizeMode='contain' />
       : imageLoading ?
         <ActivityIndicator size="large" />
         : null

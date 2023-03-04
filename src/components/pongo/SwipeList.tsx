@@ -1,10 +1,5 @@
-import { Gesture, GestureDetector, GestureUpdateEvent, PanGestureHandler, PanGestureHandlerEventPayload } from "react-native-gesture-handler"
-import Animated, {
-  useAnimatedGestureHandler,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from "react-native-reanimated"
+import { Gesture, GestureDetector, GestureUpdateEvent, PanGestureHandlerEventPayload } from "react-native-gesture-handler"
+import Animated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated"
 import { window } from "../../constants/Layout"
 
 const { width } = window

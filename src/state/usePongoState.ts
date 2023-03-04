@@ -3,7 +3,7 @@ import create from "zustand"
 import Urbit from "@uqbar/react-native-api";
 
 import { resetSubscriptions } from "./util";
-import { Chats, Message, NotifSettings, SendMessagePayload, SetNotifParams, GetMessagesParams, MessageKind, MessageStatus, SearchMessagesParams } from "../types/Pongo";
+import { Chats, Message, NotifSettings, SendMessagePayload, SetNotifParams, GetMessagesParams, MessageStatus, SearchMessagesParams, SendTokensPayload } from "../types/Pongo";
 import { addSig, deSig } from "../util/string";
 import { ONE_SECOND } from "../util/time";
 import { dedupeAndSort, sortChats, sortMessages } from "../util/ping";
@@ -15,6 +15,7 @@ import { ALL_MESSAGES_UID } from '../constants/Pongo';
 
 const usePongoStore = create<PongoStore>((set, get) => ({
   loading: null,
+  connected: true,
   showJoinChatModal: false,
   api: null,
   searchTerm: '',
@@ -197,6 +198,23 @@ const usePongoStore = create<PongoStore>((set, get) => ({
       }
     }
   },
+  toggleMute: async (id: string) => {
+    const { api } = get()
+    if (api) {
+      const newChats = { ...get().chats }
+      const muted = newChats[id].conversation.muted
+      newChats[id].conversation.muted = !muted
+      set({ chats: newChats })
+      try {
+        const json = { [muted ? 'unmute-conversation' : 'mute-conversation']: { id } }
+        console.log('JSON:', json)
+        await api.poke({ app: 'pongo', mark: 'pongo-action', json })
+      } catch {
+        newChats[id].conversation.muted = muted
+        set({ chats: newChats })
+      }
+    }
+  },
   leaveConversation: async (convo: string) => {
     // leave-conversation =conversation-id]
     await get().api?.poke({ app: 'pongo', mark: 'pongo-action', json: {
@@ -279,12 +297,32 @@ const usePongoStore = create<PongoStore>((set, get) => ({
     newChats[convo].conversation.last_read = msgId
     set({ chats: newChats })
   },
+  sendTokens: async (payload: SendTokensPayload) => {
+    const { api } = get()
+    if (api) {
+      const json = { 'send-tokens': payload }
+      console.log('SENDING TOKENS: ', json)
+      await api.poke({ app: 'pongo', mark: 'pongo-action', json })
+    }
+  },
 
   makeInvite: async (convo: string, to: string) => {
     // make-invite to=@p =id]
-    await get().api?.poke({ app: 'pongo', mark: 'pongo-action', json: {
-      'make-invite': { id: convo, to }
-    } })
+    const { api } = get()
+    if (api) {
+      const newChats = { ...get().chats }
+      const deSigged = deSig(to)
+      newChats[convo].conversation.members.unshift(deSigged)
+      set({ chats: newChats })
+      try {
+        await api.poke({ app: 'pongo', mark: 'pongo-action', json: {
+          'make-invite': { id: convo, to }
+        } })
+      } catch {
+        newChats[convo].conversation.members = newChats[convo].conversation.members.filter(m => m !== deSigged)
+        set({ chats: newChats })
+      }
+    }
   },
   acceptInvite: async (convo: string) => {
     // accept-invite =id]

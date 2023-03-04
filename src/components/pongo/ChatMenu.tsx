@@ -6,6 +6,7 @@ import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-m
 import useColors from '../../hooks/useColors';
 import usePongoStore from '../../state/usePongoState';
 import useStore from '../../state/useStore';
+import { Chat } from '../../types/Pongo';
 import Row from '../spacing/Row';
 import { Text } from '../Themed';
 
@@ -16,8 +17,9 @@ interface ChatMenuProps {
 export default function ChatMenu({ id }: ChatMenuProps) {
   const navigation = useNavigation()
   const { api } = useStore()
-  const { set, leaveConversation, getChats } = usePongoStore()
+  const { chats, set, leaveConversation, getChats, toggleMute } = usePongoStore()
   const { color, backgroundColor } = useColors()
+  const chat = chats[id]
 
   const leave = useCallback(async () => {
     try {
@@ -28,6 +30,8 @@ export default function ChatMenu({ id }: ChatMenuProps) {
       navigation.goBack()
     } catch {}
   }, [id, api, leaveConversation])
+
+  const changeMute = useCallback(() => toggleMute(id), [id])
 
   return (
     <Menu>
@@ -45,6 +49,12 @@ export default function ChatMenu({ id }: ChatMenuProps) {
           <Row style={{ justifyContent: 'flex-end', alignItems: 'center', paddingRight: 12, paddingVertical: 4 }}>
             <Text style={{ fontSize: 16, fontWeight: '600', marginRight: 8 }}>Leave</Text>
             <Ionicons name='trash' size={24} color={color} style={{ padding: 4 }} />
+          </Row>
+        </MenuOption>
+        <MenuOption onSelect={changeMute}>
+          <Row style={{ justifyContent: 'flex-end', alignItems: 'center', paddingRight: 12, paddingVertical: 4 }}>
+            <Text style={{ fontSize: 16, fontWeight: '600', marginRight: 8 }}>{chat.conversation.muted ? 'Unmute' : 'Mute'}</Text>
+            <Ionicons name={chat.conversation.muted ? 'volume-high' : 'volume-mute' } size={24} color={color} style={{ padding: 4 }} />
           </Row>
         </MenuOption>
       </MenuOptions>

@@ -32,7 +32,7 @@ const HexNum: React.FC<HexNumProps & DefaultView['props']> = ({
   return (
     <Row {...props} style={[{ alignItems: 'center' }, props.style]}>
       {colors && <HexIcon hexNum={num} />}
-      <Text bold={bold} mono={mono} style={{ fontSize: 18, marginTop: 6, fontWeight: '600' }}>{displayNum}</Text>
+      <Text bold={bold} mono={mono} style={{ fontSize: 16, marginTop: 6, fontWeight: '600', maxWidth: '75%' }}>{displayNum}</Text>
       {copy && <CopyIcon text={addHexDots(copyText)} />}
     </Row>
   )

@@ -115,7 +115,7 @@ const AccountDisplay: React.FC<AccountDisplayProps & DefaultView['props']> = ({
         </Row>
         
         <Row between style={{ flex: 1 }}>
-          <HexNum num={address} displayNum={displayPubKey(address)} mono bold />
+          <HexNum num={address} displayNum={displayPubKey(address)} mono bold style={{  }} />
           <CopyIcon text={rawAddress} style={{ marginRight: 8 }} />
         </Row>
       </Col>

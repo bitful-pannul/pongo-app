@@ -14,7 +14,7 @@ interface EntryProps {
 const Entry: React.FC<EntryProps & DefaultView['props']> = ({ center, children, title, divide = false, ...rest }) => {
   const styles = StyleSheet.create({
     entry: {
-      paddingVertical: 8,
+      paddingTop: 8,
       width: '100%',
     },
     header: {

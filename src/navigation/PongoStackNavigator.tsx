@@ -37,6 +37,7 @@ import Button from '../components/form/Button'
 import { Ionicons } from '@expo/vector-icons'
 import ShipTitle from '../components/header/ShipTitle'
 import ContactsScreen from '../screens/pongo/Contacts'
+import { useWalletStore } from '../wallet-ui'
 
 let checkAppsInstalledInterval: NodeJS.Timer | undefined
 
@@ -51,6 +52,7 @@ export default function PongoStackNavigator() {
   const { init: initPosse, clearSubscriptions: clearPosse } = usePosseState()
   const { init: initContact, clearSubscriptions: clearContact } = useContactState()
   const { init: initPongo, isSearching, clearSubscriptions: clearPongo, notifLevel, setNotifications } = usePongoStore()
+  const { initWallet, clearSubscriptions: clearWallet } = useWalletStore()
   const { api, ship: self, shipUrl } = useStore()
   const [loadingText, setLoadingText] = useState<string | undefined>()
 
@@ -66,6 +68,7 @@ export default function PongoStackNavigator() {
       initContact(api)
       initPongo(api)
       initPosse(api)
+      initWallet(api, {})
       // navigation.reset({ index: 0, routes: [ { name: 'Chats' } ] })
     }
 
@@ -74,6 +77,7 @@ export default function PongoStackNavigator() {
         clearContact()
         clearPosse()
         clearPongo()
+        clearWallet()
       }
     }
   }, [self, shipUrl])

@@ -89,6 +89,7 @@ type MessageWrapperProps = View['props'] & {
 const MessageWrapper = ({
   color,
   message: {
+    id,
     edited,
     timestamp,
     reactions,
@@ -125,14 +126,14 @@ const MessageWrapper = ({
         )}
         <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-end' }}>
           {edited && <Text style={{ color, marginLeft: 8, marginRight: -2 }}>edited</Text>}
-          {status === 'pending' && showStatus ? (
+          {status === 'pending' && showStatus && id[0] === '-' ? (
             <Ionicons name='time-outline' size={16} color={color} style={{ marginLeft: 8 }} />
           ) : status === 'failed' ? (
             <Ionicons name='alert-circle' size={16} color={color} style={{ marginLeft: 8 }} />
           ) : (
             <View style={{ display: 'flex', flexDirection: 'column', marginLeft: 8, alignItems: 'flex-end', minWidth: 60 }}>
               <Text style={{ color, fontSize: 12 }}>{moment(timestamp * ONE_SECOND).format('h:mm a')}</Text>
-              {showStatus && !!status && <Text style={{ color, alignSelf: 'flex-end', fontSize: 12 }}>{capitalize(status)}</Text>}
+              {showStatus && !!status && status !== 'pending' && <Text style={{ color, alignSelf: 'flex-end', fontSize: 12 }}>{capitalize(status)}</Text>}
             </View>
           )}
         </View>

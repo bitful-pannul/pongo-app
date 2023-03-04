@@ -45,7 +45,7 @@ const NftImage: React.FC<NftImageProps> = ({ nftInfo, style }) => {
 
   return (
     imageSource ?
-      <Image source={{ uri: imageSource }} style={{ ...(style || {}), maxWidth: '100%' }} /> :
+      <Image source={{ uri: imageSource }} style={{ ...(style || {}), maxWidth: 300 }} /> :
       <Row>
         <ActivityIndicator />
       </Row>

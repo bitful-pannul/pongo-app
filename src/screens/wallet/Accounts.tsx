@@ -29,7 +29,6 @@ export default function WalletAccounts() {
   const [nick, setNick] = useState('')
   const [hdpath, setHdpath] = useState('')
   const [importType, setImportType] = useState<HardwareWalletType | null>(null)
-  const { color } = useColors()
 
   const addHardwareAddress = addAddressType && addAddressType !== 'hot'
 

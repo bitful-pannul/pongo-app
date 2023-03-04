@@ -65,7 +65,9 @@ export const messageSub = (set: SetState<PongoStore>, get: GetState<PongoStore>)
     } else if (update.message.message.kind === 'leader-remove') {
       chat.conversation.leaders = chat.conversation.leaders.filter(l => deSig(l) !== deSig(update.message.message.content))
     } else if (update.message.message.kind === 'member-add') {
-      chat.conversation.members.push(deSig(update.message.message.content))
+      if (!chat.conversation.members.includes(deSig(update.message.message.content))) {
+        chat.conversation.members.unshift(deSig(update.message.message.content))
+      }
     } else if (update.message.message.kind === 'member-remove') {
       chat.conversation.members = chat.conversation.members.filter(m => deSig(m) !== deSig(update.message.message.content))
     } else if (update.message.message.kind === 'change-name') {
