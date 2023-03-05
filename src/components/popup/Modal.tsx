@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { TouchableOpacity } from "react-native";
+import { TouchableOpacity, Pressable } from "react-native";
 
 import useColors from "../../hooks/useColors"
 import Col from '../spacing/Col'
@@ -30,36 +30,48 @@ const Modal = ({
   const offset = window.width / 2 - 160
 
   return (
-    <Col style={{
+    <Pressable onPress={hide} style={{
       position: 'absolute',
       top: 0,
-      width: '100%',
-      height: '100%',
-      backgroundColor: shadedBackground,
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: window.height,
       zIndex: 10,
     }}>
-      <Col {...props} style={[
-        {
-          position: 'absolute',
-          left: offset,
-          right: offset,
-          width: 320,
-          backgroundColor,
-          borderRadius: 8,
-          marginTop: 24,
-          paddingBottom: 8,
-        },
-        props.style
-      ]}>
-        <TouchableOpacity onPress={hide} style={{ padding: 4, alignSelf: 'flex-end' }}>
-        {Boolean(title) && <H3 text={title!} />}
-          <Ionicons name='close' size={20} color={color} />
-        </TouchableOpacity>
-        <Col>
-          {props.children}
+      <Col style={{
+        position: 'absolute',
+        top: 0,
+        width: window.width,
+        height: window.height,
+        backgroundColor: shadedBackground,
+      }}>
+        <Col {...props} style={[
+          {
+            position: 'absolute',
+            left: offset,
+            right: offset,
+            width: 320,
+            backgroundColor,
+            borderRadius: 8,
+            marginTop: 24,
+            paddingBottom: 8,
+          },
+          props.style
+        ]}
+          onStartShouldSetResponder={(event) => true}
+          onTouchEnd={(e) => { e.stopPropagation(); }}
+        >
+          <TouchableOpacity onPress={hide} style={{ padding: 4, alignSelf: 'flex-end' }}>
+          {Boolean(title) && <H3 text={title!} />}
+            <Ionicons name='close' size={20} color={color} />
+          </TouchableOpacity>
+          <Col>
+            {props.children}
+          </Col>
         </Col>
       </Col>
-    </Col>
+    </Pressable>
   )
 }
 

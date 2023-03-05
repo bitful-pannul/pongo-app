@@ -19,6 +19,7 @@ import { WalletTabParamList } from '../../../types/Navigation'
 import Button from '../../../components/form/Button'
 import Input from './Input'
 import { ActionDisplay } from '../ActionDisplay'
+import useColors from '../../../hooks/useColors'
 
 export interface SendFormValues { to: string; rate: string; bud: string; amount: string; contract: string; town: string; action: string; }
 export type SendFormField = 'to' | 'rate' | 'bud' | 'amount' | 'contract' | 'town' | 'action'
@@ -56,6 +57,7 @@ const SendTransactionForm = ({
     sendTokens, sendNft, submitSignedHash, setMostRecentTransaction, getUnsignedTransactions, sendCustomTransaction
   } = useWalletStore()
   const navigation = useNavigation<NavigationProp<WalletTabParamList>>()
+  const { color } = useColors()
 
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -136,10 +138,12 @@ const SendTransactionForm = ({
 
       getUnsignedTransactions()
       const unsigned = await getUnsignedTransactions()
+      console.log(1, unsigned)
       const mostRecentPendingHash = Object.keys(unsigned)
         .filter(hash => unsigned[hash].from === (selectedToken?.holder || from))
         .sort((a, b) => unsigned[a].nonce - unsigned[b].nonce)[0]
       
+      console.log(2, mostRecentPendingHash)
       setPendingHash(mostRecentPendingHash)
       setLoading(false)
     }
@@ -369,7 +373,7 @@ const SendTransactionForm = ({
         <Text style={{ marginTop: 2, fontSize: 14, color: '#444' }}>({addDecimalDots(Number(amount) * Math.pow(10, 18))})</Text>
       )}
       {loading ? (
-        <ActivityIndicator style={{ alignSelf: 'center' }} color='black' />
+        <ActivityIndicator style={{ alignSelf: 'center', marginVertical: 17 }} color={color} size='large' />
       ) : (
         <Button onPress={generateTransaction} style={{ marginTop: 16, marginBottom: 16 }} disabled={loading} title='Generate Transaction' />
       )}

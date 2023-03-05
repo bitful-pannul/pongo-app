@@ -62,7 +62,6 @@ const SendTransactionModal = ({
       show={show} 
       hide={hideModal}
       style={{ width: '40%', minWidth: 350 }}
-      className='send-view'
     >
       <SendTransactionForm
         {...{ id, nftIndex, formType, from, formValues, setFormValue, setFormValues, onSubmit, unsignedTransactionHash, onDone: hide }}

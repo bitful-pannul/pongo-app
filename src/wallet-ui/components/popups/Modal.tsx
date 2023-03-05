@@ -61,7 +61,10 @@ const Modal = ({
             flex: 1,
           },
           props.style
-        ]}>
+        ]}
+          onStartShouldSetResponder={(event) => true}
+          onTouchEnd={(e) => { e.stopPropagation(); }}
+        >
           <Row between>
             {Boolean(title) && <H3 text={title!} />}
             <TouchableOpacity onPress={hide} style={{ padding: 4, alignSelf: 'flex-end' }}>

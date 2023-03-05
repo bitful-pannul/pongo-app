@@ -1,3 +1,5 @@
+import 'intl';
+import 'intl/locale-data/jsonp/en';
 import { patp2dec, isValidPatp } from 'urbit-ob'
 import { addSig } from './string';
 

@@ -1,3 +1,5 @@
+import 'intl';
+import 'intl/locale-data/jsonp/en';
 import { removeDots } from "./format";
 
 function roundDownSignificantDigits(number: number, decimals: number) {
