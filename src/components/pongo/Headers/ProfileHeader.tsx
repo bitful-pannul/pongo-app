@@ -1,7 +1,7 @@
 import { View } from "react-native";
-import { isIos, window } from "../../constants/Layout";
-import H3 from "../text/H3";
-import Avatar from "./Avatar";
+import { isIos, window } from "../../../constants/Layout";
+import H3 from "../../text/H3";
+import Avatar from "../Avatar";
 
 interface ProfileHeaderProps {
   name: string;

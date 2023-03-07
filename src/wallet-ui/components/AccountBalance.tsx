@@ -35,7 +35,7 @@ const AccountBalance: React.FC<AccountBalanceProps & DefaultView['props']> = ({
   const selectAddress = useCallback(() => selectPubkey(pubKey), [pubKey])
 
   return (
-    <View {...props} style={[style, { margin: 8, marginRight: 16, marginBottom: balances.length ? 8 : 16 }]}>
+    <View {...props} style={[style, { margin: 16 }]}>
       <Row between>
         <Row style={{ alignItems: 'center' }}>
           <Text numberOfLines={1} style={{ margin: 0, fontWeight: '600' }} onPress={selectAddress}>

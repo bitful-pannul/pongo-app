@@ -1,14 +1,14 @@
 import { Ionicons } from "@expo/vector-icons"
 import { useCallback, useEffect, useState } from "react"
 import { Pressable } from "react-native"
-import { uq_purple } from "../../constants/Colors"
-import useDebounce from "../../hooks/useDebounce"
-import useSearch from "../../hooks/useSearch"
-import usePongoStore from "../../state/usePongoState"
-import { SearchType } from "../../types/Pongo"
-import { ONE_SECOND } from "../../util/time"
-import Row from "../spacing/Row"
-import { TextInput } from "../Themed"
+import { uq_purple } from "../../../constants/Colors"
+import useDebounce from "../../../hooks/useDebounce"
+import useSearch from "../../../hooks/useSearch"
+import usePongoStore from "../../../state/usePongoState"
+import { SearchType } from "../../../types/Pongo"
+import { ONE_SECOND } from "../../../util/time"
+import Row from "../../spacing/Row"
+import { TextInput } from "../../Themed"
 
 interface SearchHeaderProps {
   searchType?: SearchType

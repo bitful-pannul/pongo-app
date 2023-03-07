@@ -2,10 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, View, Text, Keyboard } from "react-native";
 import { Audio, AVPlaybackStatus, AVPlaybackStatusError, AVPlaybackStatusSuccess } from "expo-av";
 import { Ionicons } from "@expo/vector-icons";
-import { medium_gray, uq_pink } from "../../../constants/Colors";
-import { formatRecordTime, ONE_SECOND } from "../../../util/time";
 import Slider from '@react-native-community/slider'
-import { window } from "../../../constants/Layout";
+
+import { uq_pink } from "../../../constants/Colors";
+import { formatRecordTime, ONE_SECOND } from "../../../util/time";
+import { isIos, window } from "../../../constants/Layout";
+
+const thumbImage = require('../../../../assets/images/slider_thumb.png')
 
 type AudioPlayerProps = View['props'] & { uri: string, color: string }
 
@@ -19,7 +22,7 @@ export default function AudioPlayer({ uri, color, ...props }: AudioPlayerProps) 
   const { width, height } = window
 
   useEffect(() => {
-    // getAudio()
+    getAudio()
   }, [])
 
   const getAudio = useCallback(async () => {
@@ -34,9 +37,8 @@ export default function AudioPlayer({ uri, color, ...props }: AudioPlayerProps) 
       playbackObject.setOnPlaybackStatusUpdate((status: AVPlaybackStatus) => {
         if ('isPlaying' in status) {
           setStatus(status)
-          if (status.positionMillis === status.durationMillis) {
-            playbackObject.stopAsync().catch()
-            playbackObject.setPositionAsync(0).catch()
+          if (status.positionMillis === status.durationMillis && !status.isPlaying && !status.shouldPlay) {
+            playbackObject.setPositionAsync(0).catch((err) => console.log('set position 0:', err))
             setPlaying(false)
           }
         } else {
@@ -53,9 +55,9 @@ export default function AudioPlayer({ uri, color, ...props }: AudioPlayerProps) 
   const togglePlay = useCallback(() => {
     if (audio) {
       if (!playing) {
-        audio?.playAsync().catch()
+        audio?.playAsync().catch((err) => console.log('play:', err))
       } else {
-        audio?.pauseAsync().catch()
+        audio?.pauseAsync().catch((err) => console.log('pause:', err))
       }
       setPlaying(!playing)
     } else if (!loading) {
@@ -72,6 +74,7 @@ export default function AudioPlayer({ uri, color, ...props }: AudioPlayerProps) 
       display: 'flex',
       flexDirection: 'row',
       alignItems: 'center',
+      paddingTop: 4,
     },
     button: {
       padding: 8,
@@ -92,7 +95,8 @@ export default function AudioPlayer({ uri, color, ...props }: AudioPlayerProps) 
     text: { color },
     slider: {
       width: width * 0.7 - 80,
-      height: 10,
+      height: 20,
+      marginVertical: 4,
     }
   }), [color, playing, width])
 
@@ -100,7 +104,7 @@ export default function AudioPlayer({ uri, color, ...props }: AudioPlayerProps) 
   const position = (status && 'positionMillis' in status && formatRecordTime(status.positionMillis || 0)) || '0:00'
 
   return (
-    <View {...props} style={[props.style, styles.container]}>
+    <View {...props} style={[styles.container, props.style]}>
       <Pressable style={styles.button} onPress={togglePlay} disabled={loading}>
         {!audio && !loading ? (
           <Ionicons name='download' color='white' size={24} style={{ marginLeft: 1 }} />
@@ -112,6 +116,7 @@ export default function AudioPlayer({ uri, color, ...props }: AudioPlayerProps) 
       </Pressable>
       <View style={styles.progressInfo}>
         <Slider
+          thumbImage={isIos ? thumbImage : undefined}
           style={styles.slider}
           value={status?.positionMillis || 0}
           minimumValue={0}

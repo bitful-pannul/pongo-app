@@ -1,9 +1,9 @@
 import React, { useCallback, useState } from 'react'
 import { Pressable, StyleSheet } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { useWalletStore } from '../store/walletStore';
+import { Token } from '@uqbar/wallet-ui'
 
-import { Token } from '../types/Token'
+import { useWalletStore } from '../store/walletStore';
 import { displayTokenAmount } from '../utils/number';
 import { removeDots } from '../utils/format';
 import Col from './spacing/Col';
@@ -13,21 +13,21 @@ import Divider from './spacing/Divider';
 import Entry from './spacing/Entry';
 import NftImage from './NftImage';
 import HexNum from './text/HexNum';
-
 import { Text } from '../../components/Themed';
 import Button from '../../components/form/Button';
 import { window } from '../../constants/Layout';
-import useColors from '../../hooks/useColors';
 
 interface TokenDisplayProps {
   token: Token
   selectToken: (tokenId: string, nftIndex?: number) => void
+  color: string
   small?: boolean
 }
 
 const TokenDisplay: React.FC<TokenDisplayProps> = ({
   token,
   selectToken,
+  color,
   small = false,
 }) => {
   const { metadata } = useWalletStore()
@@ -36,11 +36,11 @@ const TokenDisplay: React.FC<TokenDisplayProps> = ({
   const balance = +removeDots(String(data.balance!))
   const [open, setOpen] = useState(false)
   const isToken = token.token_type === 'token'
-  const { color } = useColors()
 
   const styles = StyleSheet.create({
     displayStyle: {
-      padding: 4,
+      paddingHorizontal: 4,
+      paddingTop: 8,
       paddingBottom: 0,
       marginTop: 12,
       borderRadius: 4,
@@ -124,7 +124,7 @@ const TokenDisplay: React.FC<TokenDisplayProps> = ({
           </Entry>
           <Entry>
             <Field name='Item:' column>
-              <HexNum copy mono num={id} style={{ maxWidth: '100%', marginLeft: -8, marginRight: 8 }} />
+              <HexNum copy mono num={id} style={{ maxWidth: '100%', marginLeft: -8, marginRight: 8, marginBottom: 8 }} />
             </Field>
           </Entry>
           {!isToken && token.data.properties && (

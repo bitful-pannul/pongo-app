@@ -1,5 +1,5 @@
 import { NavigationProp, useNavigation } from "@react-navigation/native"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Pressable, StyleSheet, Text, View, Animated, ActivityIndicator, Keyboard, TouchableOpacity, Linking } from "react-native"
 import * as Haptics from 'expo-haptics'
 
@@ -47,10 +47,10 @@ interface MessageEntryProps {
   onSwipe: (msg: Message) => void;
 }
 
-export default function MessageEntry({
+const MessageEntry = React.memo(({
   index, message, chatId, self, messages, highlighted, isDm = false, selected,
   onPress, focusReply, addReaction, onSwipe,
-}: MessageEntryProps) {
+}: MessageEntryProps) => {
   const msgRef = useRef<View | null>(null)
   const swipeRef = useRef<Swipeable | null>(null)
   const { color: defaultColor, backgroundColor, ownChatBackground } = useColors()
@@ -72,6 +72,10 @@ export default function MessageEntry({
 
   const [highlight] = useState(new Animated.Value(highlighted ? 1 : 0))
   const [shakeAnimation] = useState(new Animated.Value(0))
+
+  // if (index === 0) {
+  //   console.log('RENDER:', index)
+  // }
 
   useEffect(() => {
     const getQuotedMsg = async () => {
@@ -230,8 +234,8 @@ export default function MessageEntry({
                       <Col style={styles.reply}>
                         <Text style={styles.replyAuthor}>{quotedMsg?.author}</Text>
                         <Text numberOfLines={1} style={[styles.text, { fontSize: 14 }]}>
-                          {/* {AUDIO_URL_REGEX.test(quotedMsg?.content) ? 'Voice Note' : */}
-                            {IMAGE_URL_REGEX.test(quotedMsg?.content) ? 'Image' :
+                          {AUDIO_URL_REGEX.test(quotedMsg?.content) ? 'Voice Message' :
+                            IMAGE_URL_REGEX.test(quotedMsg?.content) ? 'Image' :
                             quotedMsg?.content}
                         </Text>
                       </Col>
@@ -309,4 +313,10 @@ export default function MessageEntry({
       {renderContent()}
     </Animated.View>
   )
-}
+}, (pP, nP) => {
+  return pP.index === nP.index && pP.message.id === nP.message.id && pP.self === nP.self &&
+    pP.chatId === nP.chatId && pP.isDm === nP.isDm && pP.selected === nP.selected &&
+    pP.messages.length === nP.messages.length && pP.highlighted === nP.highlighted
+})
+
+export default MessageEntry

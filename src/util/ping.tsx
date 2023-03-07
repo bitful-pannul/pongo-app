@@ -49,7 +49,7 @@ export const getAdminMsgText = (kind: MessageKind, content: string) => {
   } else if (kind === 'send-tokens') {
     return formatTokenContent(content)
   } else if (AUDIO_URL_REGEX.test(content)) {
-    return 'Voice Note'
+    return 'Voice Message'
   } else if (IMAGE_URL_REGEX.test(content)) {
     return 'Image'
   } else {

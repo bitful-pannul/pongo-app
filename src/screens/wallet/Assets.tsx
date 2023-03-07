@@ -9,10 +9,11 @@ import { SendFormType } from "../../wallet-ui/components/form/SendTransactionFor
 import AccountBalance from "../../wallet-ui/components/AccountBalance";
 import SendModal from "../../wallet-ui/components/SendModal";
 import H3 from "../../components/text/H3";
+import useColors from "../../hooks/useColors";
 
 export default function WalletAssets() {
   const { assets, accounts, importedAccounts, loadingText, unsignedTransactions } = useWalletStore()
-  const navigation = useNavigation()
+  const { color, backgroundColor, shadedBackground } = useColors()
 
   const [selectedAddress, setSelectedAddress] = useState<string | undefined>()
   const [sendFormType, setSendFormType] = useState<SendFormType | undefined>()
@@ -87,7 +88,7 @@ export default function WalletAssets() {
           selectPubkey={selectPubkey}
         />
       ))}
-      <SendModal title={modalTitle} show={Boolean(sendFormType)} id={id}
+      <SendModal title={modalTitle} show={Boolean(sendFormType)} id={id} {...{ color, backgroundColor, shadedBackground }}
         nftIndex={nftIndex} from={customFrom} formType={sendFormType} hide={hideModal}/>
     </ScrollView>
   )

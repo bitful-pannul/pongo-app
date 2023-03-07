@@ -59,7 +59,6 @@ export default function useSearch() {
         set({ searchResults })
       } else if (searchType === 'message') {
         if (api) {
-          console.log(1)
           searchMessages({ uid: ALL_MESSAGES_UID, phrase: query })
         }
       }

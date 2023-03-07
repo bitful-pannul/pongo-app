@@ -2,18 +2,18 @@ import { NavigationProp } from "@react-navigation/native"
 import { StyleSheet, TouchableOpacity } from "react-native"
 import moment from 'moment'
 
-import { PongoStackParamList } from "../../types/Navigation"
-import useStore from "../../state/useStore"
-import { Chat } from "../../types/Pongo"
-import Col from "../spacing/Col"
-import Row from "../spacing/Row"
-import { Text } from "../Themed"
-import { medium_gray, uq_lightpurple, uq_purple } from "../../constants/Colors"
-import { checkIsDm, getAdminMsgText, getChatName } from '../../util/ping'
-import Avatar from "./Avatar"
-import { isLargeDevice, window } from "../../constants/Layout"
-import { getRelativeTime, ONE_SECOND } from "../../util/time"
-import { addSig, deSig } from "../../util/string"
+import { PongoStackParamList } from "../../../types/Navigation"
+import useStore from "../../../state/useStore"
+import { Chat } from "../../../types/Pongo"
+import Col from "../../spacing/Col"
+import Row from "../../spacing/Row"
+import { Text } from "../../Themed"
+import { medium_gray, uq_lightpurple, uq_purple } from "../../../constants/Colors"
+import { checkIsDm, getAdminMsgText, getChatName } from '../../../util/ping'
+import Avatar from "../Avatar"
+import { isLargeDevice, window } from "../../../constants/Layout"
+import { getRelativeTime, ONE_SECOND } from "../../../util/time"
+import { addSig, deSig } from "../../../util/string"
 import { useMemo } from "react"
 
 interface ChatProps {

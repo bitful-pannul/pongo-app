@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import { Text, View, Pressable, Linking, StyleSheet } from "react-native";
 import { window } from "../../../constants/Layout";
-import { IMAGE_URL_REGEX, AUDIO_URL_REGEX, splitByImage, splitByAudio, splitByUrl, SPLIT_BY_URL_REGEX } from "../../../util/string";
-// import AudioPlayer from "./AudioPlayer";
+import { IMAGE_URL_REGEX, AUDIO_URL_REGEX, splitByImage, splitByUrl, SPLIT_BY_URL_REGEX } from "../../../util/string";
+import AudioPlayer from "./AudioPlayer";
 import ScaledImage from "./ScaledImage";
 
 interface ContentProps {
@@ -20,6 +20,12 @@ export default function Content({ onLongPress, content, color, depth = 0, delayL
     linkStyle: { color, fontSize: 16, textDecorationLine: 'underline' }
   }), [color])
 
+  if (AUDIO_URL_REGEX.test(content)) {
+    // For some reason this console statement is necessary
+    // console.log(1, `"${content}"`, AUDIO_URL_REGEX.test(content))
+    return <AudioPlayer color={color} uri={content} />
+  }
+
   if (IMAGE_URL_REGEX.test(content)) {
     const contentWithImages = splitByImage(content)
 
@@ -35,20 +41,7 @@ export default function Content({ onLongPress, content, color, depth = 0, delayL
       </View>
     )
   }
-  // else if (AUDIO_URL_REGEX.test(content)) {
-  //   const contentWithImages = splitByAudio(content)
-
-  //   return (
-  //     <View style={{ display: 'flex', flexDirection: 'column', width: '100%', flexGrow: 1 }}>
-  //       {contentWithImages.map((c, i) => (
-  //         AUDIO_URL_REGEX.test(c) ?
-  //           <AudioPlayer color={color} uri={c} key={`${i}-i-${depth}`} /> :
-  //           c.length ? <Content {...{ onLongPress, delayLongPress }} content={c} color={color} depth={depth + 1} key={`${i}-i-${depth}`} /> : null
-  //       ))}
-  //     </View>
-  //   )
-  // }
-
+  
   return (
     <Text style={styles.textStyle}>
       {splitByUrl(content).map((c, i) => SPLIT_BY_URL_REGEX.test(c) ?

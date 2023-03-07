@@ -1,5 +1,6 @@
 import 'intl';
 import 'intl/locale-data/jsonp/en';
+import 'intl/locale-data/jsonp/de';
 import { patp2dec, isValidPatp } from 'urbit-ob'
 import { addSig } from './string';
 
@@ -25,3 +26,5 @@ export const getShipColor = (ship: string) => {
 }
 
 export const fromUd = (amount?: string) => amount ? Number(amount.replace(/\./g, '')) : 0
+
+export const numToUd = (num: string | number) => Number(num).toLocaleString('de-DE')

@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { Alert, StyleSheet, TouchableOpacity, View as DefaultView } from 'react-native'
+import { HotWallet, HardwareWallet } from '@uqbar/wallet-ui';
 
 import { useWalletStore } from '../store/walletStore';
-import { HotWallet, HardwareWallet } from '../types/Accounts';
 import { displayPubKey } from '../utils/account';
 import Input from './form/Input';
 import Col from './spacing/Col';
@@ -12,15 +12,16 @@ import { ONE_SECOND, PUBLIC_URL } from '../utils/constants';
 import HexNum from './text/HexNum';
 import { Text } from '../../components/Themed';
 import { Ionicons } from '@expo/vector-icons';
-import useColors from '../../hooks/useColors';
 
 interface AccountDisplayProps {
   account: HotWallet | HardwareWallet
+  color: string
   full?: boolean
 }
 
 const AccountDisplay: React.FC<AccountDisplayProps & DefaultView['props']> = ({
   account,
+  color,
   full = false,
   ...props
 }) => {
@@ -29,7 +30,6 @@ const AccountDisplay: React.FC<AccountDisplayProps & DefaultView['props']> = ({
   const [newNick, setNewNick] = useState(nick)
   const [nickSaved, setNickSaved] = useState(false)
   const [nickInputFocused, setNickInputFocus] = useState(false)
-  const { color } = useColors()
 
   useEffect(() => {
     setNewNick(nick)
@@ -54,11 +54,12 @@ const AccountDisplay: React.FC<AccountDisplayProps & DefaultView['props']> = ({
       padding: 8,
       paddingHorizontal: 16,
       marginBottom: 16,
-      backgroundColor: 'rgba(0, 0, 0, 0.1)',
       borderRadius: 4,
+      borderWidth: 1,
+      borderColor: color,
     },
     nickInput: {
-      borderColor: 'transparent',
+      borderColor: color,
       borderWidth: 1,
       borderBottomColor: '#727bf2',
       borderBottomWidth: 3,
@@ -115,8 +116,8 @@ const AccountDisplay: React.FC<AccountDisplayProps & DefaultView['props']> = ({
         </Row>
         
         <Row between style={{ flex: 1 }}>
-          <HexNum num={address} displayNum={displayPubKey(address)} mono bold style={{  }} />
-          <CopyIcon text={rawAddress} style={{ marginRight: 8 }} />
+          <HexNum num={address} displayNum={displayPubKey(address)} mono bold style={{ width: '80%' }} />
+          <CopyIcon color={color} text={rawAddress} style={{ marginRight: 8 }} />
         </Row>
       </Col>
       {full && (

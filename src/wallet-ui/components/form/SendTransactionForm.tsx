@@ -1,13 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from 'react-native'
 import { NavigationProp, useNavigation } from '@react-navigation/native'
+import { TransactionArgs, Token } from '@uqbar/wallet-ui'
 
 import { useWalletStore } from '../../store/walletStore'
 import Row from '../spacing/Row'
 import Col from '../spacing/Col'
 import CopyIcon from '../text/CopyIcon'
-import { TransactionArgs } from '../../types/Transaction'
-import { Token } from '../../types/Token'
 import { displayTokenAmount } from '../../utils/number'
 import { displayPubKey } from '../../utils/account'
 import { abbreviateHex, addHexDots, removeDots, addDecimalDots } from '../../utils/format'
@@ -19,7 +18,6 @@ import { WalletTabParamList } from '../../../types/Navigation'
 import Button from '../../../components/form/Button'
 import Input from './Input'
 import { ActionDisplay } from '../ActionDisplay'
-import useColors from '../../../hooks/useColors'
 
 export interface SendFormValues { to: string; rate: string; bud: string; amount: string; contract: string; town: string; action: string; }
 export type SendFormField = 'to' | 'rate' | 'bud' | 'amount' | 'contract' | 'town' | 'action'
@@ -32,6 +30,7 @@ interface SendTransactionFormProps {
   setFormValue: (key: SendFormField, value: string) => void
   onSubmit?: () => void
   onDone: () => void
+  color: string
   formValues: SendFormValues
   id: string
   unsignedTransactionHash?: string
@@ -45,6 +44,7 @@ const SendTransactionForm = ({
   setFormValue,
   onSubmit,
   onDone,
+  color,
   formValues,
   id,
   unsignedTransactionHash,
@@ -57,7 +57,6 @@ const SendTransactionForm = ({
     sendTokens, sendNft, submitSignedHash, setMostRecentTransaction, getUnsignedTransactions, sendCustomTransaction
   } = useWalletStore()
   const navigation = useNavigation<NavigationProp<WalletTabParamList>>()
-  const { color } = useColors()
 
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -71,7 +70,7 @@ const SendTransactionForm = ({
   const { to, rate, bud, amount, contract, town, action } = formValues
 
   const assetsList = useMemo(() => Object.values(assets)
-    .reduce((acc: Token[], cur) => acc.concat(Object.values(cur)), [])
+    .reduce((acc: Token[], cur: any) => acc.concat(Object.values(cur)), [])
     .filter(t => isNft ? t.token_type === 'nft' : t.token_type === 'token'),
     [assets, isNft]
   )
@@ -138,12 +137,10 @@ const SendTransactionForm = ({
 
       getUnsignedTransactions()
       const unsigned = await getUnsignedTransactions()
-      console.log(1, unsigned)
       const mostRecentPendingHash = Object.keys(unsigned)
         .filter(hash => unsigned[hash].from === (selectedToken?.holder || from))
         .sort((a, b) => unsigned[a].nonce - unsigned[b].nonce)[0]
       
-      console.log(2, mostRecentPendingHash)
       setPendingHash(mostRecentPendingHash)
       setLoading(false)
     }
@@ -244,7 +241,7 @@ const SendTransactionForm = ({
               <Pressable onPress={goToTransaction(txn.hash)}>
                 <Text mono bold numberOfLines={1}>{abbreviateHex(txn.hash)}</Text>
               </Pressable>
-              <CopyIcon text={txn.hash} />
+              <CopyIcon color={color} text={txn.hash} />
             </Row>
             <Row style={{ marginLeft: -4 }}>
               <Pill label={'Nonce'} value={''+txn.nonce} />
@@ -253,7 +250,7 @@ const SendTransactionForm = ({
               <Pill label={'Status'} value={getStatus(txn.status)} />
             </Row>
             <View style={{ marginTop: 8, marginBottom: 16, marginHorizontal: 'auto', height: 24 }}>
-              {(txn.status === 100 || txn.status === 101) && <ActivityIndicator color='black' />}
+              {txn.status <= 102 && <ActivityIndicator color={color} />}
             </View>
           </>
         ) : (
@@ -276,19 +273,19 @@ const SendTransactionForm = ({
       <Col style={styles.sendTransactionForm}>
         {!isCustom && tokenDisplay}
         {showToAddress ? (
-          <Input label='To:' containerStyle={{ marginTop: 12 }} value={to || giveAction.to as any} editable={false} />
+          <Input label='To:' containerStyle={{ marginTop: 4 }} value={to || giveAction.to as any} editable={false} />
         ) : (
           <ActionDisplay action={pendingAction} />
         )}
         {showAmount && (
-          <Input label='Amount:' containerStyle={{ marginTop: 12 }} value={amount || displayTokenAmount(+removeDots(''+giveAction.amount), tokenMetadata?.data.decimals || 1)} editable={false} />
+          <Input label='Amount:' containerStyle={{ marginTop: -8 }} value={amount || displayTokenAmount(+removeDots(''+giveAction.amount), tokenMetadata?.data.decimals || 1)} editable={false} />
         )}
-        <Col>
-          <Row style={{ marginTop: 16 }}>
+        <Col style={{ marginTop: -4 }}>
+          <Row>
             <Text style={{ fontWeight: 'bold', fontSize: 16 }}>Hash: </Text>
-            <CopyIcon text={pendingHash}/>
+            <CopyIcon color={color} text={pendingHash}/>
           </Row>
-          <Text style={{ fontSize: 16 }}>{pendingHash}</Text>
+          <Text style={{ fontSize: 16 }} numberOfLines={1}>{pendingHash}</Text>
         </Col>
         <Row between style={{ marginTop: 12 }}>
           <Input
@@ -309,7 +306,7 @@ const SendTransactionForm = ({
             error={budgetError}
           />
         </Row>
-        <Button onPress={submitSignedTransaction} style={{ marginTop: 16, marginBottom: 16 }} disabled={loading} title='Sign & Submit' />
+        <Button onPress={submitSignedTransaction} style={{ marginTop: 4, marginBottom: 16 }} disabled={loading} title='Sign & Submit' />
       </Col>
     )
   } else if (isCustom) {
@@ -340,7 +337,7 @@ const SendTransactionForm = ({
           multiline
         />
         {loading ? (
-          <ActivityIndicator style={{ alignSelf: 'center' }} color='black' />
+          <ActivityIndicator style={{ alignSelf: 'center' }} color={color} />
         ) : (
           <Button onPress={generateTransaction} style={{ marginTop: 16, marginBottom: 16 }} disabled={loading} title='Generate Transaction' />
         )}
@@ -354,28 +351,27 @@ const SendTransactionForm = ({
       <Input
         label='To:'
         placeholder='Destination address'
-        containerStyle={{ marginTop: 12 }}
+        containerStyle={{ marginTop: 8 }}
         value={to}
         onChangeText={(text: string) => changeValue('to')(text.replace(NON_HEX_REGEX, ''))}
         error={addressError}
       />
       {!isNft && <Input
-        label='Amount (10^18):'
+        label='Amount:'
         placeholder='Amount'
-        containerStyle={{ marginTop: 12 }}
         value={amount}
         onChangeText={(text: string) => changeValue('amount')(text.replace(NON_NUM_REGEX, ''))}
         error={amountError}
       />}
       {isNft || Number(amount) <= 0 || isNaN(Number(amount)) ? null : amountDiff < 0 ? (
-        <Text style={{ marginTop: 2, fontSize: 14, color: 'red' }}>Not enough assets: {displayTokenAmount(tokenBalance, 18, 18)}</Text>
+        <Text style={{ marginTop: 0, fontSize: 14, color: 'red' }}>Not enough assets: {displayTokenAmount(tokenBalance, 18, 18)}</Text>
       ) : (
-        <Text style={{ marginTop: 2, fontSize: 14, color: '#444' }}>({addDecimalDots(Number(amount) * Math.pow(10, 18))})</Text>
+        <Text style={{ marginTop: -8, marginBottom: 8, fontSize: 14, color: '#444' }}>({addDecimalDots(Number(amount) * Math.pow(10, 18))})</Text>
       )}
       {loading ? (
-        <ActivityIndicator style={{ alignSelf: 'center', marginVertical: 17 }} color={color} size='large' />
+        <ActivityIndicator style={{ alignSelf: 'center', marginVertical: 7 }} color={color} size='large' />
       ) : (
-        <Button onPress={generateTransaction} style={{ marginTop: 16, marginBottom: 16 }} disabled={loading} title='Generate Transaction' />
+        <Button onPress={generateTransaction} style={{ marginTop: 6, marginBottom: 16 }} disabled={loading} title='Generate Transaction' />
       )}
     </Col>
   )

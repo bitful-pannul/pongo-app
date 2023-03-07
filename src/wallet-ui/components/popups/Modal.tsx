@@ -1,15 +1,17 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, TouchableOpacity } from "react-native";
+import { Keyboard, Pressable, TouchableOpacity } from "react-native";
 import H3 from "../../../components/text/H3";
 
-import { ViewProps } from "../../../components/Themed";
+import { ScrollView, ViewProps } from "../../../components/Themed";
 import { window } from "../../../constants/Layout";
-import useColors from "../../../hooks/useColors";
 import Col from "../spacing/Col";
 import Row from "../spacing/Row";
 
 interface ModalOptions {
   show: boolean
+  color: string
+  backgroundColor: string
+  shadedBackground: string
   hide: () => void
   title?: string
 }
@@ -20,9 +22,11 @@ const Modal = ({
   show,
   hide,
   title,
+  color,
+  backgroundColor,
+  shadedBackground,
   ...props
 }: ModalProps) => {
-  const { color, backgroundColor, shadedBackground } = useColors()
 
   if (!show) {
     return null
@@ -49,7 +53,7 @@ const Modal = ({
         height: window.height,
         backgroundColor: shadedBackground,
       }}>
-        <Col {...props} style={[
+        <ScrollView {...props} style={[
           {
             position: 'absolute',
             left: offset,
@@ -62,6 +66,7 @@ const Modal = ({
           },
           props.style
         ]}
+          keyboardShouldPersistTaps='handled'
           onStartShouldSetResponder={(event) => true}
           onTouchEnd={(e) => { e.stopPropagation(); }}
         >
@@ -74,7 +79,7 @@ const Modal = ({
           <Col>
             {props.children}
           </Col>
-        </Col>
+        </ScrollView>
       </Col>
     </Pressable>
   )

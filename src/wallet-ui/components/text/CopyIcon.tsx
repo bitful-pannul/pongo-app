@@ -5,17 +5,16 @@ import * as Clipboard from 'expo-clipboard'
 
 import Row from '../spacing/Row'
 import { Text } from '../../../components/Themed';
-import useColors from '../../../hooks/useColors';
 
 interface CopyIconProps {
   style?: any
   text: string
+  color: string
   iconOnly?: boolean
 }
 
-const CopyIcon: React.FC<CopyIconProps> = ({ style, text, iconOnly = true }) => {
+const CopyIcon: React.FC<CopyIconProps> = ({ style, text, color, iconOnly = true }) => {
   const [didCopy, setDidCopy] = useState(false)
-  const { color } = useColors()
 
   const onCopy = useCallback(() => {
     Clipboard.setStringAsync(text)

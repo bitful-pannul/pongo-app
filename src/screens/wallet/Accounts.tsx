@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { FontAwesome5 } from "@expo/vector-icons";
+import { DerivedAddressType, HardwareWalletType, Seed } from "@uqbar/wallet-ui";
 
 import Button from "../../components/form/Button";
 import H3 from "../../components/text/H3";
@@ -10,7 +11,6 @@ import Input from "../../wallet-ui/components/form/Input";
 import Modal from "../../wallet-ui/components/popups/Modal";
 import Col from "../../wallet-ui/components/spacing/Col";
 import Row from "../../wallet-ui/components/spacing/Row";
-import { DerivedAddressType, HardwareWalletType, Seed } from "../../wallet-ui/types/Accounts";
 import { capitalize } from "../../wallet-ui/utils/format";
 import { isIos } from "../../constants/Layout";
 import useColors from "../../hooks/useColors";
@@ -29,6 +29,8 @@ export default function WalletAccounts() {
   const [nick, setNick] = useState('')
   const [hdpath, setHdpath] = useState('')
   const [importType, setImportType] = useState<HardwareWalletType | null>(null)
+
+  const { color, backgroundColor, shadedBackground } = useColors()
 
   const addHardwareAddress = addAddressType && addAddressType !== 'hot'
 
@@ -139,7 +141,7 @@ export default function WalletAccounts() {
         WARNING: HOT WALLETS ARE NOT SECURE. ALL YOUR OTHER URBIT APPS CAN READ YOUR HOT WALLET PRIVATE KEYS.
       </Text>
       {accounts.map(a => (
-        <AccountDisplay key={a.address} account={a} />
+        <AccountDisplay color={color} key={a.address} account={a} />
       ))}
       <Col style={{ marginVertical: 16 }}>
         {accounts.length > 0 && (
@@ -151,7 +153,7 @@ export default function WalletAccounts() {
         <Button onPress={() => setShowCreate(true)} small title='New Wallet' />
       </Col>
       {importedAccounts.map(a => (
-        <AccountDisplay key={a.address} account={a} />
+        <AccountDisplay color={color} key={a.address} account={a} />
       ))}
       <Row>
         {importedAccounts.length > 0 && (
@@ -165,6 +167,9 @@ export default function WalletAccounts() {
         show={Boolean(seedData)} 
         hide={hideModal}
         style={{ minWidth: 300 }}
+        color={color}
+        backgroundColor={backgroundColor}
+        shadedBackground={shadedBackground}
       >
         <Col style={{ justifyContent: 'center', width: 300, marginVertical: 16 }}>
           <Text mono>{seedData?.mnemonic}</Text>
@@ -181,6 +186,9 @@ export default function WalletAccounts() {
         show={showCreate} 
         hide={hideModal}
         style={{ minWidth: 300 }}
+        color={color}
+        backgroundColor={backgroundColor}
+        shadedBackground={shadedBackground}
       >
         <Col style={{ justifyContent: 'center', alignItems: 'center', width: '100%', marginVertical: 16 }}>
           <Button style={{  marginBottom: 16 }} onPress={() => setShowAddWallet('create')} title='Create New Wallet' />
@@ -192,6 +200,9 @@ export default function WalletAccounts() {
         show={Boolean(showAddWallet)} 
         hide={hideModal}
         style={{ minWidth: 300 }}
+        color={color}
+        backgroundColor={backgroundColor}
+        shadedBackground={shadedBackground}
       >
         <Col style={{ justifyContent: 'center', alignItems: 'center', width: '100%', marginVertical: 16 }}>
           <Input
@@ -235,6 +246,9 @@ export default function WalletAccounts() {
         show={showImport} 
         hide={hideModal}
         style={{ minWidth: 300 }}
+        color={color}
+        backgroundColor={backgroundColor}
+        shadedBackground={shadedBackground}
       >
         <Col style={{ justifyContent: 'space-evenly', alignItems: 'center', height: '100%', width: '100%' }}>
           {isFirefox && <Col style={{ alignItems:'center', marginBottom: 16 }}>
@@ -261,6 +275,9 @@ export default function WalletAccounts() {
         show={Boolean(importType)}
         hide={hideModal}
         style={{ minWidth: 300 }}
+        color={color}
+        backgroundColor={backgroundColor}
+        shadedBackground={shadedBackground}
       >
         <Col style={{ justifyContent: 'center', alignItems: 'center', height: '100%', width: '100%' }}>
           <Input
@@ -278,6 +295,9 @@ export default function WalletAccounts() {
         show={Boolean(addAddressType)} 
         hide={hideModal}
         style={{ minWidth: 300 }}
+        color={color}
+        backgroundColor={backgroundColor}
+        shadedBackground={shadedBackground}
       >
         <Col style={{ justifyContent: 'center', alignItems: 'center', width: 300, maxWidth: '100%', backgroundColor: 'white', marginVertical: 16 }}>
           {/* {addHardwareAddress && (

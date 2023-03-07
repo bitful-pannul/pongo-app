@@ -15,12 +15,12 @@ import SearchResultsScreen from '../screens/pongo/SearchResults'
 import ChatsScreen from '../screens/pongo/Chats'
 import usePongoStore from '../state/usePongoState'
 import H3 from '../components/text/H3'
-import SearchHeader, { CloseSearch, OpenSearch } from '../components/pongo/SearchHeader'
+import SearchHeader, { CloseSearch, OpenSearch } from '../components/pongo/Headers/SearchHeader'
 import ProfileScreen from '../screens/pongo/Profile'
 import NavBackButton from '../components/pongo/BackButton'
 import { uq_purple } from '../constants/Colors'
-import ChatMenu from '../components/pongo/ChatMenu'
-import ChatHeader from '../components/pongo/ChatHeader'
+import ChatMenu from '../components/pongo/Chats/ChatMenu'
+import ChatHeader from '../components/pongo/Headers/ChatHeader'
 import GroupScreen from '../screens/pongo/Group'
 import usePosseState from '../state/usePosseState'
 import { getPushNotificationToken } from '../util/notification'
@@ -65,10 +65,10 @@ export default function PongoStackNavigator() {
           }
         }).catch(console.error)
 
-      initContact(api)
-      initPongo(api)
-      initPosse(api)
-      initWallet(api, {})
+      initContact(api).catch((err: any) => console.log('Contact:', err))
+      initPongo(api).catch((err: any) => console.log('Pongo:', err))
+      initPosse(api).catch((err: any) => console.log('Posse:', err))
+      initWallet(api, {}).catch((err: any) => console.log('INIT WALLET ERROR:', err))
       // navigation.reset({ index: 0, routes: [ { name: 'Chats' } ] })
     }
 

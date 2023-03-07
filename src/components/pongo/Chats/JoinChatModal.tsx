@@ -2,12 +2,12 @@ import { NavigationProp, useNavigation } from "@react-navigation/native"
 import { useCallback, useState } from "react"
 import { isValidPatp } from 'urbit-ob'
 
-import usePongoStore from "../../state/usePongoState"
-import { PongoStackParamList } from "../../types/Navigation"
-import Button from "../form/Button"
-import Modal from "../popup/Modal"
-import Col from "../spacing/Col"
-import { Text, TextInput } from "../Themed"
+import usePongoStore from "../../../state/usePongoState"
+import { PongoStackParamList } from "../../../types/Navigation"
+import Button from "../../form/Button"
+import Modal from "../../popup/Modal"
+import Col from "../../spacing/Col"
+import { Text, TextInput } from "../../Themed"
 
 interface JoinChatModalProps {
   show: boolean

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import H3 from "../../components/text/H3";
 import { ScrollView, Text } from "../../components/Themed";
+import useColors from "../../hooks/useColors";
 import { useWalletStore } from "../../wallet-ui";
 import TransactionShort from "../../wallet-ui/components/TransactionShort";
 import { addHexDots } from "../../wallet-ui/utils/format";
@@ -13,6 +14,7 @@ export default function WalletTransactions() {
   const { accounts, transactions, unsignedTransactions } = useWalletStore()
   const [filteredTransactions, setFilteredTransactions] = useState(transactions)
   const [selectedAddress, setSelectedAddress] = useState<string | undefined>()
+  const { color } = useColors()
 
   const filterByAddress = useCallback((address?: string) => {
     if (address) {
@@ -52,7 +54,7 @@ export default function WalletTransactions() {
 
       <Text bold style={{ fontSize: 18, marginTop: 16 }}>Unsigned</Text>
       {Object.keys(unsignedTransactions).length ? (
-        Object.values(unsignedTransactions).map(txn => <TransactionShort vertical selectHash={(hash: string) => null} key={txn.hash} txn={txn} />)
+        Object.values(unsignedTransactions).map((txn: any) => <TransactionShort vertical selectHash={(hash: string) => null} key={txn.hash} txn={txn} />)
       ) : (
         <Text>None</Text>
       )}

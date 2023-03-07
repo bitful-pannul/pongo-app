@@ -137,6 +137,10 @@ const usePongoStore = create<PongoStore>((set, get) => ({
       const { message_list } = await api.scry<{ message_list: Message[] }>(
         { app: 'pongo', path: `/messages/${chatId}/${msgId}/${numBefore}/${numAfter}` }
       )
+
+      if (!message_list.length) {
+        return chat.messages
+      }
       
       let newMessages: Message[] = message_list.map(msg => ({ ...msg, status: 'delivered' }))
 

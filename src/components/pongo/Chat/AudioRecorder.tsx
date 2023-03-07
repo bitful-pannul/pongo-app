@@ -5,10 +5,10 @@ import { Audio } from 'expo-av'
 import { Gesture, GestureDetector, GestureUpdateEvent, PanGestureHandlerEventPayload } from "react-native-gesture-handler"
 import AnimatedNode, { runOnJS, useAnimatedStyle, useSharedValue } from "react-native-reanimated"
 
-import { uq_pink, uq_purple } from "../../constants/Colors"
-import { window } from "../../constants/Layout"
-import { formatRecordTime } from "../../util/time"
-import useKeyboard from "../../hooks/useKeyboard"
+import { uq_pink, uq_purple } from "../../../constants/Colors"
+import { window } from "../../../constants/Layout"
+import { formatRecordTime } from "../../../util/time"
+import useKeyboard from "../../../hooks/useKeyboard"
 
 interface AudioRecorderProps {
   setIsRecording: (value: boolean) => void

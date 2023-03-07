@@ -1,4 +1,4 @@
-import { MaterialIcons, Ionicons } from '@expo/vector-icons'
+import { Ionicons } from '@expo/vector-icons'
 import { NavigationProp, RouteProp } from '@react-navigation/native'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
@@ -8,42 +8,33 @@ import {
   KeyboardAvoidingView,
   NativeScrollEvent,
   NativeSyntheticEvent,
-  Pressable,
-  RefreshControl,
   StyleSheet,
   TextInput,
-  TextInputKeyPressEventData,
-  TouchableHighlight,
   TouchableOpacity,
   View as DefaultView,
 } from 'react-native'
 import * as Clipboard from 'expo-clipboard'
-import moment from 'moment'
 
-import { BidirectionalFlatList } from './Bidirectional'
 import usePongoStore from '../../state/usePongoState'
 import useStore from '../../state/useStore'
 import useColors from '../../hooks/useColors'
-import MessageEntry from '../../components/pongo/Message/MessageEntry'
 import Row from '../../components/spacing/Row'
 import { Text, View } from '../../components/Themed'
 import Col from '../../components/spacing/Col'
-import SwipeList from '../../components/pongo/SwipeList'
-import Avatar from '../../components/pongo/Avatar'
-import ShipName from '../../components/pongo/ShipName'
-import MessageMenu from '../../components/pongo/Message/MessageMenu'
+import MessageMenu from '../../components/pongo/Chat/MessageMenu'
 import { addSig } from '../../util/string'
-import { checkIsDm, idNum, isAdminMsg } from '../../util/ping'
-import { getRelativeDate, ONE_SECOND } from '../../util/time'
-import { MENTION_REGEX } from '../../constants/Regex'
-import { isIos, isLargeDevice, keyboardAvoidBehavior, keyboardOffset, window } from '../../constants/Layout'
-import { blue_overlay, gray_overlay, light_gray, medium_gray, uq_pink, uq_purple } from '../../constants/Colors'
+import { isAdminMsg } from '../../util/ping'
+import { ONE_SECOND } from '../../util/time'
+import { isIos, keyboardAvoidBehavior, keyboardOffset, window } from '../../constants/Layout'
+import { uq_pink, uq_purple } from '../../constants/Colors'
 import { PongoStackParamList } from '../../types/Navigation'
 import { Message } from '../../types/Pongo'
 import useKeyboard from '../../hooks/useKeyboard'
+import { fromUd, numToUd } from '../../util/number'
+import ChatInput from '../../components/pongo/Inputs/ChatInput'
+import MentionSelector from '../../components/pongo/Inputs/MentionSelector'
+import MessagesList from '../../components/pongo/Chat/MessageList'
 import SendTokensModal from '../../components/pongo/SendTokensModal'
-// import useMedia from '../../hooks/useMedia'
-// import AudioRecorder from '../../components/pongo/AudioRecorder'
 
 const RETRIEVAL_NUM = 50
 
@@ -53,14 +44,14 @@ interface ChatScreenProps {
 }
 
 export default function ChatScreen({ navigation, route }: ChatScreenProps) {
-  const listRef = useRef<BidirectionalFlatList>(null)
+  const listRef = useRef<FlatList<any>>(null)
   const inputRef = useRef<TextInput>(null)
   const scrollYRef = useRef<number>(0)
   const indexRef = useRef<number>(0)
   const lastFetch = useRef<number>(0)
   const { ship, api } = useStore()
   const {
-    set, chats, drafts, edits, replies, chatPositions, getChats,
+    set, chats, edits, replies, chatPositions, getChats,
     setDraft, sendMessage, getMessages, setReply, setEdit, setLastReadMsg, editMessage, sendReaction, setChatPosition
   } = usePongoStore()
   const { color, chatBackground, backgroundColor } = useColors()
@@ -70,28 +61,21 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
   const [highlighted, setHighlighted] = useState<string | null>()
   const [focused, setFocused] = useState<string | undefined>()
   const [atEnd, setAtEnd] = useState(true)
-  const [gettingMessages, setGettingMessages] = useState(false)
   const [showMentions, setShowMentions] = useState(false)
   const [initialPositionLoad, setInitialPositionLoad] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
   const [potentialMentions, setPotentialMentions] = useState<string[]>([])
   const [unreadInfo, setUnreadInfo] = useState<{unreads: number; lastRead: string} | undefined>()
-  const [isRecording, setIsRecording] = useState(false)
-  const [sending, setSending] = useState(false)
-  const [uploading, setUploading] = useState(false)
   const [showSendTokensModal, setShowSendTokensModal] = useState(false)
 
   const chatId = route.params.id
   const msgId = route.params.msgId
-  const text = drafts[chatId] || ''
-  const chat = chats[chatId]
-  const messages = chat?.messages || []
-  const edit = useMemo(() => edits[chatId], [edits, chatId])
+  
+  const chat = useMemo(() => chats[chatId], [chatId, chats])
   const reply = useMemo(() => replies[chatId], [replies, chatId])
-  const isDm = useMemo(() => checkIsDm(chat), [chat])
+  const edit = useMemo(() => edits[chatId], [edits, chatId])
+  const messages = chat?.messages || []
   const { width, height } = window
-
-  // const { pickImage, storeAudio } = useMedia({ ship, chatId, reply, setUploading })
 
   useEffect(() => () => {
     setChatPosition(chatId, scrollYRef.current, indexRef.current)
@@ -130,7 +114,6 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
     const getInitialMessages = async () => {
       if (chatId && chat && initialLoading) {
         try {
-          setGettingMessages(true)
           // come to msg from push notification
           if (msgId) {
             await getMessages({ chatId, msgId, numBefore: RETRIEVAL_NUM, numAfter: RETRIEVAL_NUM })
@@ -162,7 +145,6 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
             msgs[0]?.id && setLastReadMsg(chatId, msgs[0].id).catch(console.warn)
           }
         } catch {} finally {
-          setGettingMessages(false)
           setInitialLoading(false)
         }
       }
@@ -174,8 +156,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
   useEffect(() => {
     if (chat?.conversation?.last_read && atEnd && (chat.conversation.last_read === messages[0]?.id || messages[0]?.id[0] === '-')) {
       const getMessagesInterval = setInterval(() => {
-        
-        getMessages({ chatId, msgId: chat.conversation.last_read, numBefore: 0, numAfter: 5, prepend: true })
+        getMessages({ chatId, msgId: numToUd(fromUd(chat.conversation.last_read) + 1), numBefore: 0, numAfter: 5, prepend: true })
           .catch(() => {
             // TODO: if this fails, set an indicator that the connection is broken
           })
@@ -214,24 +195,6 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
     message && setTimeout(() => listRef.current?.scrollToItem({ item: message, animated: true, viewPosition: 0.5 }), ONE_SECOND)
     setTimeout(() => setUnreadInfo(undefined), ONE_SECOND * 15)
   }, [])
-
-  const send = useCallback(async () => {
-    if (text.trim().length > 0) {
-      setSending(true)
-      try {
-        if (edit) {
-          editMessage(chatId, edit.id, text)
-          setEdit(chatId, undefined)
-        } else {
-          sendMessage({ self: ship, convo: chatId, kind: 'text', content: text, ref: reply?.id })
-          setReply(chatId, undefined)
-        }
-        setDraft(chatId, '')
-        setShowMentions(false)
-      } catch {}
-      setSending(false)
-    }
-  }, [ship, reply, edit, chatId, text, setSending])
 
   const onPressMessage = useCallback((msg: Message) => (offsetY: number, height: number) => {
     if (!isAdminMsg(msg)) {
@@ -286,7 +249,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
         setEdit(chatId, selected.msg)
         inputRef.current?.focus()
       } else if (act === 'resend') {
-        sendMessage({ self: ship, convo: chatId, kind: 'text', content: text, ref: reply?.id, resend: selected.msg })
+        sendMessage({ self: ship, convo: chatId, kind: 'text', content: selected.msg.content, ref: reply?.id, resend: selected.msg })
       } else if (act === 'delete') {
         editMessage(chatId, selected.msg.id, '')
       }
@@ -308,20 +271,16 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
     setReply(chatId, undefined)
   }, [chatId, edit, setReply, setEdit, setDraft])
   
-  const clearSelected = useCallback(() => {
-    setSelected(undefined)
-  }, [])
+  const clearSelected = useCallback(() => setSelected(undefined), [])
 
   const scrollToEnd = useCallback(async () => {
     lastFetch.current = Date.now()
     setTimeout(() => setAtEnd(true), 100)
     listRef.current?.scrollToOffset({ offset: 0, animated: false })
     
-    setGettingMessages(true)
     if (!(chat.last_message?.id === messages[0]?.id || !chat.last_message?.id)) {
       await getMessages({ chatId, msgId: chat.last_message.id, numBefore: 60, numAfter: 2 })
     }
-    setTimeout(() => setGettingMessages(false), ONE_SECOND / 2)
     scrollYRef.current = 0
     setChatPosition(chatId, 0, 0)
   }, [listRef, chatId, chat, messages])
@@ -334,14 +293,12 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
       return
     }
 
-    setGettingMessages(true)
     lastFetch.current = Date.now()
 
     const msgs = await getMessages({ chatId, msgId, numBefore: append ? RETRIEVAL_NUM : 0, numAfter: prepend ? RETRIEVAL_NUM : 0, append, prepend })
     if (msgs[0]?.id && prepend) {
       setLastReadMsg(chatId, msgs[0].id).catch(console.warn)
     }
-    setTimeout(() => setGettingMessages(false), ONE_SECOND / 2)
   }, [chatId, chat, messages, getMessages])
 
   const onScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -360,39 +317,6 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
     indexRef.current = viewableItems[viewableItems.length - 1]?.index || 0
   }, [])
 
-  const onChangeTextInput = useCallback((text: string) => {
-    setDraft(chatId, text)
-
-    if (isDm) {
-      return
-    }
-
-    const mentionMatch = text.match(MENTION_REGEX)
-    if (mentionMatch) {
-      const mentionName = mentionMatch[0].replace(/\s?@/, '')
-      if (mentionName.length) {
-        setPotentialMentions(chat.conversation.members.filter(m => m.includes(mentionName)))
-      } else {
-        setPotentialMentions(chat.conversation.members)
-      }
-      setShowMentions(true)
-    } else {
-      setShowMentions(false)
-    }
-
-  }, [chatId, chat, isDm, setDraft, setShowMentions])
-
-  const selectMention = useCallback((ship: string) => () => {
-    setDraft(chatId, text.replace(MENTION_REGEX, (match: string) => `${match[0] === ' ' ? ' ' : ''}~${ship} `))
-    setShowMentions(false)
-  }, [text])
-
-  const onScrollToIndexFailed = useCallback(({ index }: any) => {
-    try {
-      setTimeout(() => listRef.current?.scrollToIndex({ index, viewPosition: 0.5, animated: true }), ONE_SECOND)
-    } catch {}
-  }, [])
-
   const isOwnMsg = useMemo(() => selected?.msg.author.includes(ship), [selected, ship])
   const canDelete = isOwnMsg
   const canEdit = useMemo(
@@ -407,15 +331,6 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
     // || (messages.length > 0 && Number(messages[0]?.id) < Number(chat.last_message?.id) && messages[0]?.id.slice(0, 1) !== '-')
 
   const styles = useMemo(() => StyleSheet.create({
-    textInput: {
-      backgroundColor: 'white',
-      padding: 12,
-      paddingRight: 8,
-      borderRadius: 4,
-      borderWidth: 0,
-      fontSize: 16,
-      flex: 6,
-    },
     unreadIndicator: {
       position: 'absolute',
       top: -4,
@@ -433,54 +348,10 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
     goToEndButton: { position: 'absolute', right: 16 },
   }), [])
 
-  const renderMessage = useCallback(({ item, index }: { item: Message; index: number }) => {
-    const daySent = moment(item.timestamp * ONE_SECOND).format('YYYYMMDD')
-    const previous = messages[index + 1] && moment(messages[index + 1].timestamp * ONE_SECOND).format('YYYYMMDD')
-    const showDateIndicator = previous !== daySent
-
-    return <>
-      <MessageEntry
-        onPress={onPressMessage(item)} messages={messages}
-        focusReply={focusReply}
-        index={index} message={item} self={ship}
-        highlighted={highlighted === item.id}
-        addReaction={addReaction(item.id)}
-        isDm={chat.conversation.members.length <= 2}
-        onSwipe={swipeToReply}
-        chatId={chatId}
-      />
-      {unreadInfo && unreadInfo?.unreads > 0 && Number(unreadInfo?.lastRead) === idNum(item.id) - 1 && (
-        <View style={{ maxWidth: '84%', alignSelf: 'center', marginHorizontal: '8%', marginVertical: 4, backgroundColor: blue_overlay, borderRadius: 8, padding: 4, paddingHorizontal: 32 }}>
-          <Text style={{ fontSize: 16, color: 'white' }}>{unreadInfo?.unreads} Unread{unreadInfo?.unreads && unreadInfo?.unreads > 1 ? 's' : ''}</Text>
-        </View>
-      )}
-      {showDateIndicator && (
-        <View style={{ maxWidth: '84%', alignSelf: 'center', marginHorizontal: '8%', marginBottom: 4, marginTop: 8, backgroundColor: gray_overlay, borderRadius: 8, padding: 4, paddingHorizontal: 32 }}>
-          <Text style={{ fontSize: 16, color: 'white' }}>{getRelativeDate(item.timestamp * ONE_SECOND)}</Text>
-        </View>
-      )}
-    </>
-  }, [highlighted, messages, unreadInfo])
-
-  const keyExtractor = useCallback((item: Message) => `${item?.id || 'missing'}-${item?.timestamp}`, [])
-
-  const onKeyPress = useCallback((e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
-    if (e.nativeEvent.key === 'Enter' && isLargeDevice) {
-      e.preventDefault()
-      e.stopPropagation()
-      send()
-
-      setTimeout(() => {
-        setDraft(chatId, '')
-        setShowMentions(false)
-      }, 10)
-    }
-  }, [send, chatId])
-  
   if (!chats || !chats[chatId]) {
     return null
   }
-  
+
   return (
     <KeyboardAvoidingView
       style={{ height: '100%', width: '100%', flex: 1 }}
@@ -492,40 +363,29 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
           source={require('../../../assets/images/retro-background-small.jpg')}
           style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.3, width: '100%', height: '100%' }}
         />
-        <BidirectionalFlatList
-          ref={listRef}
-          data={messages}
-          contentContainerStyle={{ paddingTop: 4, paddingBottom: 12 }}
-          style={{ backgroundColor: chatBackground, borderBottomWidth: 0 }}
-          inverted
-          scrollEventThrottle={50}
-          onScroll={onScroll}
-          windowSize={15}
-          renderItem={renderMessage}
-          keyExtractor={keyExtractor}
-          keyboardShouldPersistTaps="handled"
-          onEndReached={getMessagesOnScroll({ append: true })}
-          onEndReachedThreshold={2}
+
+        <MessagesList
+          messages={messages}
+          self={ship}
+          chatBackground={chatBackground}
+          color={color}
+          listRef={listRef}
+          highlighted={highlighted}
+          unreadInfo={unreadInfo}
           initialNumToRender={initialNumToRender}
-          // onViewableItemsChanged={onViewableItemsChanged}
-          onScrollToIndexFailed={onScrollToIndexFailed}
-          refreshControl={<RefreshControl refreshing={false} onRefresh={getMessagesOnScroll({ prepend: true })} />}
           enableAutoscrollToTop={atEnd && !initialLoading}
-          autoscrollToTopThreshold={40}
-          activityIndicatorColor={color}
+          isDm={chat?.conversation?.dm}
+          chatId={chatId}
+          onViewableItemsChanged={onViewableItemsChanged}
+          onScroll={onScroll}
+          getMessagesOnScroll={getMessagesOnScroll}
+          onPressMessage={onPressMessage}
+          addReaction={addReaction}
+          swipeToReply={swipeToReply}
+          focusReply={focusReply}
         />
-        {showMentions && (
-          <SwipeList style={{ position: 'absolute', bottom: 0, backgroundColor }} minHeight={potentialMentions.length > 1 ? 100 : 50}>
-            {potentialMentions.map(mem => (
-              <TouchableHighlight onPress={selectMention(mem)}>
-                <Row key={`mention-${mem}`} style={{ padding: 4 }}>
-                  <Avatar size='large' ship={addSig(mem)} />
-                  <ShipName name={addSig(mem)} style={{ marginLeft: 8, fontSize: 18, color }} />
-                </Row>
-              </TouchableHighlight>
-            ))}
-          </SwipeList>
-        )}
+        
+        {showMentions && <MentionSelector {...{ chatId, potentialMentions, color, backgroundColor, setShowMentions }} />}
         {!messages?.length && (
           initialLoading ? (
             <ActivityIndicator size="large" style={{ width: '100%', padding: 40, position: 'absolute' }} />
@@ -536,20 +396,14 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
       </DefaultView>
 
       {showDownButton && (
-        // gettingMessages ? (
-        //   <View style={[styles.goToEndButton, { padding: 4, borderRadius: 20, bottom: goToEndButtonBottom }]}>
-        //     <ActivityIndicator color={color} />
-        //   </View>
-        // ) : (
-          <TouchableOpacity onPress={scrollToEnd} style={[styles.goToEndButton, { bottom: goToEndButtonBottom }]}>
-            <Col style={{ width: 48, height: 48, borderRadius: 36, justifyContent: 'center', alignItems: 'center' }}>
-              <Ionicons name='chevron-down' size={36} color={uq_purple} style={{ marginTop: 4 }} />
-              {!!chat?.unreads && chat.unreads > 0 && <View style={styles.unreadIndicator}>
-                <Text style={{ color: 'white', fontSize: 12, fontWeight: '600' }}>{chat.unreads}</Text>
-              </View>}
-            </Col>
-          </TouchableOpacity>
-        // )
+        <TouchableOpacity onPress={scrollToEnd} style={[styles.goToEndButton, { bottom: goToEndButtonBottom }]}>
+          <Col style={{ width: 48, height: 48, borderRadius: 36, justifyContent: 'center', alignItems: 'center' }}>
+            <Ionicons name='chevron-down' size={36} color={uq_purple} style={{ marginTop: 4 }} />
+            {!!chat?.unreads && chat.unreads > 0 && <View style={styles.unreadIndicator}>
+              <Text style={{ color: 'white', fontSize: 12, fontWeight: '600' }}>{chat.unreads}</Text>
+            </View>}
+          </Col>
+        </TouchableOpacity>
       )}
       
       <Col>
@@ -562,35 +416,9 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
             <Text numberOfLines={1} style={{ fontSize: 14, marginTop: 2, maxWidth: width - 140 }}>"{(edit || reply).content}"</Text>
           </Row>
         )}
-        <Row style={{ marginBottom: isIos ? 40 : 0, borderBottomWidth: 1, borderBottomColor: light_gray, backgroundColor: 'white' }}>
-          {uploading ? (
-            <>
-              <ActivityIndicator size='large' style={{ margin: 8, marginLeft: 16 }} color='black' />
-              <Text style={{ color: 'black', margin: 8 }}>Uploading...</Text>
-            </>
-          ) : (
-            <>
-              {!isRecording && <TextInput ref={inputRef} placeholder='Message' value={text} onKeyPress={onKeyPress}
-                onChangeText={onChangeTextInput} maxLength={1024} style={styles.textInput} multiline
-              />}
-              {text.length > 0 ? (
-                <Pressable onPress={send} disabled={sending}>
-                  <MaterialIcons name='send' size={32} style={{ padding: 8 }} color={sending ? medium_gray : uq_purple} />
-                </Pressable>
-              ) : (
-                <>
-                  {!isRecording && <Pressable onPress={() => setShowSendTokensModal(true)} style={{ marginRight: 4 }}>
-                    <MaterialIcons name='attach-money' size={32} style={{ padding: 8 }} color={uq_purple} />
-                  </Pressable>}
-                  {/* {!isRecording && <Pressable onPress={pickImage} style={{ marginRight: 6 }}>
-                    <Ionicons name='attach' size={32} style={{ padding: 8 }} color={uq_purple} />
-                  </Pressable>}
-                  <AudioRecorder {...{ storeAudio, setIsRecording }} /> */}
-                </>
-              )}
-            </>
-          )}
-        </Row>
+
+        <ChatInput {...{ inputRef, chatId, showMentions, setShowMentions, setPotentialMentions, setShowSendTokensModal }} />
+
       </Col>
 
       {Boolean(selected) && (
@@ -598,6 +426,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
           <MessageMenu {...{ interactWithSelected, react, selected, color, isOwnMsg, canEdit, canResend, canDelete }} />
         </TouchableOpacity>
       )}
+
       {showSendTokensModal && <SendTokensModal convo={chatId} show={showSendTokensModal} hide={() => setShowSendTokensModal(false)} />}
     </KeyboardAvoidingView>
   )

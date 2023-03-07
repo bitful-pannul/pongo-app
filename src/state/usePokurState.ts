@@ -122,7 +122,6 @@ const usePokurStore = create<PokurStore>((set, get) => ({
     set({ messages })
   },
   getOurTable: async () => {
-    console.log(1)
     const ourTable = await api.scry({ app: 'pokur', path: '/our-table' })
     console.log(2, ourTable)
 
