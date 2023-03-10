@@ -88,8 +88,6 @@ const MessagesList = React.memo(({
 
   const keyExtractor = useCallback((item: Message) => `${item?.id || 'missing'}-${item?.timestamp}`, [])
 
-  console.log('RERENDER')
-
   return (
     <BidirectionalFlatList
       ref={listRef}

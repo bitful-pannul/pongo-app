@@ -48,7 +48,7 @@
       },
       "supportsTablet": true,
       "bundleIdentifier": "network.uqbar.ping",
-      "buildNumber": "24"
+      "buildNumber": "25"
     },
     "android": {
       "adaptiveIcon": {
