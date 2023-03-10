@@ -2,7 +2,7 @@ import { isValidPatp } from 'urbit-ob'
 import React from 'react'
 import { Image, View, Text } from 'react-native'
 import _ from 'lodash'
-import { deSig, Contact, cite, uxToHex } from '@urbit/api'
+import { deSig, Contact, cite } from '@urbit/api'
 import { darken, lighten, parseToHsla } from 'color2k'
 
 import { useContact } from '../../state/useContactState'

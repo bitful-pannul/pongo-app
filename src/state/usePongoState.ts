@@ -145,9 +145,9 @@ const usePongoStore = create<PongoStore>((set, get) => ({
       let newMessages: Message[] = message_list.map(msg => ({ ...msg, status: 'delivered' }))
 
       if (append) {
-        newMessages = dedupeAndSort((chat.messages.slice(-120) || []).concat(newMessages))
+        newMessages = dedupeAndSort((chat.messages.slice(-100) || []).concat(newMessages))
       } else if (prepend) {
-        newMessages = dedupeAndSort((newMessages).concat((chat.messages || []).slice(0, 120)))
+        newMessages = dedupeAndSort((newMessages).concat((chat.messages || []).slice(0, 100)))
       }
       
       chat.messages = newMessages

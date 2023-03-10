@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { ActivityIndicator, Image as DefaultImage } from "react-native"
-import { Image } from 'expo-image'
+import { Image } from "expo-image"
 
 interface ScaledImageProps {
   width: number;
@@ -13,7 +13,7 @@ const ScaledImage = ({ width, uri, ...props }: ScaledImageProps) => {
   const [imageLoading, setImageLoading] = useState(true)
 
   useEffect(() => {
-    DefaultImage.getSize(uri, (width1, height1) => {
+      DefaultImage.getSize(uri, (width1, height1) => {
         setHeight(width / width1 * height1)
         setImageLoading(false)
       }, (error) => {
@@ -23,7 +23,7 @@ const ScaledImage = ({ width, uri, ...props }: ScaledImageProps) => {
 
   return (
     height ?
-      <Image source={uri} style={{ height, width }} resizeMode='contain' cachePolicy={'disk'} />
+      <Image source={uri} style={{ width, height }} contentFit="contain" cachePolicy='disk' />
       : imageLoading ?
         <ActivityIndicator size="large" />
         : null

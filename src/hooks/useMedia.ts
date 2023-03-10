@@ -32,7 +32,7 @@ export default function useMedia({ ship, chatId, reply, setUploading } : UseMedi
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         aspect: [4, 3],
-        quality: 0.2,
+        quality: 1,
       })
 
       if (!result.canceled) {
@@ -45,7 +45,7 @@ export default function useMedia({ ship, chatId, reply, setUploading } : UseMedi
           const manipResult = await manipulateAsync(
             imgInfo.uri,
             [{ resize: { width: resizedWidth }}],
-            { compress: 0.2, format: ext === 'png' ? SaveFormat.PNG : SaveFormat.JPEG }
+            { compress: 1, format: ext === 'png' ? SaveFormat.PNG : SaveFormat.JPEG }
           )
 
           const imgBlob = await fetchFileFromUri(manipResult.uri)

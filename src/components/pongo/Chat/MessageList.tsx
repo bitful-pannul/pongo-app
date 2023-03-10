@@ -1,12 +1,12 @@
 import moment from 'moment'
-import React, { useCallback } from 'react'
-import { FlatList, RefreshControl, NativeSyntheticEvent, NativeScrollEvent } from 'react-native'
+import React, { useCallback, useMemo } from 'react'
+import { FlatList, RefreshControl, NativeSyntheticEvent, NativeScrollEvent, StyleSheet } from 'react-native'
 import { blue_overlay, gray_overlay } from '../../../constants/Colors'
+import { isWeb } from '../../../constants/Layout'
 import { Message } from '../../../types/Pongo'
 import { idNum } from '../../../util/ping'
 import { getRelativeDate, ONE_SECOND } from '../../../util/time'
 import { Text, View } from '../../Themed'
-
 import { BidirectionalFlatList } from './Bidirectional'
 import MessageEntry from './MessageEntry'
 
@@ -88,29 +88,53 @@ const MessagesList = React.memo(({
 
   const keyExtractor = useCallback((item: Message) => `${item?.id || 'missing'}-${item?.timestamp}`, [])
 
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      transform: isWeb ? [{scaleY: -1}] : undefined,
+      position: 'absolute',
+      top: 0,
+      right: 0,
+      left: 0,
+      bottom: 0,
+      backgroundColor: chatBackground,
+    },
+    list: {
+      backgroundColor: 'transparent',
+      borderBottomWidth: 0,
+      // flexDirection: isWeb ? 'column-reverse' : undefined,
+    },
+    contentContainer: {
+      paddingTop: 4,
+      paddingBottom: 12,
+      // flexDirection: isWeb ? 'column-reverse' : undefined,
+    },
+  }), [])
+
   return (
-    <BidirectionalFlatList
-      ref={listRef}
-      data={messages}
-      contentContainerStyle={{ paddingTop: 4, paddingBottom: 12 }}
-      style={{ backgroundColor: chatBackground, borderBottomWidth: 0 }}
-      inverted
-      scrollEventThrottle={50}
-      onScroll={onScroll}
-      windowSize={15}
-      renderItem={renderMessage}
-      keyExtractor={keyExtractor}
-      keyboardShouldPersistTaps="handled"
-      onEndReached={getMessagesOnScroll({ append: true })}
-      onEndReachedThreshold={2}
-      initialNumToRender={initialNumToRender}
-      onViewableItemsChanged={onViewableItemsChanged}
-      onScrollToIndexFailed={onScrollToIndexFailed}
-      refreshControl={<RefreshControl refreshing={false} onRefresh={getMessagesOnScroll({ prepend: true })} />}
-      enableAutoscrollToTop={enableAutoscrollToTop}
-      autoscrollToTopThreshold={40}
-      activityIndicatorColor={color}
-    />
+    <View style={styles.container}>
+      <BidirectionalFlatList
+        ref={listRef}
+        data={messages}
+        contentContainerStyle={styles.contentContainer}
+        style={styles.list}
+        inverted
+        scrollEventThrottle={50}
+        onScroll={onScroll}
+        windowSize={15}
+        renderItem={renderMessage}
+        keyExtractor={keyExtractor}
+        keyboardShouldPersistTaps="handled"
+        onEndReached={getMessagesOnScroll({ append: true })}
+        onEndReachedThreshold={2}
+        initialNumToRender={initialNumToRender}
+        onViewableItemsChanged={onViewableItemsChanged}
+        onScrollToIndexFailed={onScrollToIndexFailed}
+        refreshControl={<RefreshControl refreshing={false} onRefresh={getMessagesOnScroll({ prepend: true })} />}
+        enableAutoscrollToTop={enableAutoscrollToTop}
+        autoscrollToTopThreshold={40}
+        activityIndicatorColor={color}
+      />
+    </View>
   )
 }
 // , (pP, nP) => pP.messages[0]?.id === nP.messages[0]?.id

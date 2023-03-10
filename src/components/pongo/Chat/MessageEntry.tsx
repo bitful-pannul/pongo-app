@@ -73,10 +73,6 @@ const MessageEntry = React.memo(({
   const [highlight] = useState(new Animated.Value(highlighted ? 1 : 0))
   const [shakeAnimation] = useState(new Animated.Value(0))
 
-  // if (index === 0) {
-  //   console.log('RENDER:', index)
-  // }
-
   useEffect(() => {
     const getQuotedMsg = async () => {
       if (reference && !quotedMsg && api) {

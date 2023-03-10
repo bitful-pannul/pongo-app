@@ -68,7 +68,7 @@ const Modal = ({
         ]}
           keyboardShouldPersistTaps='handled'
           onStartShouldSetResponder={(event) => true}
-          onTouchEnd={(e) => { e.stopPropagation(); }}
+          onTouchEnd={(e) => { e.stopPropagation(); e.preventDefault() }}
         >
           <Row between>
             {Boolean(title) && <H3 text={title!} />}

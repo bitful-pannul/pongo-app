@@ -51,7 +51,7 @@ export default function ChatsEntry({ chat, navigation }: ChatProps) {
   )
 
   const styles = useMemo(() => StyleSheet.create({
-    chatsEntry: { width: '100%', padding: 24, paddingVertical: 10, borderBottomWidth: 1, borderColor: uq_lightpurple },
+    chatsEntry: { width: '100%', padding: 16, paddingVertical: 10, borderBottomWidth: 1, borderColor: uq_lightpurple },
     unread: {
       padding: 4, backgroundColor: muted ? medium_gray : uq_purple, borderRadius: 14, minWidth: 28, justifyContent: 'center'
     },
@@ -68,7 +68,7 @@ export default function ChatsEntry({ chat, navigation }: ChatProps) {
         ) : (
           <Avatar size='huge' ship={groupDisplayShip} />
         )}
-        <Col style={{ marginLeft: 12, width: (isLargeDevice ? width / 4 : width) - (2 * 24 + 12 + 48) }}>
+        <Col style={{ marginLeft: 12, flex: 1 }}>
           <Row style={{ flex: 1, justifyContent: 'space-between' }}>
             <Text style={{ fontSize: 18, fontWeight: '600', maxWidth: width - (2 * 24 + 12 + 48 + 70) }} numberOfLines={1}>{chatName}</Text>
             {/* FORMAT TIME: time if today, day of the week if last week, mmm DD if last year, DD.MM.YY otherwise */}

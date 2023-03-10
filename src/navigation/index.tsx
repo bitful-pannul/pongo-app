@@ -40,7 +40,7 @@ export default function Navigation({
 
   return (
     <NavigationContainer theme={colorScheme === "dark" ? DarkTheme : DefaultTheme} ref={navigationRef}>
-      <Drawer.Navigator initialRouteName="Pongo" drawerContent={DrawerContent} screenOptions={{ swipeEnabled: false }}>
+      <Drawer.Navigator initialRouteName="Pongo" drawerContent={DrawerContent} screenOptions={{ swipeEnabled: false }} useLegacyImplementation={false}>
         <Drawer.Screen name="Pongo" component={PongoStackNavigator} options={() => ({
           headerShown: false,
         })} />

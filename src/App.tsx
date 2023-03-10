@@ -1,4 +1,5 @@
 import 'react-native-gesture-handler'
+import 'setimmediate'
 import { StatusBar } from "expo-status-bar"
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { ActivityIndicator, Alert, AppState, AppStateStatus, Button, StyleSheet, Text, View } from "react-native"
@@ -20,6 +21,7 @@ import useColors from './hooks/useColors'
 import useColorScheme from './hooks/useColorScheme'
 import usePongoStore from './state/usePongoState'
 import { NotifPayload } from './types/Pongo'
+import { isWeb } from './constants/Layout'
 
 const HANDLE_NOTIFICATION_BACKGROUND = 'HANDLE_NOTIFICATION_BACKGROUND'
 
@@ -28,7 +30,9 @@ TaskManager.defineTask(HANDLE_NOTIFICATION_BACKGROUND, async ({ data, error, exe
   showNotification(payload)
 })
 
-Notifications.registerTaskAsync(HANDLE_NOTIFICATION_BACKGROUND)
+if (!isWeb) {
+  Notifications.registerTaskAsync(HANDLE_NOTIFICATION_BACKGROUND)
+}
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -40,7 +44,7 @@ Notifications.setNotificationHandler({
 
 export default function App() {
   const isLoadingComplete = useCachedResources()
-  const { loading, setLoading, ship: self, shipUrl, authCookie, loadStore, needLogin, setNeedLogin, setShip } = useStore()
+  const { loading, setLoading, ship: self, shipUrl, authCookie, loadStore, needLogin, setNeedLogin, setShip, addShip } = useStore()
   const { currentChat, set } = usePongoStore()
   const { color, backgroundColor } = useColors()
   const colorScheme = useColorScheme()
@@ -128,15 +132,29 @@ export default function App() {
         )
       }
 
-      const res = await storage.load({ key: 'store' }).catch(console.error)
-      if (res?.shipUrl) {
-        const response = await fetch(res.shipUrl).catch(console.error)
-        const html = await response?.text()
+      if (isWeb) {
 
-        if (html && URBIT_HOME_REGEX.test(html)) {
+      }
+
+      const res = await storage.load({ key: 'store' }).catch(console.error)
+
+      if (res?.shipUrl) {
+        if (isWeb) {
           loadStore(res)
-          setNeedLogin(false)
+        } else {
+          const response = await fetch(res.shipUrl).catch(console.error)
+          const html = await response?.text()
+  
+          if (html && URBIT_HOME_REGEX.test(html)) {
+            loadStore(res)
+          }
         }
+        setNeedLogin(false)
+      } else if (isWeb) {
+        console.log(window.ship)
+        addShip({ ship: window.ship, shipUrl: '/' })
+        setNeedLogin(false)
+        console.log('WEB')
       }
       
       setTimeout(() => setLoading(false), 200)

@@ -1,10 +1,22 @@
 import Urbit from "@uqbar/react-native-api";
 import { configureApi } from "@uqbar/react-native-api/configureApi";
+import WebUrbit from "@urbit/http-api";
 import React from "react";
 import WebView from "react-native-webview";
 import create, { SetState } from "zustand";
+import { isWeb } from "../constants/Layout";
 import storage from "../util/storage";
 import { deSig } from "../util/string";
+
+const initializeApi = (ship: string, shipUrl: string) => {
+  if (isWeb) {
+    const api = new WebUrbit("", "", "pongo")
+    api.ship = window.ship
+    return api
+  }
+  
+  return configureApi(ship, shipUrl)
+}
 
 declare global {
   var api: Urbit;
@@ -67,9 +79,9 @@ const useStore = create<Store>((set, get) => ({
     window.ship = deSig(store.ship);
     global.window.ship = deSig(store.ship);
 
-    const api = configureApi(store.ship, store.shipUrl);
-    global.api = api
-    window.api = api
+    const api = initializeApi(store.ship, store.shipUrl);
+    global.api = api as any
+    window.api = api as any
 
     return { ...store, api };
   }),
@@ -77,8 +89,8 @@ const useStore = create<Store>((set, get) => ({
   setLoading: (loading: boolean) => set({ loading }),
   addShip: (shipConnection: ShipConnection) => set((store) => {
     const { ship } = shipConnection;
-    const api = configureApi(shipConnection.ship, shipConnection.shipUrl);
-    const newStore: any = getNewStore(store, shipConnection.ship, { ...shipConnection, ship: `~${deSig(ship)}` }, api);
+    const api = initializeApi(shipConnection.ship, shipConnection.shipUrl);
+    const newStore: any = getNewStore(store, shipConnection.ship, { ...shipConnection, ship: `~${deSig(ship)}` }, api as any);
     
     storage.save({ key: 'store', data: newStore });
     return newStore;
@@ -112,7 +124,7 @@ const useStore = create<Store>((set, get) => ({
     const newStore: any = { ships, ship: '', shipUrl: '', authCookie: '', api: null };
 
     if (newShip) {
-      const api = configureApi(newShip.ship, newShip.shipUrl);
+      const api = initializeApi(newShip.ship, newShip.shipUrl);
       newStore.ship = newShip.ship;
       newStore.shipUrl = newShip.shipUrl;
       newStore.authCookie = newShip.authCookie || '';

@@ -1,4 +1,4 @@
-import { WalletStore, useWalletStore } from './store/walletStore'
+import { useWalletStore } from './store/walletStore'
 
 // import {
 //   HardwareWalletType,
@@ -56,7 +56,6 @@ import { WalletStore, useWalletStore } from './store/walletStore'
 
 export {
   useWalletStore,
-  WalletStore,
   
   // HardwareWalletType,
   // DerivedAddressType,

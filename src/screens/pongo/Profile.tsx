@@ -134,7 +134,7 @@ export default function ProfileScreen({ navigation, route }: ProfileScreenProps)
                 onChangeText={changeTag}
                 style={{ height: 40, width: 200 }}
               />
-              <Button title='Add Tag' onPress={saveTag} style={{ width: undefined, marginLeft: 8, marginRight: 0 }} />
+              <Button title='Add Tag' small onPress={saveTag} style={{ marginLeft: 8, marginRight: 0 }} />
             </Row>
             {Boolean(error) && <Text style={{ fontSize: 16, color: 'red', margin: 4 }}>{error}</Text>}
           </Col>

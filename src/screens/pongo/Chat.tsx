@@ -4,7 +4,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   KeyboardAvoidingView,
   NativeScrollEvent,
   NativeSyntheticEvent,
@@ -14,6 +13,7 @@ import {
   View as DefaultView,
 } from 'react-native'
 import * as Clipboard from 'expo-clipboard'
+import { Image } from "expo-image"
 
 import usePongoStore from '../../state/usePongoState'
 import useStore from '../../state/useStore'
@@ -359,7 +359,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
       keyboardVerticalOffset={keyboardOffset}
     >
       <DefaultView style={{ flex: 1 }}>
-        <Image resizeMode="cover"
+        <Image contentFit="cover"
           source={require('../../../assets/images/retro-background-small.jpg')}
           style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.3, width: '100%', height: '100%' }}
         />

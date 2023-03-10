@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import { Pressable, StyleSheet } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Token } from '@uqbar/wallet-ui'
@@ -15,7 +15,7 @@ import NftImage from './NftImage';
 import HexNum from './text/HexNum';
 import { Text } from '../../components/Themed';
 import Button from '../../components/form/Button';
-import { window } from '../../constants/Layout';
+import { isWeb, window } from '../../constants/Layout';
 
 interface TokenDisplayProps {
   token: Token
@@ -37,7 +37,7 @@ const TokenDisplay: React.FC<TokenDisplayProps> = ({
   const [open, setOpen] = useState(false)
   const isToken = token.token_type === 'token'
 
-  const styles = StyleSheet.create({
+  const styles = useMemo(() => StyleSheet.create({
     displayStyle: {
       paddingHorizontal: 4,
       paddingTop: 8,
@@ -50,6 +50,7 @@ const TokenDisplay: React.FC<TokenDisplayProps> = ({
     smallStyle: small ? {
       margin: 0,
       maxWidth: '94%',
+      marginHorizontal: isWeb ? 'auto' : '3%'
     } : {},
     tokenName: {
       paddingLeft: 4,
@@ -68,7 +69,7 @@ const TokenDisplay: React.FC<TokenDisplayProps> = ({
       paddingLeft: 8,
       paddingTop: 8,
     }
-  })
+  }), [open])
 
   const select = useCallback(() => {
     selectToken(id, data.id)
@@ -80,7 +81,7 @@ const TokenDisplay: React.FC<TokenDisplayProps> = ({
     isToken ? 'coins' : 'portrait'
 
   return (
-    <Pressable onPress={() => !open && setOpen(true)}>
+    <Pressable onPress={() => !open && setOpen(true)} style={{ width: '100%' }}>
       <Col style={[styles.displayStyle, styles.smallStyle]}>
         <Pressable onPress={() => setOpen(!open)}>
           <Row between>
@@ -98,7 +99,7 @@ const TokenDisplay: React.FC<TokenDisplayProps> = ({
                 <Text># {data.id || ''}</Text>
               )}
             </Row>
-            <Button onPress={select} style={{ marginLeft: 16, marginRight: 4 }} small title='Send' />
+            <Button onPress={select} style={{ marginLeft: 16, marginRight: 4 }} small title='Select' />
           </Row>
         </Pressable>
         <Col style={[styles.tokenDetails, styles.tokenClosedDetails]}>

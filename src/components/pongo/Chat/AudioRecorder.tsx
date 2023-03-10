@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { PermissionsAndroid, Platform, Pressable, StyleSheet, Text, View, Animated, Easing, EasingFunction, GestureResponderEvent, Keyboard } from "react-native"
+import { PermissionsAndroid, Platform, Pressable, StyleSheet, Text, View, Animated, Easing, EasingFunction, Keyboard } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { Audio } from 'expo-av'
 import { Gesture, GestureDetector, GestureUpdateEvent, PanGestureHandlerEventPayload } from "react-native-gesture-handler"
 import AnimatedNode, { runOnJS, useAnimatedStyle, useSharedValue } from "react-native-reanimated"
+import * as Haptics from 'expo-haptics'
 
 import { uq_pink, uq_purple } from "../../../constants/Colors"
 import { window } from "../../../constants/Layout"
@@ -62,6 +63,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ storeAudio, setIsRecordin
       Keyboard.dismiss()
       return
     }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)
     setIsRecording(true)
     isRecordingStuff.value = true
     const newMicAnimation = createPulse(micTransform, 1.4, 1, Easing.linear)
@@ -103,17 +105,23 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ storeAudio, setIsRecordin
     recordAnimation.stop()
     console.log('Stopping recording...', cancel)
     if (recording) {
-      const newStatus = await recording.stopAndUnloadAsync()
-      setRecordingStatus(newStatus)
-      if (!cancel) {
-        await Audio.setAudioModeAsync({
-          allowsRecordingIOS: false,
-        })
-        const uri = recording.getURI()
-        console.log('Recording stopped and stored at', uri)
-        if (uri) {
-          storeAudio(uri)
+      try {
+        const newStatus = await recording.stopAndUnloadAsync()
+        setRecordingStatus(newStatus)
+        if (!cancel) {
+          await Audio.setAudioModeAsync({
+            allowsRecordingIOS: false,
+          })
+          const uri = recording.getURI()
+          console.log('Recording stopped and stored at', uri)
+          if (uri) {
+            storeAudio(uri)
+          }
         }
+      } catch {
+        setRecordingStatus(undefined)
+      } finally {
+        setRecording(undefined)
       }
     }
     setRecording(undefined)
@@ -139,33 +147,6 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ storeAudio, setIsRecordin
       }
     })()
   }, [])
- 
-  // Actions
-  // const onStartRecord = async () => {
-  //   if (!androidGranted) {
-  //     if (Platform.OS === 'android') {
-  //       const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.RECORD_AUDIO)
- 
-  //       if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-  //         return false
-  //       }
-  //     }
- 
-  //     if (Platform.OS === 'android') {
-  //       const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE)
- 
-  //       if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-  //         return false
-  //       }
-  //     }
- 
-  //     setAndroidGranted(true)
-  //   } else {
-  //     startRecording()
-  //   }
- 
-  //   return
-  // }
  
   const styles = useMemo(() => StyleSheet.create({
     container: {
@@ -212,7 +193,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ storeAudio, setIsRecordin
   }), [recordingStatus])
 
   const panGesture = Gesture.Pan()
-    .activateAfterLongPress(300)
+    .activateAfterLongPress(600)
     .shouldCancelWhenOutside(true)
     .onBegin((e: GestureUpdateEvent<PanGestureHandlerEventPayload>) => {
       runOnJS(startRecording)(isKeyboardVisible)

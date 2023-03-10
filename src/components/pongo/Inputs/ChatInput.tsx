@@ -2,7 +2,7 @@ import { Ionicons, MaterialIcons } from "@expo/vector-icons"
 import React, { useCallback, useEffect, useMemo, useState } from "react"
 import { TextInput, NativeSyntheticEvent, Pressable, TextInputKeyPressEventData, ActivityIndicator, Text } from "react-native"
 import { light_gray, medium_gray, uq_purple } from "../../../constants/Colors"
-import { isIos, isLargeDevice } from "../../../constants/Layout"
+import { isIos, isLargeDevice, isWeb } from "../../../constants/Layout"
 import { MENTION_REGEX } from "../../../constants/Regex"
 import useMedia from "../../../hooks/useMedia"
 import usePongoStore from "../../../state/usePongoState"
@@ -95,13 +95,14 @@ export default function ChatInput({ chatId, inputRef, showMentions, setShowMenti
         setPotentialMentions(chat.conversation.members)
       }
       setShowMentions(true)
+      setDraft(chatId, text)
     } else if (showMentions) {
       setShowMentions(false)
     }
   }, [chatId, chat, isDm, setText, setShowMentions, showMentions])
 
   return (
-    <Row style={{ marginBottom: isIos ? 40 : 0, borderBottomWidth: 1, borderBottomColor: light_gray, backgroundColor: 'white' }}>
+    <Row style={{ marginBottom: isIos ? 40 : 0, borderBottomWidth: 1, borderBottomColor: light_gray, backgroundColor: 'white', height: 54 }}>
       {uploading ? (
         <>
           <ActivityIndicator size='large' style={{ margin: 8, marginLeft: 16 }} color='black' />
@@ -135,7 +136,7 @@ export default function ChatInput({ chatId, inputRef, showMentions, setShowMenti
               {!isRecording && <Pressable onPress={pickImage} style={{ marginRight: 6 }}>
                 <Ionicons name='attach' size={32} style={{ padding: 8 }} color={uq_purple} />
               </Pressable>}
-              <AudioRecorder {...{ storeAudio, setIsRecording }} />
+              {!isWeb && <AudioRecorder {...{ storeAudio, setIsRecording }} />}
             </>
           )}
         </>

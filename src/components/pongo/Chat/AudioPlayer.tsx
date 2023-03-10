@@ -116,7 +116,6 @@ export default function AudioPlayer({ uri, color, ...props }: AudioPlayerProps) 
       </Pressable>
       <View style={styles.progressInfo}>
         <Slider
-          thumbImage={isIos ? thumbImage : undefined}
           style={styles.slider}
           value={status?.positionMillis || 0}
           minimumValue={0}

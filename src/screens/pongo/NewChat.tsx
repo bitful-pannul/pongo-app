@@ -63,7 +63,7 @@ export default function NewChatScreen({ navigation }: NewChatScreenProps) {
         </Col>
       ) : (
         <>
-          <Button style={{ marginTop: 16 }} onPress={() => navigation.navigate('NewGroup')} iconName='people' title='New Group' />
+          <Button style={{ marginTop: 16 }} onPress={() => navigation.navigate('NewGroup')} iconName='add' title='New Group' />
           {Object.keys(tags).length > 0 && (
             <Button style={{ marginTop: 16 }} onPress={() => navigation.navigate('NewPosseGroup')} title='New Group From Posse' />
           )}

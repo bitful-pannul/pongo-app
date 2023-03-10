@@ -14,6 +14,7 @@ import { ESCAPE_APP_LINK } from "../constants/Escape"
 import usePongoStore from "../state/usePongoState"
 import { useApi } from "../hooks/useApi"
 import { configureApi } from "@uqbar/react-native-api/configureApi"
+import { isWeb } from "../constants/Layout"
 
 export default function DrawerContent({
   navigation,
@@ -85,6 +86,30 @@ export default function DrawerContent({
     }
   }, [ships])
 
+  const goToGrid = useCallback(() => {
+    if (isWeb) {
+      window.location.assign('/apps/grid')
+    } else {
+      navigation.navigate('Grid')
+    }
+  }, [])
+
+  const goToEScape = useCallback(() => {
+    if (isWeb) {
+      window.location.assign('/apps/escape')
+    } else {
+      navigation.navigate('Grid', { path: '/apps/escape' })
+    }
+  }, [])
+
+  const goToPokur = useCallback(() => {
+    if (isWeb) {
+      window.location.assign('/apps/pokur')
+    } else {
+      navigation.navigate('Grid', { path: '/apps/pokur' })
+    }
+  }, [])
+
   const { color, backgroundColor } = useColors()
   const styles = getStyles(color)
 
@@ -107,14 +132,16 @@ export default function DrawerContent({
           </TouchableOpacity>
         </View>)}
       </View>
-      <Button small unstyled
-        style={{ marginTop: 12, marginLeft: 0 }}
-        viewStyle={{ justifyContent: 'flex-start', paddingLeft: 4 }}
-        background={showManageShips ? uq_purple : uq_darkpurple}
-        title="Manage Ships"
-        iconName={showManageShips ? 'chevron-up' : 'chevron-down'}
-        onPress={() => setShowManageShips(!showManageShips)}
-      />
+      {!isWeb && (
+        <Button small unstyled
+          style={{ marginTop: 12, marginLeft: 0 }}
+          viewStyle={{ justifyContent: 'flex-start', paddingLeft: 4 }}
+          background={showManageShips ? uq_purple : uq_darkpurple}
+          title="Manage Ships"
+          iconName={showManageShips ? 'chevron-up' : 'chevron-down'}
+          onPress={() => setShowManageShips(!showManageShips)}
+        />
+      )}
       {showManageShips && (
         <>
           <Button small style={{ marginTop: 12, marginLeft: 4 }} title="Add ship" onPress={handleAdd} />
@@ -144,13 +171,13 @@ export default function DrawerContent({
             <Text style={styles.app}>Pongo</Text>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('Grid')} style={{ marginTop: 16 }}>
+        <TouchableOpacity onPress={goToGrid} style={{ marginTop: 16 }}>
           <View style={{ ...styles.row, ...styles.rowStart }}>
             <Ionicons name="grid" size={24} color={color} />
             <Text style={styles.app}>Apps</Text>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('Grid', { path: '/apps/pokur' })} style={{ marginTop: 16 }}>
+        <TouchableOpacity onPress={goToPokur} style={{ marginTop: 16 }}>
           <View style={{ ...styles.row, ...styles.rowStart }}>
             <Text style={{ fontSize: 24, color }}>♠</Text>
             <Text style={styles.app}>Pokur</Text>
@@ -168,7 +195,7 @@ export default function DrawerContent({
             <Text style={styles.app}>Handshake</Text>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('Grid', { path: '/apps/escape' })} style={{ marginTop: 16 }}>
+        <TouchableOpacity onPress={goToEScape} style={{ marginTop: 16 }}>
           <View style={{ ...styles.row, ...styles.rowStart }}>
             <Image style={{ width: 24, height: 24 }} source={require('../../assets/images/escape-icon.png')} />
             <Text style={styles.app}>EScape</Text>

@@ -3,10 +3,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useCallback } from 'react';
 import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu'
+import { isWeb } from '../../../constants/Layout';
 import useColors from '../../../hooks/useColors';
 import usePongoStore from '../../../state/usePongoState';
 import useStore from '../../../state/useStore';
-import { Chat } from '../../../types/Pongo';
 import Row from '../../spacing/Row';
 import { Text } from '../../Themed';
 
@@ -34,7 +34,7 @@ export default function ChatMenu({ id }: ChatMenuProps) {
   const changeMute = useCallback(() => toggleMute(id), [id])
 
   return (
-    <Menu>
+    <Menu style={{ marginRight: isWeb ? 16 : undefined }}>
       <MenuTrigger>
         <Ionicons name='menu' size={24} color='white' style={{ padding: 4 }} />
       </MenuTrigger>

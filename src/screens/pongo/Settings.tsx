@@ -12,7 +12,7 @@ import usePongoStore from '../../state/usePongoState'
 import useStore from '../../state/useStore'
 import { NotifLevel } from '../../types/Pongo'
 import { getPushNotificationToken } from '../../util/notification'
-import { isIos } from '../../constants/Layout'
+import { isIos, isWeb } from '../../constants/Layout'
 
 interface SettingsScreenProps {
   navigation: NavigationProp<PongoStackParamList>
@@ -64,7 +64,11 @@ export default function SettingsScreen({ navigation, route }: SettingsScreenProp
           ) : (
             <>
               <H3 text='Notfications Disabled' style={{ marginBottom: 8 }} />
-              <Text>Please go to Settings {'>'} Notifications {'>'} Pongo to turn on notifications</Text>
+              {isWeb ? (
+                <Text>Notifications are not enabled in web</Text>
+              ) : (
+                <Text>Please go to Settings {'>'} Notifications {'>'} Pongo to turn on notifications</Text>
+              )}
             </>
           )}
         </Col>
