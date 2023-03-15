@@ -52,7 +52,7 @@ export default function ChatInput({ chatId, inputRef, showMentions, setShowMenti
           editMessage(chatId, edit.id, text)
           setEdit(chatId, undefined)
         } else {
-          sendMessage({ self, convo: chatId, kind: 'text', content: text, ref: reply?.id })
+          sendMessage({ self, convo: chatId, kind: 'text', content: text, ref: reply?.id, mentions: reply ? [reply.author] : [] })
           setReply(chatId, undefined)
         }
         setText('')

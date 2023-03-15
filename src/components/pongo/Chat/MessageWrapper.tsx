@@ -3,7 +3,7 @@ import { BlurView } from "expo-blur"
 import { capitalize } from "lodash"
 import moment from "moment"
 import { useCallback, useState } from "react"
-import { View, Pressable, Modal } from "react-native"
+import { Animated, View, Pressable, Modal } from "react-native"
 import * as Haptics from 'expo-haptics'
 
 import { gray_overlay } from "../../../constants/Colors"
@@ -29,8 +29,10 @@ const Reaction = ({ color, emoji, reactions, addReaction }: ReactionProps) => {
   const [showReactors, setShowReactors] = useState(false)
 
   const onPressReaction = useCallback((emoji: string) => () => {
-    addReaction && addReaction(emoji)
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+    if (addReaction) {
+      addReaction(emoji)
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+    }
   }, [addReaction])
 
   const onLongPressReaction = useCallback((emoji: string) => () => {

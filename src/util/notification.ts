@@ -4,12 +4,22 @@ import * as Notifications from 'expo-notifications';
 import { DM_DIVIDER } from '../constants/Pongo';
 import { NotifPayload } from '../types/Pongo';
 import { isWeb } from '../constants/Layout';
+import { Platform } from 'react-native';
 
 export const getPushNotificationToken = async () => {
   let token;
 
   if (!isWeb) {
     try {
+      if (Platform.OS === 'android') {
+        await Notifications.setNotificationChannelAsync('default', {
+          name: 'default',
+          importance: Notifications.AndroidImportance.MAX,
+          // vibrationPattern: [0, 250, 250, 250],
+          // lightColor: '#FF231F7C',
+        });
+      }
+
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;
     

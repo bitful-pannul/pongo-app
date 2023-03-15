@@ -1,18 +1,18 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Image, Keyboard, KeyboardAvoidingView, StyleSheet, TextInput } from "react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react"
+import { ActivityIndicator, Image, Keyboard, KeyboardAvoidingView, StyleSheet, TextInput } from "react-native"
 import * as Clipboard from 'expo-clipboard'
-import Checkbox from 'expo-checkbox';
+import Checkbox from 'expo-checkbox'
+import * as Linking from 'expo-linking'
 
-import { Text, View } from "../components/Themed";
-import useStore from "../state/useStore";
-import Button from "../components/form/Button";
-import { isIos, keyboardAvoidBehavior, keyboardOffset, window } from "../constants/Layout";
-import Col from "../components/spacing/Col";
-import H3 from "../components/text/H3";
-import Row from "../components/spacing/Row";
-import { ONE_SECOND } from "../util/time";
-import { uq_purple } from "../constants/Colors";
-import useColors from "../hooks/useColors";
+import { Text, View } from "../components/Themed"
+import useStore from "../state/useStore"
+import Button from "../components/form/Button"
+import { isIos, keyboardAvoidBehavior, keyboardOffset, window } from "../constants/Layout"
+import Col from "../components/spacing/Col"
+import Row from "../components/spacing/Row"
+import { ONE_SECOND } from "../util/time"
+import { uq_purple } from "../constants/Colors"
+import useColors from "../hooks/useColors"
 
 type CreateAccountStep = 'email' | 'otp' | 'invite' | 'success'
 
@@ -53,6 +53,7 @@ export default function CreateAccountScreen({ method, goBack } : { method: 'logi
   const [accessToken, setAccessToken] = useState('')
   const [authCookie, setAuthCookie] = useState('')
   const [termsChecked, setChecked] = useState(false)
+  const initialUrlPromise = Linking.getInitialURL()
 
   const [accountDetails, setAccountDetails] = useState<AccountDetails | null>()
 
@@ -149,6 +150,89 @@ export default function CreateAccountScreen({ method, goBack } : { method: 'logi
     setLoading('')
   }, [email, termsChecked])
 
+  const registerInviteCode = useCallback(async (inviteCode: string, token: string) => {
+    if (!(/^[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}$/.test(inviteCode))) {
+      return setInviteError('Must be in xxxx-xxxx-xxxx format')
+    }
+
+    setLoading('Generating account...')
+    try {
+      const inviteRedemptionResult = await fetch(`${ROOT_URL}/rest/v1/rpc/redeem_invite_code`, {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": `${ANON_KEY}`,
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          "invite_code": inviteCode
+        })
+      })
+
+      const username = await inviteRedemptionResult.text()
+
+      if (!username) {
+        setLoading('')
+        return setInviteError('That invite code has already been claimed')
+      }
+
+      const userDataResult = await fetch(`${ROOT_URL}/rest/v1/planets?select=*`, {
+        method: 'GET',
+        headers: {
+          "apikey": `${ANON_KEY}`,
+          "Authorization": `Bearer ${token}`,
+        }
+      })
+
+      const userInfo: UserInfo[] = await userDataResult.json()
+
+      if (!userInfo || !userInfo[0] || !userInfo[0].pat_p) {
+        setLoading('')
+        return setInviteError('Account info not found')
+      }
+
+      const ship = userInfo[0].pat_p
+      const url = `https://${ship}.${userInfo[0].domain}`
+      const code = userInfo[0]['lus_code']
+
+      const formBody = `${encodeURIComponent('password')}=${encodeURIComponent(code)}`
+      const loginCheckStart = Date.now()
+      
+      const loginResult: any = await new Promise((resolve, reject) => {
+        const loginInterval = setInterval(() => {
+          fetch(`${url}/~/login`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+            },
+            body: formBody
+          })
+            .then((result) => {
+              clearInterval(loginInterval)
+              resolve(result)
+            })
+            .catch(() => {
+              console.log('failed once', (Date.now() - loginCheckStart))
+              if ((Date.now() - loginCheckStart) > (20 * ONE_SECOND)) {
+                reject('Login timed out')
+              }
+            })
+        }, ONE_SECOND)
+      })
+
+      const authCookieHeader = loginResult.headers.get('set-cookie') || ''
+      setAuthCookie(authCookieHeader || '')
+      
+      setAccountDetails({ ship, url, code })
+      setStep('success')
+    } catch (err) {
+      setInviteError('Something went wrong, please check the invite code and try again')
+    }
+    setLoading('')
+  }, [])
+
+  const submitInvite = useCallback(() => registerInviteCode(invite, accessToken), [invite, accessToken])
+
   const submitOtp = useCallback(async () => {
     if (otp.length < 6) {
       return setOtpError('Must be 6 digits')
@@ -206,11 +290,6 @@ export default function CreateAccountScreen({ method, goBack } : { method: 'logi
   
           const authCookieHeader = loginResult.headers.get('set-cookie') || ''
           setAuthCookie(authCookieHeader || '')
-          // if (!authCookieHeader) {
-          //   console.log('auth header error')
-          //   return setInviteError('Something went wrong, please check the invite code and try again');
-          // }
-          
           setAccountDetails({ ship, url, code })
   
           setStep('success')
@@ -218,99 +297,24 @@ export default function CreateAccountScreen({ method, goBack } : { method: 'logi
       } else {
         setAccessToken(access_token)
         setStep('invite')
+
+        const initialUrl = await initialUrlPromise
+        if (initialUrl && initialUrl.includes('invite-code') && initialUrl.includes('?')) {
+          const [, queryString] = initialUrl.split('?')
+          const queryParams = queryString.split('&')
+          const inviteCode = queryParams.find(qp => qp.includes('invite-code'))?.replace('invite-code=', '')
+          if (inviteCode) {
+            setInvite(inviteCode)
+            setTimeout(() => registerInviteCode(inviteCode, access_token), 1)
+          }
+        }
       }
       setOtp('')
-    } catch {
+    } catch (err) {
       setOtpError('Something went wrong, please check the code and try again')
     }
     setLoading('')
-  }, [otp, method])
-
-  const submitInvite = useCallback(async () => {
-    if (!(/^[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}$/.test(invite))) {
-      return setInviteError('Must be in xxxx-xxxx-xxxx format')
-    }
-
-    setLoading('Generating account...')
-    try {
-      const inviteRedemptionResult = await fetch(`${ROOT_URL}/rest/v1/rpc/redeem_invite_code`, {
-        method: 'POST',
-        headers: {
-          "Content-Type": "application/json",
-          "apikey": `${ANON_KEY}`,
-          "Authorization": `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          "invite_code": invite
-        })
-      })
-
-      const username = await inviteRedemptionResult.text()
-
-      if (!username) {
-        setLoading('')
-        return setInviteError('That invite code has already been claimed')
-      }
-
-      const userDataResult = await fetch(`${ROOT_URL}/rest/v1/planets?select=*`, {
-        method: 'GET',
-        headers: {
-          "apikey": `${ANON_KEY}`,
-          "Authorization": `Bearer ${accessToken}`,
-        }
-      })
-
-      const userInfo: UserInfo[] = await userDataResult.json()
-
-      if (!userInfo || !userInfo[0] || !userInfo[0].pat_p) {
-        setLoading('')
-        return setInviteError('Account info not found')
-      }
-
-      const ship = userInfo[0].pat_p
-      const url = `https://${ship}.${userInfo[0].domain}`
-      const code = userInfo[0]['lus_code']
-
-      const formBody = `${encodeURIComponent('password')}=${encodeURIComponent(code)}`
-      const loginCheckStart = Date.now()
-      
-      const loginResult: any = await new Promise((resolve, reject) => {
-        const loginInterval = setInterval(() => {
-          fetch(`${url}/~/login`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-            },
-            body: formBody
-          })
-            .then((result) => {
-              clearInterval(loginInterval)
-              resolve(result)
-            })
-            .catch(() => {
-              console.log('failed once', (Date.now() - loginCheckStart))
-              if ((Date.now() - loginCheckStart) > (20 * ONE_SECOND)) {
-                reject('Login timed out')
-              }
-            })
-        }, ONE_SECOND)
-      })
-      
-      const authCookieHeader = loginResult.headers.get('set-cookie') || ''
-      setAuthCookie(authCookieHeader || '')
-      // if (!authCookieHeader) {
-      //   console.log('auth header error')
-      //   return setInviteError('Something went wrong, please check the invite code and try again');
-      // }
-      
-      setAccountDetails({ ship, url, code })
-      setStep('success')
-    } catch (err) {
-      console.log('error:', err)
-      setInviteError('Something went wrong, please check the invite code and try again')
-    }
-    setLoading('')
-  }, [invite, accessToken])
+  }, [otp, method, registerInviteCode])
 
   const content = (
     loading ? (

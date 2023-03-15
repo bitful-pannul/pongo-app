@@ -1,6 +1,6 @@
 import create, { SetState } from "zustand"
-
 import Urbit from "@uqbar/react-native-api";
+
 import { Guest } from "../types/Handshake";
 import { hoonToJSDate, ONE_SECOND } from "../util/time";
 import { DefaultStore } from "./types/types";
@@ -58,8 +58,10 @@ const useHandshakeStore = create<HandshakeStore>((set, get) => ({
       const expiresAt = new Date(expires_at * ONE_SECOND)
       set({ code, expiresAt })
     }
+
     const handleReaderUpdate = (data: { [key: string]: string }) => {
       // good-sig, bad-sig, expired-sig
+      console.log('READER UPDATE:', data)
 
       if (data['good-sig']) {
         set({ possePopupShip: data['good-sig'], showPossePopup: true })

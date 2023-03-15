@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect } from "react"
 import { Pressable } from "react-native"
+
 import { uq_purple } from "../../../constants/Colors"
 import useDebounce from "../../../hooks/useDebounce"
 import useSearch from "../../../hooks/useSearch"
@@ -12,6 +13,7 @@ import { TextInput } from "../../Themed"
 
 interface SearchHeaderProps {
   searchType?: SearchType
+  chatId?: string
 }
 
 export function OpenSearch() {
@@ -34,7 +36,7 @@ export function CloseSearch() {
   )
 }
 
-export default function SearchHeader({ searchType = 'ship' }: SearchHeaderProps) {
+export default function SearchHeader({ searchType = 'ship', chatId }: SearchHeaderProps) {
   const { set, searchTerm } = usePongoStore()
   const { search } = useSearch()
 
@@ -48,7 +50,7 @@ export default function SearchHeader({ searchType = 'ship' }: SearchHeaderProps)
     }
   }, [])
 
-  useDebounce(() => search(searchType, searchTerm), [searchTerm, searchType, search], ONE_SECOND * 0.5)
+  useDebounce(() => search(searchType, searchTerm, chatId), [searchTerm, searchType, search], ONE_SECOND * 0.2)
 
   const updateSearch = useCallback((searchTerm: string) => set({ searchTerm }), [])
 

@@ -9,6 +9,7 @@ import * as TaskManager from 'expo-task-manager'
 import * as Network from 'expo-network'
 import { Ionicons } from "@expo/vector-icons"
 import { MenuProvider } from 'react-native-popup-menu'
+import * as Linking from 'expo-linking'
 
 import useCachedResources from "./hooks/useCachedResources"
 import useStore from "./state/useStore"

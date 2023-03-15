@@ -30,7 +30,7 @@ export default function ChatHeader({ chatId }: ChatHeaderProps) {
   }, [navigation, isDm, chatName])
 
   return (
-    isSearching ? <SearchHeader searchType='message' /> :
+    isSearching ? <SearchHeader searchType='message' chatId={chatId} /> :
       (
         <Pressable onPress={onPress}>
           <ProfileHeader name={chatName} showAvatar={isDm} />

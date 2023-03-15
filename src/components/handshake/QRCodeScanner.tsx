@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { BarCodeScanner, BarCodeScannerResult } from "expo-barcode-scanner";
 import { StyleSheet, Text, View } from "react-native";
 import Button from "../form/Button";
@@ -17,11 +17,11 @@ const QrCodeScanner: React.FC<{ onScan: (text: string) => void }> = ({
     getBarCodeScannerPermissions();
   }, []);
   
-  const handleBarCodeScanned = ({ type, data }: BarCodeScannerResult) => {
+  const handleBarCodeScanned = useCallback(({ type, data }: BarCodeScannerResult) => {
     setScanned(true);
     // alert(`Bar code with type ${type} and data ${data} has been scanned!`);
     onScan(data);
-  };
+  }, []);
 
   if (hasPermission === null) {
     return <Text>Requesting for camera permission</Text>;

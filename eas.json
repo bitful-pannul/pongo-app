@@ -19,12 +19,12 @@
       },
       "ios": {
         "buildConfiguration": "Debug",
-        "resourceClass": "m1-medium"
+        "resourceClass": "m-medium"
       }
     },
     "production": {
       "ios": {
-        "resourceClass": "m1-medium"
+        "resourceClass": "m-medium"
       }
     }
   },

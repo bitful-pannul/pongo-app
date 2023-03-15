@@ -18,7 +18,7 @@ export default function useSearch() {
   const { api, set, searchMessages } = usePongoStore()
   const { contacts } = useContactState()
 
-  const search = useCallback((searchType: SearchType, query: string) => {
+  const search = useCallback((searchType: SearchType, query: string, chatId?: string) => {
     set({ searchTerm: query })
 
     if (query) {
@@ -58,8 +58,10 @@ export default function useSearch() {
   
         set({ searchResults })
       } else if (searchType === 'message') {
-        if (api) {
-          searchMessages({ uid: ALL_MESSAGES_UID, phrase: query })
+        if (api && chatId) {
+          console.log(1, query, chatId)
+          const uid = '0x1234'
+          searchMessages({ uid, phrase: query, onlyIn: chatId })
         }
       }
     }

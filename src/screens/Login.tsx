@@ -106,7 +106,12 @@ export default function LoginScreen() {
           if (html) {
             const stringMatch = html.match(/<input value="~.*?" disabled="true"/i) || [];
             const ship = stringMatch[0]?.slice(14, -17);
-            if (ship) addShip({ ship, shipUrl: formattedUrl });
+            if (ship) {
+              addShip({ ship, shipUrl: formattedUrl });
+            } else {
+              setShipUrl('')
+              setUrlProblem('Please ensure your ship is accessible and try again.')
+            }
           }
         }
       } else {
@@ -229,7 +234,7 @@ export default function LoginScreen() {
               urlInputRef?.current.focus()
             }}>
               <View style={styles.changeHttp}>
-                <Text style={{ textAlign: 'center' }}>
+                <Text style={{ textAlign: 'center', backgroundColor: 'transparent' }}>
                   Change to {shipUrlInput.includes('https') ? 'http' : 'https'}
                 </Text>
               </View>
@@ -297,8 +302,10 @@ export default function LoginScreen() {
 
     return (
       <>
-        <Button style={{ marginTop: isIos ? 48 : 24 }} title="Login with URL" onPress={() => setLoginType('url')} />
-        <Button style={{ marginTop: 16 }} title="Login with Email" onPress={() => setLoginType('email-login')} />
+        <Text style={{ marginLeft: '10%', marginTop: isIos ? 48 : 24, fontSize: 18 }}>Urbit:</Text>
+        <Button style={{ marginTop: 8 }} title="Login with URL" onPress={() => setLoginType('url')} />
+        <Text style={{ marginLeft: '10%', marginTop: 32, fontSize: 18 }}>Red Horizon Hosting:</Text>
+        <Button style={{ marginTop: 8 }} title="Login with Email" onPress={() => setLoginType('email-login')} />
         <Button style={{ marginTop: 16 }} title="Create Account" onPress={() => setLoginType('create-account')} />
         {/* <Text style={{ marginTop: 16 }}>Already Logged In?</Text>
         <Button title="Refresh Connection" onPress={loadStorage} /> */}

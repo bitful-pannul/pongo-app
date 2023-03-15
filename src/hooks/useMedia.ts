@@ -6,6 +6,7 @@ import { isIos, window } from "../constants/Layout"
 import { Message } from "../types/Pongo"
 import { fetchFileFromUri, getFileExt, uploadFile } from "../util/file-upload"
 import usePongoStore from "../state/usePongoState"
+import useSettingsState from "../state/useSettingsState"
 
 interface UseMediaProps {
   ship: string
@@ -16,6 +17,7 @@ interface UseMediaProps {
 
 export default function useMedia({ ship, chatId, reply, setUploading } : UseMediaProps) {
   const { sendMessage, setReply } = usePongoStore()
+  const { s3Creds, s3Config } = useSettingsState()
 
   const { width } = window
 
@@ -49,8 +51,9 @@ export default function useMedia({ ship, chatId, reply, setUploading } : UseMedi
           )
 
           const imgBlob = await fetchFileFromUri(manipResult.uri)
-          const filename = `${chatId.slice(2, 10).replace(/\./g, '')}${Date.now()}.${ext || 'jpg'}` 
-          const uploadUrl = await uploadFile(imgBlob, filename)
+          const filename = `${chatId.slice(2, 10).replace(/\./g, '')}${Date.now()}.${ext || 'jpg'}`
+
+          const uploadUrl = await uploadFile(imgBlob, filename, s3Creds, s3Config)
           console.log('FILE URL:', uploadUrl)
           // I need to somehow push the message in before the image is actually uploaded
           await sendMessage({ self: ship, convo: chatId, kind: 'text', content: uploadUrl, ref: reply?.id })
@@ -61,14 +64,14 @@ export default function useMedia({ ship, chatId, reply, setUploading } : UseMedi
       console.log('UPLOAD ERROR:', e)
     }
     setUploading(false)
-  }, [ship, reply, chatId])
+  }, [ship, reply, chatId, s3Creds, s3Config])
 
   const storeAudio = useCallback(async (audioUri: string) => {
     setUploading(true)
     try {
       const imgBlob = await fetchFileFromUri(audioUri)
       const filename = `${chatId.slice(2, 10).replace(/\./g, '')}${Date.now()}.${getFileExt(audioUri)}` 
-      const uploadUrl = await uploadFile(imgBlob, filename)
+      const uploadUrl = await uploadFile(imgBlob, filename, s3Creds, s3Config)
       console.log('FILE URL:', uploadUrl)
       await sendMessage({ self: ship, convo: chatId, kind: 'text', content: uploadUrl, ref: reply?.id })
       setReply(chatId, undefined)
@@ -76,7 +79,7 @@ export default function useMedia({ ship, chatId, reply, setUploading } : UseMedi
       console.log('UPLOAD ERROR:', e)
     }
     setUploading(false)
-  }, [ship, reply, chatId])
+  }, [ship, reply, chatId, s3Creds, s3Config])
 
   return { pickImage, storeAudio }
 }

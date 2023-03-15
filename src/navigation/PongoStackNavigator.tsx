@@ -38,6 +38,7 @@ import ShipTitle from '../components/header/ShipTitle'
 import ContactsScreen from '../screens/pongo/Contacts'
 import { useWalletStore } from '../wallet-ui'
 import Row from '../components/spacing/Row'
+import useSettingsState from '../state/useSettingsState'
 
 let checkAppsInstalledInterval: NodeJS.Timer | undefined
 
@@ -51,6 +52,7 @@ export default function PongoStackNavigator() {
   const navigation = useNavigation<NavigationProp<PongoStackParamList>>()
   const { init: initPosse, clearSubscriptions: clearPosse } = usePosseState()
   const { init: initContact, clearSubscriptions: clearContact } = useContactState()
+  const { init: initSettings, clearSubscriptions: clearSettings } = useSettingsState()
   const { init: initPongo, isSearching, clearSubscriptions: clearPongo, notifLevel, setNotifications } = usePongoStore()
   const { initWallet, clearSubscriptions: clearWallet } = useWalletStore()
   const { api, ship: self, shipUrl } = useStore()
@@ -60,12 +62,14 @@ export default function PongoStackNavigator() {
     if (api) {
       getPushNotificationToken()
         .then((token) => {
+          console.log('TOKEN', token)
           if (token) {
             setNotifications({ shipUrl, expoToken: token, level: notifLevel === 'off' ? 'low' : notifLevel })
           }
         }).catch(console.error)
 
       initContact(api).catch((err: any) => console.log('Contact:', err))
+      initSettings(api).catch((err: any) => console.log('Settings:', err))
       initPongo(api).catch((err: any) => console.log('Pongo:', err))
       initPosse(api).catch((err: any) => console.log('Posse:', err))
       initWallet(api, {}).catch((err: any) => console.log('INIT WALLET ERROR:', err))
@@ -75,6 +79,7 @@ export default function PongoStackNavigator() {
     return () => {
       if (api) {
         clearContact()
+        clearSettings()
         clearPosse()
         clearPongo()
         clearWallet()

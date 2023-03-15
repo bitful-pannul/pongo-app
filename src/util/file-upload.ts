@@ -1,14 +1,16 @@
 import AWS from 'aws-sdk'
+
 import { ACCESS_KEY, BUCKET_NAME, SECRET_KEY } from '../s3-creds'
+import { S3Config, S3Creds } from '../state/useSettingsState'
 
-const s3 = new AWS.S3({
-  accessKeyId: ACCESS_KEY,
-  secretAccessKey: SECRET_KEY,
-})
+export const uploadFile = async (blob: Blob, filename: string, s3Creds?: S3Creds, s3Config?: S3Config) => {
+  const s3 = new AWS.S3({
+    accessKeyId: s3Creds?.credentials.accessKeyId || ACCESS_KEY,
+    secretAccessKey: s3Creds?.credentials.secretAccessKey || SECRET_KEY,
+  })
 
-export const uploadFile = async (blob: Blob, filename: string) => {
   const uploadedImage = await s3.upload({
-    Bucket: BUCKET_NAME,
+    Bucket: s3Config?.configuration.currentBucket || BUCKET_NAME,
     Key: filename,
     Body: blob,
     ACL: 'public-read'

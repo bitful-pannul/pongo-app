@@ -133,39 +133,41 @@ export default function GroupScreen({ navigation, route }: GroupScreenProps) {
 
         {display === 'members' && (
           <>
-            <Col style={{ marginBottom: 4, marginHorizontal: width * 0.1 }}>
-              <Row>
-                <TextInput
-                  value={newMember}
-                  placeholder='New Member'
-                  onChangeText={changeNewMember}
-                  style={{ height: 40, width: 220 }}
-                  autoCorrect={false}
-                  autoCapitalize='none'
-                  autoComplete='off'
-                />
-                <Button title='Add' onPress={addNewMember} style={{ width: undefined, marginLeft: 8, marginRight: 0 }} />
-              </Row>
-              {Boolean(newMemberError) && <Text style={{ fontSize: 16, color: 'red', margin: 4 }}>{newMemberError}</Text>}
-            </Col>
+            {selfIsAdmin && (
+              <Col style={{ marginBottom: 4, marginHorizontal: width * 0.1 }}>
+                <Row>
+                  <TextInput
+                    value={newMember}
+                    placeholder='New Member'
+                    onChangeText={changeNewMember}
+                    style={{ height: 40, width: 220 }}
+                    autoCorrect={false}
+                    autoCapitalize='none'
+                    autoComplete='off'
+                  />
+                  <Button title='Add' onPress={addNewMember} style={{ width: undefined, marginLeft: 8, marginRight: 0 }} />
+                </Row>
+                {Boolean(newMemberError) && <Text style={{ fontSize: 16, color: 'red', margin: 4 }}>{newMemberError}</Text>}
+              </Col>
+            )}
 
-            <ScrollView style={{ width, paddingHorizontal: width / 10, flex: 1}} keyboardShouldPersistTaps='handled'>
+            <ScrollView style={{ width, paddingHorizontal: width / 10, flex: 1, marginTop: 4 }} keyboardShouldPersistTaps='handled'>
               {members.map(mem => {
                 const isAdmin = leaders?.includes(deSig(mem))
 
                 return (
                   <TouchableOpacity key={mem} onPress={() => navigation.navigate('Profile', { ship: addSig(mem) })} style={styles.member}>
                     <Row style={{ justifyContent: 'space-between', width: width * 0.75 }}>
-                      <Row>
+                      <Row style={{ width: '84%' }}>
                         <Avatar ship={addSig(mem)} size={'large'} />
-                        <ShipName style={styles.shipName} name={addSig(mem)} />
+                        <ShipName numberOfLines={1} style={styles.shipName} name={addSig(mem)} />
                         {isAdmin && <Text style={{ fontSize: 18, marginLeft: 8 }}>(admin)</Text>}
                       </Row>
                       {selfIsAdmin && deSig(self) !== deSig(mem) && <Menu>
                         <MenuTrigger>
                           <Ionicons name='menu' size={24} color={color} style={{ padding: 4 }} />
                         </MenuTrigger>
-                        <MenuOptions style={{ backgroundColor }}>
+                        <MenuOptions {...{ style: { backgroundColor } }}>
                           <MenuOption onSelect={updateShip(addSig(mem), 'member-remove')}>
                             <Row style={{ justifyContent: 'flex-end', alignItems: 'center', paddingRight: 12, paddingVertical: 4 }}>
                               <Text style={{ fontSize: 16, fontWeight: '600', marginRight: 8 }}>Remove</Text>

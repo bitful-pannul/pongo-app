@@ -1,5 +1,5 @@
 import { MaterialIcons, Ionicons } from '@expo/vector-icons'
-import React from 'react'
+import React, { useMemo } from 'react'
 import { TouchableOpacity, StyleSheet } from 'react-native'
 import { BlurView } from "expo-blur"
 
@@ -7,7 +7,7 @@ import Row from '../../spacing/Row'
 import { Text, View } from '../../Themed'
 import { gray_overlay } from '../../../constants/Colors'
 import Col from '../../spacing/Col'
-import { CHECK_MARK, THUMB_UP, THUMB_DOWN, THANK_YOU, FIRE, GRINNING, CLAPPING } from '../../../constants/Emojis'
+import { HEART, THUMB_UP, THUMB_DOWN, THANK_YOU, FIRE, LAUGHING, CLAPPING } from '../../../constants/Emojis'
 import { Message } from '../../../types/Pongo'
 import { window, isIos } from '../../../constants/Layout'
 const { height } = window
@@ -23,11 +23,11 @@ interface MessageMenuProps {
   interactWithSelected: (act: 'reply' | 'copy' | 'edit' | 'resend' | 'delete') => () => void;
 }
 
-export default function MessageMenu({
+const MessageMenu = React.memo(({
   selected, canEdit, canResend, canDelete, isOwnMsg, color, react, interactWithSelected
-}: MessageMenuProps) {
+}: MessageMenuProps) => {
 
-  const styles = StyleSheet.create({
+  const styles = useMemo(() => StyleSheet.create({
     messageInteractionModal: {
       alignSelf: 'center',
       backgroundColor: 'transparent',
@@ -54,14 +54,14 @@ export default function MessageMenu({
       fontSize: 18,
       marginLeft: 16,
     },
-  })
+  }), [])
 
   const blurContents = (
     <Col style={styles.messageInteractionModal}>
       {!isOwnMsg && (
         <Row style={{ borderRadius: 8, marginBottom: 4, paddingHorizontal: 4 }}>
           {/* SHOW 6 EMOJIS */}
-          {[CHECK_MARK, THUMB_UP, THUMB_DOWN, THANK_YOU, FIRE, GRINNING, CLAPPING].map(emoji => (
+          {[THUMB_UP, THUMB_DOWN, HEART, THANK_YOU, FIRE, LAUGHING, CLAPPING].map(emoji => (
             <TouchableOpacity onPress={react(emoji)} style={{ padding: 4 }} key={emoji}>
               <Text style={{ fontSize: 28 }}>{emoji}</Text>
             </TouchableOpacity>
@@ -112,4 +112,6 @@ export default function MessageMenu({
       {blurContents}
     </View>
   )
-}
+})
+
+export default MessageMenu

@@ -1,6 +1,6 @@
 import { NavigationProp, useNavigation } from "@react-navigation/native"
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { Pressable, StyleSheet, Text, View, Animated, ActivityIndicator, Keyboard, TouchableOpacity, Linking } from "react-native"
+import { Pressable, StyleSheet, Text, View, Animated, ActivityIndicator, Keyboard, TouchableOpacity } from "react-native"
 import * as Haptics from 'expo-haptics'
 
 import { blue_overlay, blue_overlay_transparent, medium_gray, uq_pink } from "../../../constants/Colors"

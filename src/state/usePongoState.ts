@@ -158,9 +158,16 @@ const usePongoStore = create<PongoStore>((set, get) => ({
     return []
   },
   searchMessages: async ({ uid, phrase, onlyIn, onlyAuthor }: SearchMessagesParams) => {
-    const json = { search: { uid, phrase, 'only-in': onlyIn || null, 'only-author': onlyAuthor || null } }
-    console.log(0, json)
-    await get().api?.poke({ app: 'pongo', mark: 'pongo-action', json })
+    const { api } = get()
+
+    if (api) {
+      api.subscribeOnce('pongo', `/search-results/${uid}`, ONE_SECOND * 8).then((result: any) => {
+        console.log('SEARCH RESULT', result)
+      })
+      const json = { search: { uid, phrase, 'only-in': onlyIn || null, 'only-author': onlyAuthor || null } }
+      console.log(0, json)
+      await api.poke({ app: 'pongo', mark: 'pongo-action', json })
+    }
   },
   createConversation: async (chatName: string, members: string[], isOpen = false) => {
     const { api } = get()
@@ -225,13 +232,13 @@ const usePongoStore = create<PongoStore>((set, get) => ({
       'leave-conversation': { convo }
     } })
   },
-  sendMessage: async ({ self, convo, kind, content, ref, resend }: SendMessagePayload) => {
+  sendMessage: async ({ self, convo, kind, content, ref, resend, mentions: mens = [] }: SendMessagePayload) => {
     const reference = ref?.replace(/\./g, '') || null
     const chats = { ...get().chats }
     const chat = chats[convo]
     const timesent = new Date().getTime()
     const identifier = `-${timesent}`
-    const mentions = (kind === 'text' ? content.match(HAS_MENTION_REGEX) || [] : []).map(m => addSig(m.trim())).filter(isValidPatp)
+    const mentions: string[] = (kind === 'text' ? content.match(HAS_MENTION_REGEX) || [] as string[] : []).concat(mens).map(m => addSig(m.trim())).filter(isValidPatp)
     chat.unreads = 0
 
     chat.messages = resend ? chat.messages.map(m => m.id === resend.id ? { ...m, status: 'pending' } : m) :
