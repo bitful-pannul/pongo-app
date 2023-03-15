@@ -8,7 +8,7 @@ import H2 from '../../components/text/H2'
 import { PossePopup } from '../../components/handshake/PossePopup'
 
 const ScanCodeScreen = () => {
-  const { guestSuccess, verifyCode } = useScanStore()
+  const { guestSuccess, verifyCode, verifyError } = useScanStore()
   const [data, setData] = useState('')
 
   useEffect(() => {
@@ -33,9 +33,10 @@ const ScanCodeScreen = () => {
     <View style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <H2 text='Scan QR Code' style={{ marginTop: 24 }} />
       <QrCodeScanner onScan={onScan} />
-      <Text style={{ marginVertical: 12 }}>{data}</Text>
-      {guestSuccess && <Text>{guestSuccess}</Text>}
-      <View style={{ height: 16 }} />
+      <Text style={{ marginVertical: 6 }}>{data}</Text>
+      <View style={{ minHeight: 18 }}>
+        {verifyError && <Text style={{ color: 'red', fontSize: 18 }}>{verifyError}</Text>}
+      </View>
       <UqbarExperience />
       <PossePopup />
     </View>

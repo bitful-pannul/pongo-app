@@ -23,6 +23,10 @@ const QrCodeScreen = () => {
   const { color } = useColors()
 
   useEffect(() => {
+    setTimeout(createCode, ONE_SECOND)
+  }, [])
+
+  useEffect(() => {
     const interval = setInterval(() => {
       setDiff(calcDiff(expiresAt))
     }, 990)

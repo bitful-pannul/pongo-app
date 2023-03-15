@@ -2,10 +2,12 @@ import { useCallback, useEffect, useState } from "react";
 import { BarCodeScanner, BarCodeScannerResult } from "expo-barcode-scanner";
 import { StyleSheet, Text, View } from "react-native";
 import Button from "../form/Button";
+import useHandshakeStore from "../../state/useHandshakeState";
 
 const QrCodeScanner: React.FC<{ onScan: (text: string) => void }> = ({
   onScan,
 }) => {
+  const { set } = useHandshakeStore()
   const [hasPermission, setHasPermission] = useState(false);
   const [scanned, setScanned] = useState(false);
 
@@ -22,6 +24,11 @@ const QrCodeScanner: React.FC<{ onScan: (text: string) => void }> = ({
     // alert(`Bar code with type ${type} and data ${data} has been scanned!`);
     onScan(data);
   }, []);
+
+  const resetScan = useCallback(() => {
+    set({ verifyError: undefined })
+    setScanned(false)
+  }, [])
 
   if (hasPermission === null) {
     return <Text>Requesting for camera permission</Text>;
@@ -54,7 +61,7 @@ const QrCodeScanner: React.FC<{ onScan: (text: string) => void }> = ({
       />
       <View style={{ height: 16 }} />
       {scanned && (
-        <Button title={"Tap to Scan Again"} onPress={() => setScanned(false)} />
+        <Button title={"Tap to Scan Again"} onPress={resetScan} />
       )}
       {/* <Button title="toggle" onPress={toggle}>
         Change Camera

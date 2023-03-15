@@ -8,26 +8,25 @@ import Col from '../spacing/Col'
 import { Text, TextInput } from '../Themed'
 
 export const PossePopup = () => {
-  const { possePopupShip, showPossePopup, setPossePopupShip } = useHandshakeStore()
+  const { possePopupShip, showPossePopup, setPossePopupShip, set } = useHandshakeStore()
   const { addTag } = usePosseState()
   const [tag, setTag] = useState('')
 
-  const saveTag = useCallback(async () => {
-    try {
-      if (possePopupShip) {
-        const newTag = tag || 'handshake'
-        await addTag(possePopupShip, newTag)
-      }
-    } catch (e) {
-      console.error(e)
-    } finally {
+  const saveTag = useCallback(() => {
+    if (possePopupShip) {
+      const newTag = tag || 'handshake'
+      addTag(possePopupShip, newTag)
+        .then(() => {
+
+        })
+        .catch(console.error)
       setPossePopupShip()
       setTag('')
     }
   }, [possePopupShip, tag, addTag, setPossePopupShip])
 
   const cancel = useCallback(() => {
-    setPossePopupShip()
+    setPossePopupShip(undefined)
     setTag('')
   }, [setPossePopupShip])
 
@@ -44,8 +43,8 @@ export const PossePopup = () => {
             width: '80%'
           }}
         />
-        <Button title='Add Tag' small onPress={saveTag} style={{ marginTop: 16 }} />
-        <Button title='Cancel' small onPress={cancel} style={{ marginTop: 16, marginBottom: 24 }} />
+        <Button title='Add Tag' small onPress={saveTag} style={{ width: 120, marginTop: 24 }} />
+        <Button title='Cancel' small onPress={cancel} style={{ width: 120, marginTop: 16, marginBottom: 24 }} />
       </Col>
     </Modal>
   )

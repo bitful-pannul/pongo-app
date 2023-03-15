@@ -18,6 +18,7 @@ export interface HandshakeStore extends DefaultStore {
   expiresAt: Date | null,
   guestList: Guest[],
   guestSuccess?: string,
+  verifyError?: string,
   possePopupShip: string,
   showPossePopup: boolean,
   subscriptions: number[],
@@ -55,6 +56,7 @@ const useHandshakeStore = create<HandshakeStore>((set, get) => ({
   setLoading: (loading) => set({ loading }),
   init: async (api: Urbit) => {
     const handleSignerUpdate = ({ code, expires_at }: CodeData) => {
+      console.log('CODE')
       const expiresAt = new Date(expires_at * ONE_SECOND)
       set({ code, expiresAt })
     }
@@ -63,8 +65,12 @@ const useHandshakeStore = create<HandshakeStore>((set, get) => ({
       // good-sig, bad-sig, expired-sig
       console.log('READER UPDATE:', data)
 
-      if (data['good-sig']) {
-        set({ possePopupShip: data['good-sig'], showPossePopup: true })
+      if (data.good_sig) {
+        set({ possePopupShip: data.good_sig, showPossePopup: true })
+      } else if (data.expired_sig) {
+        set({ verifyError: 'Code has expired' })
+      } else {
+        set({ verifyError: 'Error reading code, please try again' })
       }
     }
 
