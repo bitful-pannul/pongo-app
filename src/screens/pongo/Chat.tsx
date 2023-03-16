@@ -99,10 +99,10 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
     if (msgId && !initialPositionLoad) {
       setFocused(msgId)
       setInitialPositionLoad(true)
-    }
-     else if (chatId && chatPositions[chatId]?.offset && chatPositions[chatId]?.offset > 0 && !initialPositionLoad) {
+    } else if (chatId && chatPositions[chatId]?.offset && chatPositions[chatId]?.offset > 0 && !initialPositionLoad) {
       const wait = new Promise(resolve => setTimeout(resolve, 100));
       wait.then(() => {
+
         listRef.current?.scrollToOffset({ offset: chatPositions[chatId].offset, animated: false });
       })
       setInitialPositionLoad(true)
@@ -192,7 +192,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
 
   const setUnreadIndicator = useCallback((data: { unreads: number; lastRead: string }, message?: Message) => {
     setUnreadInfo(data)
-    message && setTimeout(() => listRef.current?.scrollToItem({ item: message, animated: true, viewPosition: 0.5 }), ONE_SECOND)
+    message && data.lastRead !== message.id && setTimeout(() => listRef.current?.scrollToItem({ item: message, animated: true, viewPosition: 0.5 }), ONE_SECOND)
     setTimeout(() => setUnreadInfo(undefined), ONE_SECOND * 15)
   }, [])
 

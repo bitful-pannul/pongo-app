@@ -1,17 +1,26 @@
 const createExpoWebpackConfigAsync = require('@expo/webpack-config');
 
+const target = 'https://fabnev.labwet.art/'
+
 module.exports = async function (env, argv) {
   const config = await createExpoWebpackConfigAsync(env, argv);
   // Customize the config before returning it.
 
   config.devServer = {
     proxy: {
-      // '/session.js': {
-      //   target: 'https://fabnev.labwet.art/session.js',
-      //   changeOrigin: true,
-      // },
-      // '/': 'https://fabnev.labwet.art',
-      '/': 'http://localhost:8080',
+      '/session.js': {
+        target: `${target}session.js`,
+        changeOrigin: true,
+      },
+      '/~/login': {
+        target: `${target}~/login`,
+        changeOrigin: true,
+      },
+      '/': {
+        target,
+        changeOrigin: true
+      },
+      // '/': 'http://localhost:8080',
     },
     client: {
       overlay: {

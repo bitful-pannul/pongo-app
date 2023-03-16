@@ -47,6 +47,7 @@ export default function SendTokensModal({ show, hide, convo }: SendTokensModalPr
     Object.values(assets[selectedAccount?.rawAddress || ''] || {})?.find(({ contract }) => contract === ZIGS_CONTRACT)
       ?.data.balance || '0'
   )
+  console.log('ZIGS:', zigsBalance)
   const tokenBalance = useMemo(() => Number((asset?.data.balance ?? '0').replace(/\./gi, '')), [asset])
   const amountDiff = useMemo(
     () => tokenBalance - (Number(amount) * Math.pow(10, 18) + (asset?.contract === ZIGS_CONTRACT ? DEFAULT_TXN_COST : 0))
@@ -68,7 +69,7 @@ export default function SendTokensModal({ show, hide, convo }: SendTokensModalPr
 
   const send = useCallback(async () => {
     if (zigsBalance < DEFAULT_TXN_COST) {
-      setError('Your acount does not have enough zigs to pay the transaction fee.')
+      setError('Your account does not have enough zigs to pay the transaction fee.')
     } else if (!chat || !chat.conversation.members.includes(deSig(recipient))) {
       setError('The recipient must be a member of this chat.')
     } else if (!amount || isNaN(Number(amount)) || !Number(amount)) {

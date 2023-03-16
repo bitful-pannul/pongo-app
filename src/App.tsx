@@ -9,7 +9,6 @@ import * as TaskManager from 'expo-task-manager'
 import * as Network from 'expo-network'
 import { Ionicons } from "@expo/vector-icons"
 import { MenuProvider } from 'react-native-popup-menu'
-import * as Linking from 'expo-linking'
 
 import useCachedResources from "./hooks/useCachedResources"
 import useStore from "./state/useStore"
@@ -23,6 +22,10 @@ import useColorScheme from './hooks/useColorScheme'
 import usePongoStore from './state/usePongoState'
 import { NotifPayload } from './types/Pongo'
 import { isWeb } from './constants/Layout'
+
+// if (!window.ship) {
+//   window.ship = 'fabnev-hinmur'
+// }
 
 const HANDLE_NOTIFICATION_BACKGROUND = 'HANDLE_NOTIFICATION_BACKGROUND'
 
@@ -133,35 +136,29 @@ export default function App() {
         )
       }
 
-      if (isWeb) {
-
-      }
-
       const res = await storage.load({ key: 'store' }).catch(console.error)
 
       if (res?.shipUrl) {
-        if (isWeb) {
+        const response = await fetch(res.shipUrl).catch(console.error)
+        const html = await response?.text()
+
+        if (html && URBIT_HOME_REGEX.test(html)) {
           loadStore(res)
-        } else {
-          const response = await fetch(res.shipUrl).catch(console.error)
-          const html = await response?.text()
-  
-          if (html && URBIT_HOME_REGEX.test(html)) {
-            loadStore(res)
-          }
         }
         setNeedLogin(false)
-      } else if (isWeb) {
-        console.log(window.ship)
-        addShip({ ship: window.ship, shipUrl: '/' })
-        setNeedLogin(false)
-        console.log('WEB')
       }
       
       setTimeout(() => setLoading(false), 200)
     }
-    loadStorage()
-    checkNetwork()
+
+    if (isWeb) {
+      addShip({ ship: window.ship, shipUrl: '/' })
+      setNeedLogin(false)
+      setTimeout(() => setLoading(false), 200)
+    } else {
+      loadStorage()
+      checkNetwork()
+    }
 
     return () => {
       if (notificationListener.current)

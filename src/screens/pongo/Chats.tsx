@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react'
-import { AppState, AppStateStatus, Pressable, RefreshControl, StyleSheet } from 'react-native'
+import { AppState, AppStateStatus, Pressable, RefreshControl, StyleSheet, View } from 'react-native'
 import { NavigationProp, useNavigation } from '@react-navigation/native'
 import { getPresentedNotificationsAsync, dismissNotificationAsync, setBadgeCountAsync, Notification } from 'expo-notifications'
 
@@ -10,7 +10,7 @@ import Col from '../../components/spacing/Col'
 import { Text, ScrollView } from '../../components/Themed'
 import H2 from '../../components/text/H2'
 import { PongoStackParamList } from '../../types/Navigation'
-import { MaterialIcons } from '@expo/vector-icons'
+import { Ionicons, MaterialIcons } from '@expo/vector-icons'
 import { light_gray, uq_darkpink, uq_pink, uq_purple } from '../../constants/Colors'
 import Button from '../../components/form/Button'
 import { isLargeDevice, isWeb, window } from '../../constants/Layout'
@@ -20,13 +20,14 @@ import H3 from '../../components/text/H3'
 import Row from '../../components/spacing/Row'
 
 interface ChatsScreenProps {
+  drawerNavigator?: any
 }
 
-export default function ChatsScreen({  }: ChatsScreenProps) {
+export default function ChatsScreen({ drawerNavigator }: ChatsScreenProps) {
   const { chats, showJoinChatModal, set, init, refresh, sortedChats, isSearching } = usePongoStore()
   const { api, shipUrl } = useStore()
-  const navigation = useNavigation<NavigationProp<PongoStackParamList>>()
   const appState = useRef(AppState.currentState)
+  const navigation = useNavigation<NavigationProp<PongoStackParamList>>()
 
   const onRefresh = useCallback(async () => {
     try {
@@ -70,6 +71,10 @@ export default function ChatsScreen({  }: ChatsScreenProps) {
     navigation.navigate('NewChat')
   }, [navigation])
 
+  const openDrawer = useCallback(() => {
+    drawerNavigator?.openDrawer()
+  }, [])
+
   const { width } = window
 
   const styles = useMemo(() => StyleSheet.create({
@@ -100,7 +105,7 @@ export default function ChatsScreen({  }: ChatsScreenProps) {
       maxWidth: 300,
       height: 64,
       alignItems: 'center',
-      justifyContent: 'center',
+      justifyContent: 'space-between',
       borderBottomColor: 'rgb(216,216,216)',
       borderBottomWidth: 1
     }
@@ -110,7 +115,9 @@ export default function ChatsScreen({  }: ChatsScreenProps) {
     <Col style={styles.container}>
       {isLargeDevice && (
         <Row style={styles.chatsHeader}>
+          <Ionicons name='menu' size={24} color='white' style={{ padding: 4, paddingLeft: 16 }} onPress={openDrawer} />
           <H3 text='Chats' style={{ color: 'white' }} />
+          <View style={{ width: 44 }} />
         </Row>
       )}
       {isSearching ? (

@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View, Animated, ActivityIndicator, Keyboar
 import * as Haptics from 'expo-haptics'
 
 import { blue_overlay, blue_overlay_transparent, medium_gray, uq_pink } from "../../../constants/Colors"
-import { window } from "../../../constants/Layout"
+import { isWeb, window } from "../../../constants/Layout"
 import useColors from "../../../hooks/useColors"
 import { Message } from "../../../types/Pongo"
 import { formatTokenContent, getAdminMsgText, getAppLinkText, isAdminMsg } from "../../../util/ping"
@@ -120,6 +120,8 @@ const MessageEntry = React.memo(({
 
   const { width } = window
 
+  const chatWidth = useMemo(() => isWeb ? width * 0.70 : width, [width, isWeb])
+
   const styles = useMemo(() => StyleSheet.create({
     container: {
       marginTop: differentAuthor ? 6 : 0,
@@ -135,11 +137,11 @@ const MessageEntry = React.memo(({
     message: {
       display: 'flex',
       flexDirection: 'column',
-      maxWidth: isDm || isSelf ? width * 0.86 : width * 0.86 - 48,
+      maxWidth: isDm || isSelf ? chatWidth * 0.86 : chatWidth * 0.86 - 48,
       minWidth: 140,
       alignSelf: isSelf ? 'flex-end' : 'flex-start',
-      marginRight: isSelf ? width * 0.02 : 0,
-      marginLeft: isSelf ? 0 : width * 0.02,
+      marginRight: isSelf ? chatWidth * 0.02 : 0,
+      marginLeft: isSelf ? 0 : chatWidth * 0.02,
       backgroundColor: isSelf ? ownChatBackground : backgroundColor,
       borderTopLeftRadius: isSelf ? 15 : 0,
       borderTopRightRadius: isSelf ? 6 : 15,
@@ -180,7 +182,7 @@ const MessageEntry = React.memo(({
     image: {
       width: '100%',
     },
-  }), [differentAuthor, isSelected, isSelf, ownChatBackground, backgroundColor, width])
+  }), [differentAuthor, isSelected, isSelf, ownChatBackground, backgroundColor, chatWidth])
 
   const pressReply = useCallback(() => {
     focusReply(reference)

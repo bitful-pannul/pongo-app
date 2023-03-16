@@ -25,6 +25,7 @@ interface InitOptions {
   assets?: boolean
   transactions?: boolean
   prompt?: boolean
+  failOnError?: boolean
   onReceiveTransaction?: (txn: Transaction) => void
 }
 
@@ -50,7 +51,7 @@ export interface WalletStore {
   setLoading: (loadingText: string | null) => void;
   setPromptInstall: (promptInstall: boolean) => void;
   setInsetView: (insetView?: string) => void;
-  getAccounts: () => Promise<void>;
+  getAccounts: (api?: Urbit) => Promise<void>;
   setSelectedAccount: (selectedAccount: HotWallet | HardwareWallet) => void;
   getTransactions: () => Promise<void>;
   createAccount: (password: string, nick: string) => Promise<void>;
@@ -87,7 +88,7 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
     walletTitleBase: 'Wallet:',
     promptInstall: false,
     appInstalled: true,
-    initWallet: async (api: Urbit, { assets = true, transactions = true, prompt = false, onReceiveTransaction }: InitOptions) => {
+    initWallet: async (api: Urbit, { assets = true, transactions = true, prompt = false, failOnError = false, onReceiveTransaction }: InitOptions) => {
       const { getAccounts, getTransactions, getUnsignedTransactions } = get()
       set({ loadingText: 'Loading...' })
 
@@ -113,9 +114,12 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
             getUnsignedTransactions()
             newSubs.push(api.subscribe(createSubscription('wallet', '/tx-updates', handleTxnUpdate(get, set, onReceiveTransaction))))
           }
-          await getAccounts()
+          await getAccounts(api)
         } catch (error) {
           console.warn('INIT ERROR:', error)
+          if (failOnError) {
+            throw new Error('init error')
+          }
         }
 
         resetSubscriptions(set, api, get().subscriptions, newSubs)
@@ -133,23 +137,26 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
     setSelectedAccount: (selectedAccount?: HotWallet | HardwareWallet) => set({ selectedAccount }),
     setLoading: (loadingText: string | null) => set({ loadingText }),
     setInsetView: (insetView?: string) => set({ insetView }),
-    getAccounts: async () => {
-      const accountData = await api.scry<{[key: string]: RawAccount}>({ app: 'wallet', path: '/accounts' }) || {}
-      const allAccounts = Object.values(accountData).map(processAccount).sort((a, b) => a.nick.localeCompare(b.nick))
-
-      const { accounts, importedAccounts } = allAccounts.reduce(({ accounts, importedAccounts }, cur) => {
-        if (cur.imported) {
-          const [nick, type] = cur.nick.split('//')
-          importedAccounts.push({ ...cur, type: type as HardwareWalletType, nick })
-        } else {
-          accounts.push(cur)
-        }
-        return { accounts, importedAccounts }
-      }, { accounts: [] as HotWallet[], importedAccounts: [] as HardwareWallet[] })
-
-      set({ accounts, importedAccounts, loadingText: null })
-
-      if (!get().selectedAccount) set({ selectedAccount: (accounts as any[]).concat(importedAccounts)[0] })
+    getAccounts: async (api?: Urbit) => {
+      const apiToUse = api || get().api
+      if (apiToUse) {
+        const accountData = await apiToUse.scry<{[key: string]: RawAccount}>({ app: 'wallet', path: '/accounts' }) || {}
+        const allAccounts = Object.values(accountData).map(processAccount).sort((a, b) => a.nick.localeCompare(b.nick))
+  
+        const { accounts, importedAccounts } = allAccounts.reduce(({ accounts, importedAccounts }, cur) => {
+          if (cur.imported) {
+            const [nick, type] = cur.nick.split('//')
+            importedAccounts.push({ ...cur, type: type as HardwareWalletType, nick })
+          } else {
+            accounts.push(cur)
+          }
+          return { accounts, importedAccounts }
+        }, { accounts: [] as HotWallet[], importedAccounts: [] as HardwareWallet[] })
+  
+        set({ accounts, importedAccounts, loadingText: null })
+  
+        if (!get().selectedAccount) set({ selectedAccount: (accounts as any[]).concat(importedAccounts)[0] })
+      }
     },
     getTransactions: async () => {
       const result = await api.scry<any>({ app: 'wallet', path: `/transactions` })

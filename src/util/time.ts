@@ -27,7 +27,7 @@ export const getHoonSeconds = (increment: string) => Number(increment.slice(2)) 
 
 export const getRelativeTime = (timestamp: number) =>
   moment(timestamp).calendar(null, {
-    sameDay: 'h:mm a',
+    sameDay: 'h:mma',
     nextDay: '[Tomorrow]',
     nextWeek: '[Next] dddd',
     lastDay: 'ddd',

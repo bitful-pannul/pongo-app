@@ -3,6 +3,7 @@ import { ActivityIndicator, Image, Keyboard, KeyboardAvoidingView, StyleSheet, T
 import * as Clipboard from 'expo-clipboard'
 import Checkbox from 'expo-checkbox'
 import * as Linking from 'expo-linking'
+import dynamicLinks from '@react-native-firebase/dynamic-links'
 
 import { Text, View } from "../components/Themed"
 import useStore from "../state/useStore"
@@ -53,11 +54,21 @@ export default function CreateAccountScreen({ method, goBack } : { method: 'logi
   const [accessToken, setAccessToken] = useState('')
   const [authCookie, setAuthCookie] = useState('')
   const [termsChecked, setChecked] = useState(false)
-  const initialUrlPromise = Linking.getInitialURL()
+  const [initialUrl, setInitialUrl] = useState(Linking.useURL())
 
   const [accountDetails, setAccountDetails] = useState<AccountDetails | null>()
 
   const { height } = window
+
+  useEffect(() => {
+    dynamicLinks()
+      .getInitialLink()
+      .then(link => {
+        if (link?.url.includes('invite-code')) {
+          setInitialUrl(link.url)
+        }
+      })
+  }, [])
 
   const onBack = useCallback(() => {
     if (step === 'email') {
@@ -169,6 +180,10 @@ export default function CreateAccountScreen({ method, goBack } : { method: 'logi
         })
       })
 
+      if (inviteRedemptionResult.status >= 400) {
+        throw new Error((await inviteRedemptionResult.json())?.message)
+      }
+
       const username = await inviteRedemptionResult.text()
 
       if (!username) {
@@ -225,8 +240,15 @@ export default function CreateAccountScreen({ method, goBack } : { method: 'logi
       
       setAccountDetails({ ship, url, code })
       setStep('success')
-    } catch (err) {
-      setInviteError('Something went wrong, please check the invite code and try again')
+    } catch (err: any) {
+      // {
+      //   code: 'RIC01' | 'RIC02' | 'RIC03';
+      //   message: 'RIC01: invalid planet code' | 'RIC02: no available planets' | 'RIC03: unauthenticated';
+      // }
+      const error = String(err).includes('RIC0') ? `Registration error: ${String(err).replace(/RIC0[1-3]: /, '')}, please try again`
+        : 'Something went wrong, please check the code and try again.'
+
+      setInviteError(error)
     }
     setLoading('')
   }, [])
@@ -298,12 +320,11 @@ export default function CreateAccountScreen({ method, goBack } : { method: 'logi
         setAccessToken(access_token)
         setStep('invite')
 
-        const initialUrl = await initialUrlPromise
-        if (initialUrl && initialUrl.includes('invite-code') && initialUrl.includes('?')) {
-          const [, queryString] = initialUrl.split('?')
-          const queryParams = queryString.split('&')
-          const inviteCode = queryParams.find(qp => qp.includes('invite-code'))?.replace('invite-code=', '')
-          if (inviteCode) {
+        if (initialUrl) {
+          const { queryParams } = Linking.parse(initialUrl)
+          
+          if (queryParams && queryParams['invite-code'] && typeof queryParams['invite-code'] === 'string') {
+            const inviteCode = queryParams['invite-code']
             setInvite(inviteCode)
             setTimeout(() => registerInviteCode(inviteCode, access_token), 1)
           }
@@ -314,7 +335,7 @@ export default function CreateAccountScreen({ method, goBack } : { method: 'logi
       setOtpError('Something went wrong, please check the code and try again')
     }
     setLoading('')
-  }, [otp, method, registerInviteCode])
+  }, [otp, method, initialUrl, registerInviteCode])
 
   const content = (
     loading ? (

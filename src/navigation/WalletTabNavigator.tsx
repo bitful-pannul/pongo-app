@@ -1,5 +1,7 @@
 import { useEffect } from 'react'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
+import { useNavigation } from '@react-navigation/native'
+import { MaterialIcons } from '@expo/vector-icons'
 
 import { WalletTabParamList } from '../types/Navigation'
 import useStore from '../state/useStore'
@@ -10,18 +12,23 @@ import WalletAssets from '../screens/wallet/Assets'
 import WalletAccounts from '../screens/wallet/Accounts'
 import WalletTransactions from '../screens/wallet/Transactions'
 import { useWalletStore } from '../wallet-ui'
-import { MaterialIcons } from '@expo/vector-icons'
+import { ONE_SECOND } from '../util/time'
 
 const BottomTab = createBottomTabNavigator<WalletTabParamList>()
 
 export default function WalletTabNavigator() {
   const { color } = useColors()
-  const { initWallet, clearSubscriptions: clearWallet } = useWalletStore()
+  const { initWallet, clearSubscriptions: clearWallet, getAccounts } = useWalletStore()
   const { api, ship } = useStore()
+  const navigation = useNavigation()
 
   useEffect(() => {
     if (api) {
-      initWallet(api, {})
+      initWallet(api, { failOnError: true })
+        .catch(() => {
+          console.log('ERROR GETTING ACCOUNTS')
+          navigation.getParent('drawer' as any)?.navigate('Pongo')
+        })
     }
 
     return () => {
@@ -29,7 +36,7 @@ export default function WalletTabNavigator() {
         clearWallet()
       }
     }
-  }, [ship])
+  }, [api])
 
   return (
     <BottomTab.Navigator

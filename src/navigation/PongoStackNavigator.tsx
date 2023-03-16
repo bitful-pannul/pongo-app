@@ -58,6 +58,8 @@ export default function PongoStackNavigator() {
   const { api, ship: self, shipUrl } = useStore()
   const [loadingText, setLoadingText] = useState<string | undefined>()
 
+  const drawerNavigator = navigation.getParent('drawer' as any)
+
   useEffect(() => {
     if (api) {
       getPushNotificationToken()
@@ -175,9 +177,7 @@ export default function PongoStackNavigator() {
       options={({ navigation } : NavHeaderProps) => ({
         headerStyle: { backgroundColor: uq_purple },
         headerTitleAlign: 'center',
-        headerLeft: () => <Pressable onPress={openDrawer(navigation)}>
-          <Ionicons style={{ padding: 2, paddingBottom: 4 }} name='menu' size={24} color='white' />
-        </Pressable>,
+        headerLeft: () => isLargeDevice ? null : <Ionicons onPress={openDrawer(navigation)} style={{ padding: 2, paddingBottom: 4 }} name='menu' size={24} color='white' />,
         headerTitle: () => isSearching ? <SearchHeader searchType='message' /> : <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
           <View style={{ marginTop: 2 }}>
             <ShipTitle navigation={navigation} color='white' />
@@ -283,7 +283,7 @@ export default function PongoStackNavigator() {
   if (isLargeDevice) {
     return (
       <Row style={{ flex: 1 }}>
-        <ChatsScreen />
+        <ChatsScreen drawerNavigator={drawerNavigator} />
         <View style={{ flex: 1, height: '100%' }}>
           {stack}
         </View>
