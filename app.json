@@ -62,7 +62,7 @@
       "supportsTablet": true,
       "googleServicesFile": "./GoogleService-Info.plist",
       "bundleIdentifier": "network.uqbar.ping",
-      "buildNumber": "30"
+      "buildNumber": "31"
     },
     "android": {
       "adaptiveIcon": {

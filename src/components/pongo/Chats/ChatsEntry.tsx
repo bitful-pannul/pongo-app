@@ -44,7 +44,9 @@ export default function ChatsEntry({ chat, navigation }: ChatProps) {
   }), [muted])
 
   const goToChat = useCallback(() => {
-    navigation.reset({ index: 0, routes: [ { name: 'Chats' } ] })
+    if (isWeb) {
+      navigation.reset({ index: 0, routes: [ { name: 'Chats' } ] })
+    }
     setTimeout(() => navigation.navigate('Chat', { id }), 10)
   }, [isLargeDevice])
 
@@ -84,7 +86,7 @@ export default function ChatsEntry({ chat, navigation }: ChatProps) {
             <Text style={{ fontSize: 14, overflow: 'visible' }}>{getRelativeTime(last_active * ONE_SECOND)}</Text>
           </Row>
           <Row style={{ flex: 1, justifyContent: 'space-between', marginTop: 4 }}>
-            <Row style={{ maxWidth: chatsWidth - (2 * 12 + (hasUnreads ? 56 : 24)) }}>
+            <Row style={{ maxWidth: chatsWidth - (2 * 12 + (hasUnreads ? (isWeb ? 56 : 88) : 24)) }}>
               {messageDisplay}
             </Row>
             {hasUnreads && (
