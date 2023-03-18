@@ -102,7 +102,7 @@ export default function ChatInput({ chatId, inputRef, showMentions, setShowMenti
   }, [chatId, chat, isDm, setText, setShowMentions, showMentions])
 
   return (
-    <Row style={{ marginBottom: isIos ? 40 : 0, borderBottomWidth: 1, borderBottomColor: light_gray, backgroundColor: 'white', height: 54 }}>
+    <Row style={{ marginBottom: isIos ? 40 : 0, borderBottomWidth: 1, borderBottomColor: light_gray, backgroundColor: 'white', maxHeight: 120 }}>
       {uploading ? (
         <>
           <ActivityIndicator size='large' style={{ margin: 8, marginLeft: 16 }} color='black' />

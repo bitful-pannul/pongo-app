@@ -82,7 +82,7 @@ export default function SendTokensModal({ show, hide, convo }: SendTokensModalPr
           from: asset.holder,
           contract: asset.contract,
           town: '0x0',
-          to: addSig(recipient),
+          to: addSig(recipient.toLowerCase()),
           amount: numToUd(Number(amount) * Math.pow(10, 18)),
           item: asset.id,
         }
@@ -129,7 +129,7 @@ export default function SendTokensModal({ show, hide, convo }: SendTokensModalPr
               <TextInput
                 placeholder="Recipient"
                 value={recipient}
-                onChangeText={(text) => { setRecipient(text.toLowerCase().replace(/[^~a-z-]/, '')); setError('') }}
+                onChangeText={(text) => { setRecipient(text.replace(/[^~a-zA-Z-]/, '')); setError('') }}
                 autoFocus={!dm}
                 style={{ marginTop: 4, width: '80%' }}
               />

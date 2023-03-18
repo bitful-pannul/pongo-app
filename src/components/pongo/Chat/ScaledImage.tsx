@@ -9,12 +9,18 @@ interface ScaledImageProps {
 }
 
 const ScaledImage = ({ width, uri, ...props }: ScaledImageProps) => {
-  const [height, setHeight] = useState(props.height)
+  const [displayHeight, setDisplayHeight] = useState(props.height)
+  const [displayWidth, setDisplayWidth] = useState(width)
   const [imageLoading, setImageLoading] = useState(true)
 
   useEffect(() => {
       DefaultImage.getSize(uri, (width1, height1) => {
-        setHeight(width / width1 * height1)
+        if (width1 < width) {
+          setDisplayWidth(width1)
+          setDisplayHeight(height1)
+        } else {
+          setDisplayHeight(width / width1 * height1)
+        }
         setImageLoading(false)
       }, (error) => {
         console.log("ScaledImage,Image.getSize failed with error: ", error)
@@ -22,8 +28,8 @@ const ScaledImage = ({ width, uri, ...props }: ScaledImageProps) => {
   }, [])
 
   return (
-    height ?
-      <Image source={uri} style={{ width, height }} contentFit="contain" cachePolicy='disk' />
+    displayHeight ?
+      <Image source={uri} style={{ width: displayWidth, height: displayHeight }} contentFit="contain" cachePolicy='disk' />
       : imageLoading ?
         <ActivityIndicator size="large" />
         : null

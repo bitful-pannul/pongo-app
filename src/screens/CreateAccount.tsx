@@ -61,6 +61,8 @@ export default function CreateAccountScreen({ method, goBack } : { method: 'logi
   const { height } = window
 
   useEffect(() => {
+    // firebase dynamic link format
+    // https://ping.page.link/?link=https%3A%2F%2Fuqbar.network%3Finvite-code%3D067B-CA90-8F0F&apn=network.uqbar.ping&amv=1.0.1&ibi=uqbar.network.ping&isi=1669043343&imv=1.0.1
     dynamicLinks()
       .getInitialLink()
       .then(link => {
@@ -125,11 +127,11 @@ export default function CreateAccountScreen({ method, goBack } : { method: 'logi
 
   const changeInvite = useCallback((text: string) => {
     if ((invite.length === 3 && text.length === 4) || (invite.length === 8 && text.length === 9)) {
-      setInvite(`${text}-`.toUpperCase())
+      setInvite(`${text}-`)
     } else if ((/[A-Z0-9]{4}/.test(invite) && /[A-Z0-9]{5}/.test(text)) || (/[A-Z0-9]{4}-[A-Z0-9]{4}/.test(invite) && /[A-Z0-9]{4}-[A-Z0-9]{5}/.test(text))) {
-      setInvite(`${invite}-${text.slice(-1)}`.toUpperCase())
+      setInvite(`${invite}-${text.slice(-1)}`)
     } else {
-      setInvite(text.toUpperCase())
+      setInvite(text)
     }
     setInviteError('')
   }, [invite])
@@ -227,7 +229,6 @@ export default function CreateAccountScreen({ method, goBack } : { method: 'logi
               resolve(result)
             })
             .catch(() => {
-              console.log('failed once', (Date.now() - loginCheckStart))
               if ((Date.now() - loginCheckStart) > (20 * ONE_SECOND)) {
                 reject('Login timed out')
               }
@@ -241,11 +242,12 @@ export default function CreateAccountScreen({ method, goBack } : { method: 'logi
       setAccountDetails({ ship, url, code })
       setStep('success')
     } catch (err: any) {
+      console.warn(err)
       // {
       //   code: 'RIC01' | 'RIC02' | 'RIC03';
       //   message: 'RIC01: invalid planet code' | 'RIC02: no available planets' | 'RIC03: unauthenticated';
       // }
-      const error = String(err).includes('RIC0') ? `Registration error: ${String(err).replace(/RIC0[1-3]: /, '')}, please try again`
+      const error = String(err).includes('RIC0') ? `Registration error: ${String(err).replace(/RIC0[1-3]: /, '').replace('Error: ', '')}, please try again`
         : 'Something went wrong, please check the code and try again.'
 
       setInviteError(error)
@@ -253,7 +255,7 @@ export default function CreateAccountScreen({ method, goBack } : { method: 'logi
     setLoading('')
   }, [])
 
-  const submitInvite = useCallback(() => registerInviteCode(invite, accessToken), [invite, accessToken])
+  const submitInvite = useCallback(() => registerInviteCode(invite.toUpperCase(), accessToken), [invite, accessToken])
 
   const submitOtp = useCallback(async () => {
     if (otp.length < 6) {
@@ -332,6 +334,7 @@ export default function CreateAccountScreen({ method, goBack } : { method: 'logi
       }
       setOtp('')
     } catch (err) {
+      console.warn(err)
       setOtpError('Something went wrong, please check the code and try again')
     }
     setLoading('')

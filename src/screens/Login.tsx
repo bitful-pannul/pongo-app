@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Image, KeyboardAvoidingView, StyleSheet, TextInput, TouchableOpacity } from "react-native";
+import { ActivityIndicator, Image, KeyboardAvoidingView, StyleSheet, TextInput, TouchableOpacity, Text as DefaultText } from "react-native";
 
 import storage from "../util/storage";
 import QrCodeScanner from "../components/handshake/QRCodeScanner";
@@ -8,7 +8,7 @@ import useStore from "../state/useStore";
 import { URBIT_HOME_REGEX } from "../util/regex";
 import Button from "../components/form/Button";
 import { isIos, keyboardAvoidBehavior, keyboardOffset } from "../constants/Layout";
-import { gray_overlay } from "../constants/Colors";
+import { medium_gray } from "../constants/Colors";
 import CreateAccountScreen from "./CreateAccount";
 import useColors from "../hooks/useColors";
 
@@ -229,15 +229,13 @@ export default function LoginScreen() {
           </Text>
           {/* TODO: put a selector here for https/http that prepopulates the form and focuses */}
           <View>
-            <TouchableOpacity style={{ width: 120 }} onPress={() => {
+            <TouchableOpacity style={styles.changeHttp} onPress={() => {
               setShipUrlInput(shipUrlInput.includes('https') ? 'http://' : 'https://')
               urlInputRef?.current.focus()
             }}>
-              <View style={styles.changeHttp}>
-                <Text style={{ textAlign: 'center', backgroundColor: 'transparent' }}>
-                  Change to {shipUrlInput.includes('https') ? 'http' : 'https'}
-                </Text>
-              </View>
+              <DefaultText style={{ textAlign: 'center', backgroundColor: medium_gray, color: 'white' }}>
+                Change to {shipUrlInput.includes('https') ? 'http' : 'https'}
+              </DefaultText>
             </TouchableOpacity>
             <TextInput
               ref={urlInputRef}
@@ -379,7 +377,7 @@ const styles = StyleSheet.create({
     color: 'black',
   },
   changeHttp: {
-    backgroundColor: gray_overlay,
+    backgroundColor: medium_gray,
     borderRadius: 8,
     padding: 4,
     paddingHorizontal: 4,
