@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ColorSchemeName, StyleSheet } from "react-native";
 import { NavigationContainer, DefaultTheme, DarkTheme, createNavigationContainerRef, NavigationProp } from "@react-navigation/native";
 import { createDrawerNavigator } from '@react-navigation/drawer';
@@ -13,6 +13,7 @@ import WalletTabNavigator from './WalletTabNavigator';
 import useColors from '../hooks/useColors';
 import Grid from '../screens/Grid';
 import GridRefresh from './GridRefresh';
+import usePongoStore from '../state/usePongoState';
 
 const Drawer = createDrawerNavigator<RootDrawerParamList>();
 
@@ -37,9 +38,14 @@ export default function Navigation({
   colorScheme: ColorSchemeName;
 }) {
   const { color } = useColors()
+  const { chats } = usePongoStore()
+  const unreadCount = useMemo(() => Object.values(chats).reduce((acc, cur) => acc + cur.unreads, 0), [chats])
 
   return (
-    <NavigationContainer theme={colorScheme === "dark" ? DarkTheme : DefaultTheme} ref={navigationRef}>
+    <NavigationContainer theme={colorScheme === "dark" ? DarkTheme : DefaultTheme} ref={navigationRef} documentTitle={{
+      formatter: (options, route) => 
+        `${options?.title ?? route?.name} ${unreadCount > 0 ? `(${unreadCount})` : ''}`,
+    }}>
       <Drawer.Navigator backBehavior='history' id='drawer' initialRouteName="Pongo" drawerContent={DrawerContent} screenOptions={{ swipeEnabled: false }} useLegacyImplementation={false}>
         <Drawer.Screen name="Pongo" component={PongoStackNavigator} options={() => ({
           headerShown: false,

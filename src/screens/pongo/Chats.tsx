@@ -13,11 +13,12 @@ import { PongoStackParamList } from '../../types/Navigation'
 import { Ionicons, MaterialIcons } from '@expo/vector-icons'
 import { light_gray, uq_darkpink, uq_pink, uq_purple } from '../../constants/Colors'
 import Button from '../../components/form/Button'
-import { isLargeDevice, isWeb, window } from '../../constants/Layout'
+import { isWeb } from '../../constants/Layout'
 import JoinChatModal from '../../components/pongo/Chats/JoinChatModal'
 import MessageSearchResults from '../../components/pongo/MessageSearchResults'
 import H3 from '../../components/text/H3'
 import Row from '../../components/spacing/Row'
+import useDimensions from '../../hooks/useDimensions'
 
 interface ChatsScreenProps {
   drawerNavigator?: any
@@ -28,6 +29,7 @@ export default function ChatsScreen({ drawerNavigator }: ChatsScreenProps) {
   const { api, shipUrl } = useStore()
   const appState = useRef(AppState.currentState)
   const navigation = useNavigation<NavigationProp<PongoStackParamList>>()
+  const { isLargeDevice, cWidth, width } = useDimensions()
 
   const onRefresh = useCallback(async () => {
     try {
@@ -75,8 +77,6 @@ export default function ChatsScreen({ drawerNavigator }: ChatsScreenProps) {
     drawerNavigator?.openDrawer()
   }, [])
 
-  const { width } = window
-
   const styles = useMemo(() => StyleSheet.create({
     container: {
       height: '100%',
@@ -109,7 +109,7 @@ export default function ChatsScreen({ drawerNavigator }: ChatsScreenProps) {
       borderBottomColor: 'rgb(216,216,216)',
       borderBottomWidth: 1
     }
-  }), [])
+  }), [width, isLargeDevice])
 
   return (
     <Col style={styles.container}>
@@ -134,12 +134,14 @@ export default function ChatsScreen({ drawerNavigator }: ChatsScreenProps) {
         </ScrollView>
       )}
 
-      <Pressable onPress={() => navigation.navigate('Contacts')} style={[styles.floatButton, { bottom: 120 }]}>
-        <MaterialIcons name='group' color='white' size={32} />
-      </Pressable>
-      <Pressable onPress={() => navigation.navigate('NewChat')} style={[styles.floatButton, { bottom: 40 }]}>
-        <MaterialIcons name='edit' color='white' size={32} />
-      </Pressable>
+      {!isLargeDevice && <>
+        <Pressable onPress={() => navigation.navigate('Contacts')} style={[styles.floatButton, { bottom: 120 }]}>
+          <MaterialIcons name='group' color='white' size={32} />
+        </Pressable>
+        <Pressable onPress={() => navigation.navigate('NewChat')} style={[styles.floatButton, { bottom: 40 }]}>
+          <MaterialIcons name='edit' color='white' size={32} />
+        </Pressable>
+      </>}
 
       <JoinChatModal show={showJoinChatModal} hide={() => set({ showJoinChatModal: false })} />
     </Col>

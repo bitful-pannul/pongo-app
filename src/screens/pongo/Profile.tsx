@@ -16,7 +16,7 @@ import Row from '../../components/spacing/Row'
 import H3 from '../../components/text/H3'
 import { Text, View, TextInput } from '../../components/Themed'
 import { uq_darkpink } from '../../constants/Colors'
-import { keyboardAvoidBehavior, keyboardOffset, window } from '../../constants/Layout'
+import { keyboardAvoidBehavior, keyboardOffset } from '../../constants/Layout'
 import { DM_DIVIDER } from '../../constants/Pongo'
 import useColors from '../../hooks/useColors'
 import usePongoStore from '../../state/usePongoState'
@@ -42,8 +42,6 @@ export default function ProfileScreen({ navigation, route }: ProfileScreenProps)
   const [tag, setTag] = useState('')
   const [error, setError] = useState('')
   const isSelf = deSig(self) === deSig(ship)
-
-  const { width } = window
 
   useEffect(() => {
     getTags(ship)
@@ -110,7 +108,7 @@ export default function ProfileScreen({ navigation, route }: ProfileScreenProps)
       ) : (
         <Col style={{ width: '100%', alignItems: 'center', paddingHorizontal: 32, marginTop: 4 }}>
 
-          <Button title='Send Message' onPress={startDm} style={{ marginBottom: 16 }} />
+          {!isSelf && <Button title='Send Message' onPress={startDm} style={{ marginBottom: 16 }} />}
 
           <View style={{ marginTop: 16, padding: 2, borderBottomColor: uq_darkpink, borderBottomWidth: 2 }}>
             <H3 text='Posse Tags' />

@@ -25,7 +25,7 @@ import MessageMenu from '../../components/pongo/Chat/MessageMenu'
 import { addSig } from '../../util/string'
 import { isAdminMsg } from '../../util/ping'
 import { ONE_SECOND } from '../../util/time'
-import { isIos, keyboardAvoidBehavior, keyboardOffset, window } from '../../constants/Layout'
+import { isIos, keyboardAvoidBehavior, keyboardOffset } from '../../constants/Layout'
 import { uq_pink, uq_purple } from '../../constants/Colors'
 import { PongoStackParamList } from '../../types/Navigation'
 import { Message } from '../../types/Pongo'
@@ -35,6 +35,7 @@ import ChatInput from '../../components/pongo/Inputs/ChatInput'
 import MentionSelector from '../../components/pongo/Inputs/MentionSelector'
 import MessagesList from '../../components/pongo/Chat/MessageList'
 import SendTokensModal from '../../components/pongo/SendTokensModal'
+import useDimensions from '../../hooks/useDimensions'
 
 const RETRIEVAL_NUM = 50
 
@@ -56,6 +57,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
   } = usePongoStore()
   const { color, chatBackground, backgroundColor } = useColors()
   const { isKeyboardVisible, keyboardHeight } = useKeyboard()
+  const { cWidth, height } = useDimensions()
 
   const [selected, setSelected] = useState<{ msg: Message; offsetY: number; height: number } | undefined>()
   const [highlighted, setHighlighted] = useState<string | null>()
@@ -75,7 +77,6 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
   const reply = useMemo(() => replies[chatId], [replies, chatId])
   const edit = useMemo(() => edits[chatId], [edits, chatId])
   const messages = chat?.messages || []
-  const { width, height } = window
 
   useEffect(() => () => {
     setChatPosition(chatId, scrollYRef.current, indexRef.current)
@@ -413,7 +414,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
               <Ionicons name='close-circle-outline' color={color} size={20} />
             </TouchableOpacity>
             <Text style={{ marginRight: 8, fontSize: 16 }}>{edit ? 'Editing' : 'Reply to'}:</Text>
-            <Text numberOfLines={1} style={{ fontSize: 14, marginTop: 2, maxWidth: width - 140 }}>"{(edit || reply).content}"</Text>
+            <Text numberOfLines={1} style={{ fontSize: 14, marginTop: 2, maxWidth: cWidth - 140 }}>"{(edit || reply).content}"</Text>
           </Row>
         )}
 

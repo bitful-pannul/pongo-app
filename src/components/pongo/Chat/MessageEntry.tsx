@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View, Animated, ActivityIndicator, Keyboar
 import * as Haptics from 'expo-haptics'
 
 import { blue_overlay, blue_overlay_transparent, medium_gray, uq_pink } from "../../../constants/Colors"
-import { isWeb, window } from "../../../constants/Layout"
+import { isWeb } from "../../../constants/Layout"
 import useColors from "../../../hooks/useColors"
 import { Message } from "../../../types/Pongo"
 import { formatTokenContent, getAdminMsgText, getAppLinkText, isAdminMsg } from "../../../util/ping"
@@ -18,6 +18,8 @@ import MessageWrapper from "./MessageWrapper"
 import Swipeable from 'react-native-gesture-handler/Swipeable'
 import { getShipColor } from "../../../util/number"
 import usePongoStore from "../../../state/usePongoState"
+import { Ionicons } from "@expo/vector-icons"
+import useDimensions from "../../../hooks/useDimensions"
 
 const processReference = (msg: { notification: { author: string, content: string } }, id: string): Message => {
   const { notification: { author, content } } = msg
@@ -58,6 +60,7 @@ const MessageEntry = React.memo(({
   const { api } = usePongoStore()
   const [quotedMsg, setQuotedMsg] = useState<Message | undefined>()
   const [quotedMsgNotFound, setQuotedMsgNotFound] = useState(false)
+  const { cWidth } = useDimensions()
 
   const onSwipeLeft = useCallback(() => {
   }, [])
@@ -65,7 +68,7 @@ const MessageEntry = React.memo(({
   const { id, author, content, kind, reference } = message
   const isSelf = useMemo(() => deSig(author) === deSig(self), [author, self])
   const color = useMemo(() => isSelf ? 'white' : defaultColor, [isSelf, defaultColor]) 
-  const differentAuthor = useMemo(() => !messages[index + 1] || isAdminMsg(messages[index + 1]) || messages[index + 1]?.author !== author, [messages, author])
+  const differentAuthor = useMemo(() => !messages[index + 1] || isAdminMsg(message) || isAdminMsg(messages[index + 1]) || messages[index + 1]?.author !== author, [messages, author])
   const showAvatar = useMemo(() => !isDm && !isSelf && !isAdminMsg(message) && differentAuthor, [isDm, isSelf, differentAuthor])
   const showStatus = useMemo(() => isSelf && message.status !== null && !messages[index - 1]?.status, [isSelf, message, messages])
   const isSelected = useMemo(() => selected === id, [selected, id])
@@ -118,9 +121,7 @@ const MessageEntry = React.memo(({
     }
   }, [message, swipeRef, onSwipe])
 
-  const { width } = window
-
-  const chatWidth = useMemo(() => isWeb ? width * 0.70 : width, [width, isWeb])
+  const chatWidth = useMemo(() => cWidth, [cWidth])
 
   const styles = useMemo(() => StyleSheet.create({
     container: {
@@ -189,6 +190,8 @@ const MessageEntry = React.memo(({
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)
   }, [reference])
 
+  const replyToMessage = useCallback(() => onSwipe(message), [message])
+
   const goToAppLink = useCallback((path: string) => () => {
     navigation.navigate('Grid', { path })
   }, [])
@@ -204,7 +207,9 @@ const MessageEntry = React.memo(({
     ]).start();
   }, [msgRef])
 
-  const dismissKeyboard = useCallback(() => Keyboard.dismiss(), [])
+  const dismissKeyboard = useCallback(() => {
+    Keyboard.dismiss()
+  }, [measure])
 
   const renderContent = () => {
     if (kind === 'text' || kind === 'code' || kind === 'send-tokens') {
@@ -251,6 +256,8 @@ const MessageEntry = React.memo(({
                 {/* </Swipeable> */}
             </Animated.View>
           </Pressable>
+
+          {isWeb && !isSelf && <Ionicons style={{ marginLeft: 8, alignSelf: 'center' }} name='chatbubble' color='white' size={16} onPress={replyToMessage} />}
         </View>
       )
     } else if (kind === 'app-link') {
@@ -280,6 +287,8 @@ const MessageEntry = React.memo(({
               {/* </Swipeable> */}
             </Animated.View>
           </Pressable>
+
+          {isWeb && !isSelf && <Ionicons style={{ marginLeft: 8, alignSelf: 'center' }} name='chatbubble' color='white' size={16} onPress={replyToMessage} />}
         </View>
       )
     } else if (kind === 'member-add' ||

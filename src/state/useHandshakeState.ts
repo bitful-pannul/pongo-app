@@ -56,7 +56,6 @@ const useHandshakeStore = create<HandshakeStore>((set, get) => ({
   setLoading: (loading) => set({ loading }),
   init: async (api: Urbit) => {
     const handleSignerUpdate = ({ code, expires_at }: CodeData) => {
-      console.log('CODE')
       const expiresAt = new Date(expires_at * ONE_SECOND)
       set({ code, expiresAt })
     }

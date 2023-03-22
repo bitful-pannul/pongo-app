@@ -11,10 +11,11 @@ import { Text } from "../../Themed"
 import { medium_gray, uq_lightpurple, uq_purple } from "../../../constants/Colors"
 import { checkIsDm, getAdminMsgText, getChatName } from '../../../util/ping'
 import Avatar from "../Avatar"
-import { isLargeDevice, isWeb, window } from "../../../constants/Layout"
+import { isWeb } from "../../../constants/Layout"
 import { getRelativeTime, ONE_SECOND } from "../../../util/time"
 import { addSig, deSig } from "../../../util/string"
 import { useCallback, useMemo } from "react"
+import useDimensions from "../../../hooks/useDimensions"
 
 interface ChatProps {
   chat: Chat
@@ -23,14 +24,12 @@ interface ChatProps {
 
 export default function ChatsEntry({ chat, navigation }: ChatProps) {
   const { ship } = useStore()
+  const { isLargeDevice } = useDimensions()
   const { unreads, last_message, conversation: { id, members, last_active, name, leaders, muted } } = chat
   const chatName = getChatName(ship, chat)
+  const isDm = checkIsDm(chat)
 
   const hasUnreads = unreads > 0
-
-  const isDm = checkIsDm(chat)
-  const { width } = window
-
   const groupDisplayShip = addSig(last_message?.author || (leaders && leaders[0]) || ship)
 
   const styles = useMemo(() => StyleSheet.create({
@@ -49,8 +48,6 @@ export default function ChatsEntry({ chat, navigation }: ChatProps) {
     }
     setTimeout(() => navigation.navigate('Chat', { id }), 10)
   }, [isLargeDevice])
-
-  const chatsWidth = isLargeDevice ? width / 4 : width
 
   const messageDisplay = (
     <Col style={{ maxWidth: '100%' }}>

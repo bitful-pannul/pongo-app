@@ -6,6 +6,7 @@ import { DefaultStore } from "./types";
 export interface PongoStore extends DefaultStore {
   loading: string | null;
   connected: boolean;
+  showUqbarWallet: boolean;
   showJoinChatModal: boolean;
   currentChat?: string;
   chats: Chats;
@@ -30,6 +31,8 @@ export interface PongoStore extends DefaultStore {
 
   refresh: (shipUrl: string) => Promise<void>;
   setNotifications: (params: SetNotifParams) => Promise<void>;
+  setNotifToken: (params: { shipUrl: string, expoToken: string }) => Promise<void>;
+  setNotifLevel: (level: NotifLevel, api?: Urbit) => Promise<void>;
   getChats: (api: Urbit, maintainMessages?: boolean) => Promise<Chats>;
   getMessages: (params: GetMessagesParams) => Promise<Message[]>;
   searchMessages: (params: SearchMessagesParams) => Promise<void>;

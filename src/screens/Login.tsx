@@ -17,7 +17,7 @@ const getShipFromCookie = (cookie: string) => cookie.match(SHIP_COOKIE_REGEX)![0
 
 type LoginType = 'scan' | 'url' | 'create-account' | 'email-login' | null
 
-export default function LoginScreen() {
+export default function LoginScreen({ inviteUrl }: { inviteUrl?: string }) {
   const { ships, ship, shipUrl, authCookie, addShip, clearShip, setShipUrl, setShip, loadStore, setNeedLogin } = useStore();
   const urlInputRef = useRef<any>(null)
   const [shipUrlInput, setShipUrlInput] = useState('https://');
@@ -28,28 +28,6 @@ export default function LoginScreen() {
   const [formLoading, setFormLoading] = useState(false);
   const [loginType, setLoginType] = useState<LoginType>(null);
   const { color } = useColors()
-
-  // const connectToShip = useCallback(() => {
-  //   if (shipUrl) {
-  //     fetch(shipUrl)
-  //       .then(async (response) => {
-  //         const html = await response.text();
-
-  //         if (URBIT_HOME_REGEX.test(html)) {
-  //           const authCookieHeader = response.headers.get('set-cookie') || 'valid';
-  //           if (typeof authCookieHeader === 'string' && authCookieHeader?.includes('urbauth-~')) {
-  //             const ship = getShipFromCookie(authCookieHeader);
-  //             addShip({ ship, shipUrl, authCookie: authCookieHeader, path: '/apps/escape/' });
-  //           }
-  //         } else {
-  //           const stringMatch = html.match(/<input value="~.*?" disabled="true"/i) || [];
-  //           const urbitId = stringMatch[0]?.slice(14, -17);
-  //           if (urbitId) addShip({ ship: urbitId, shipUrl, path: '/apps/escape/' });
-  //         }
-  //       })
-  //       .catch(console.error)
-  //   }
-  // }, [shipUrl])
 
   const loadStorage = useCallback(async () => {
     try {
@@ -69,6 +47,12 @@ export default function LoginScreen() {
   useEffect(() => {
     loadStorage();
   }, []);
+
+  useEffect(() => {
+    if (inviteUrl) {
+      setLoginType('create-account')
+    }
+  }, [inviteUrl])
 
   const changeUrl = useCallback(() => {
     clearShip();
@@ -313,7 +297,7 @@ export default function LoginScreen() {
 
   if (loginType === 'create-account') {
     return (
-      <CreateAccountScreen method="create" goBack={() => setLoginType(null)} />
+      <CreateAccountScreen inviteUrl={inviteUrl} method="create" goBack={() => setLoginType(null)} />
     )
   } else if (loginType === 'email-login') {
     return (

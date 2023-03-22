@@ -42,6 +42,7 @@ export default function Button({
       width: small ? undefined:  '80%',
       marginHorizontal: small ? undefined : '10%',
       borderRadius: 8,
+      maxWidth: 300,
     },
     view: {
       display: 'flex',

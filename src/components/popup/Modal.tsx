@@ -5,7 +5,8 @@ import useColors from "../../hooks/useColors"
 import Col from '../spacing/Col'
 import H3 from '../text/H3'
 import { ViewProps } from '../Themed'
-import { window } from '../../constants/Layout'
+import useDimensions from "../../hooks/useDimensions";
+import { useMemo } from "react";
 
 interface ModalOptions {
   show: boolean
@@ -22,12 +23,12 @@ const Modal = ({
   ...props
 }: ModalProps) => {
   const { color, backgroundColor, shadedBackground } = useColors()
+  const { width, height } = useDimensions()
+  const offset = useMemo(() => width / 2 - 160, [width])
 
   if (!show) {
     return null
   }
-
-  const offset = window.width / 2 - 160
 
   return (
     <Pressable onPress={hide} style={{
@@ -36,14 +37,14 @@ const Modal = ({
       bottom: 0,
       left: 0,
       right: 0,
-      height: window.height,
+      height,
       zIndex: 10,
     }}>
       <Col style={{
         position: 'absolute',
         top: 0,
-        width: window.width,
-        height: window.height,
+        width,
+        height,
         backgroundColor: shadedBackground,
       }}>
         <Col {...props} style={[

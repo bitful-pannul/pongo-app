@@ -7,9 +7,9 @@ import AnimatedNode, { runOnJS, useAnimatedStyle, useSharedValue } from "react-n
 import * as Haptics from 'expo-haptics'
 
 import { uq_pink, uq_purple } from "../../../constants/Colors"
-import { window } from "../../../constants/Layout"
 import { formatRecordTime } from "../../../util/time"
 import useKeyboard from "../../../hooks/useKeyboard"
+import useDimensions from "../../../hooks/useDimensions"
 
 interface AudioRecorderProps {
   setIsRecording: (value: boolean) => void
@@ -46,10 +46,9 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ storeAudio, setIsRecordin
   const [recordAnimation, setRecordAnimation] = useState(createPulse(recordOpacity, 1, 0, Easing.linear))
   const lastTranslationX = useSharedValue(0)
   const isRecordingStuff = useSharedValue(false)
+  const { cWidth } = useDimensions()
 
   const { isKeyboardVisible, keyboardHeight } = useKeyboard()
-
-  const { width, height } = window
 
   const [recording, setRecording] = useState<Audio.Recording | undefined>()
   const [recordingStatus, setRecordingStatus] = useState<Audio.RecordingStatus | undefined>()
@@ -203,10 +202,10 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ storeAudio, setIsRecordin
     })
     .onEnd((e: GestureUpdateEvent<PanGestureHandlerEventPayload>) => {
       console.log('X', e.translationX)
-      runOnJS(stopRecording)(Math.abs(e.translationX) > (width / 3.5))
+      runOnJS(stopRecording)(Math.abs(e.translationX) > (cWidth / 3.5))
     })
     .onTouchesUp(() => {
-      runOnJS(stopRecording)(lastTranslationX.value < -(width / 3.5))
+      runOnJS(stopRecording)(lastTranslationX.value < -(cWidth / 3.5))
     })
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -219,7 +218,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ storeAudio, setIsRecordin
       <AnimatedNode.View style={[animatedStyle, styles.container]}>
         {isRecordingStuff.value && (
           <>
-            {lastTranslationX.value < -(width / 3.5) ? (
+            {lastTranslationX.value < -(cWidth / 3.5) ? (
               <View style={styles.recordingInfo}>
                 <Ionicons name='trash' size={24} style={{ marginLeft: 16 }} color='red' />
               </View>

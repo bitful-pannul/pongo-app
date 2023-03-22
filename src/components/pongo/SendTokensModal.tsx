@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { isValidPatp } from 'urbit-ob'
+import { Token } from "@uqbar/wallet-ui"
 
 import usePongoStore from "../../state/usePongoState"
 import { useWalletStore } from "../../wallet-ui"
-import { Token } from "../../wallet-ui/types/Token"
 import { displayTokenAmount, numToUd } from "../../wallet-ui/utils/number"
 import { NON_NUM_REGEX } from "../../wallet-ui/utils/regex"
 import Button from "../form/Button"
@@ -44,10 +43,10 @@ export default function SendTokensModal({ show, hide, convo }: SendTokensModalPr
   , [assets])
 
   const zigsBalance = fromUd(
-    Object.values(assets[selectedAccount?.rawAddress || ''] || {})?.find(({ contract }) => contract === ZIGS_CONTRACT)
+    Object.values(assets[asset?.holder || ''] || {})?.find(({ contract }) => contract === ZIGS_CONTRACT)
       ?.data.balance || '0'
   )
-  console.log('ZIGS:', zigsBalance)
+
   const tokenBalance = useMemo(() => Number((asset?.data.balance ?? '0').replace(/\./gi, '')), [asset])
   const amountDiff = useMemo(
     () => tokenBalance - (Number(amount) * Math.pow(10, 18) + (asset?.contract === ZIGS_CONTRACT ? DEFAULT_TXN_COST : 0))
@@ -119,7 +118,7 @@ export default function SendTokensModal({ show, hide, convo }: SendTokensModalPr
             <>
               <Col style={{ width: '100%', alignItems: "center" }}>
                 {!allAssets.length && <Text style={{ fontSize: 16, marginHorizontal: '10%', textAlign: 'center' }}>No assets to show, please check your Uqbar Wallet.</Text>}
-                {allAssets.map(t => <TokenDisplay key={t.id} token={t} selectToken={selectToken} small />)}
+                {allAssets.map(t => <TokenDisplay color={color} key={t.id} token={t} selectToken={selectToken} small />)}
               </Col>
               <Button title='Cancel' onPress={hide} style={{ marginVertical: 16 }} />
             </>

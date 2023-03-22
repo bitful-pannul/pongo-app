@@ -30,7 +30,7 @@ import { NECTAR_APP, NECTAR_HOST } from '../constants/Nectar'
 import { PING_APP, PING_HOST } from '../constants/Pongo'
 import Col from '../components/spacing/Col'
 import Loader from '../components/Loader'
-import { isLargeDevice, isWeb } from '../constants/Layout'
+import { isWeb } from '../constants/Layout'
 import SettingsScreen from '../screens/pongo/Settings'
 import Button from '../components/form/Button'
 import { Ionicons } from '@expo/vector-icons'
@@ -39,6 +39,7 @@ import ContactsScreen from '../screens/pongo/Contacts'
 import { useWalletStore } from '../wallet-ui'
 import Row from '../components/spacing/Row'
 import useSettingsState from '../state/useSettingsState'
+import useDimensions from '../hooks/useDimensions'
 
 let checkAppsInstalledInterval: NodeJS.Timer | undefined
 
@@ -53,10 +54,11 @@ export default function PongoStackNavigator() {
   const { init: initPosse, clearSubscriptions: clearPosse } = usePosseState()
   const { init: initContact, clearSubscriptions: clearContact } = useContactState()
   const { init: initSettings, clearSubscriptions: clearSettings } = useSettingsState()
-  const { init: initPongo, isSearching, clearSubscriptions: clearPongo, notifLevel, setNotifications } = usePongoStore()
+  const { init: initPongo, isSearching, clearSubscriptions: clearPongo, notifLevel, setNotifToken } = usePongoStore()
   const { initWallet, clearSubscriptions: clearWallet } = useWalletStore()
   const { api, ship: self, shipUrl } = useStore()
   const [loadingText, setLoadingText] = useState<string | undefined>()
+  const { isLargeDevice } = useDimensions()
 
   const drawerNavigator = navigation.getParent('drawer' as any)
 
@@ -66,7 +68,7 @@ export default function PongoStackNavigator() {
         .then((token) => {
           console.log('TOKEN', token)
           if (token) {
-            setNotifications({ shipUrl, expoToken: token, level: notifLevel === 'off' ? 'low' : notifLevel })
+            setNotifToken({ shipUrl, expoToken: token })
           }
         }).catch(console.error)
 

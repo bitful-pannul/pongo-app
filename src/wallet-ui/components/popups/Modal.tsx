@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Keyboard, Pressable, TouchableOpacity } from "react-native";
+import { useMemo } from "react";
+import { Pressable, TouchableOpacity } from "react-native";
 import H3 from "../../../components/text/H3";
 
 import { ScrollView, ViewProps } from "../../../components/Themed";
-import { window } from "../../../constants/Layout";
+import useDimensions from "../../../hooks/useDimensions";
 import Col from "../spacing/Col";
 import Row from "../spacing/Row";
 
@@ -27,12 +28,12 @@ const Modal = ({
   shadedBackground,
   ...props
 }: ModalProps) => {
+  const { width, height } = useDimensions()
+  const offset = useMemo(() => width / 2 - 160, [width])
 
   if (!show) {
     return null
   }
-
-  const offset = window.width / 2 - 160
 
   return (
     <Pressable onPress={hide} style={{
@@ -41,7 +42,7 @@ const Modal = ({
       bottom: 0,
       left: 0,
       right: 0,
-      height: window.height,
+      height,
       zIndex: 10,
     }}>
       <Col style={{
@@ -50,7 +51,7 @@ const Modal = ({
         bottom: 0,
         left: 0,
         right: 0,
-        height: window.height,
+        height,
         backgroundColor: shadedBackground,
       }}>
         <ScrollView {...props} style={[

@@ -1,14 +1,13 @@
-import React, { useCallback, useEffect, useRef, useState } from "react"
+import React, { useCallback, useRef, useState } from "react"
 import { ActivityIndicator, Image, Keyboard, KeyboardAvoidingView, StyleSheet, TextInput } from "react-native"
 import * as Clipboard from 'expo-clipboard'
 import Checkbox from 'expo-checkbox'
 import * as Linking from 'expo-linking'
-import dynamicLinks from '@react-native-firebase/dynamic-links'
 
 import { Text, View } from "../components/Themed"
 import useStore from "../state/useStore"
 import Button from "../components/form/Button"
-import { isIos, keyboardAvoidBehavior, keyboardOffset, window } from "../constants/Layout"
+import { isIos, keyboardAvoidBehavior, keyboardOffset } from "../constants/Layout"
 import Col from "../components/spacing/Col"
 import Row from "../components/spacing/Row"
 import { ONE_SECOND } from "../util/time"
@@ -35,7 +34,13 @@ interface AccountDetails {
 const ROOT_URL = 'https://bfjkflmsowbwosbfrqvg.supabase.co'
 const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmamtmbG1zb3did29zYmZycXZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NzU4OTExNjEsImV4cCI6MTk5MTQ2NzE2MX0.9Lu6CJfYbJ9cDdBp0wlAx54pSmoJclhxDoE4nxlrzH4'
 
-export default function CreateAccountScreen({ method, goBack } : { method: 'login' | 'create'; goBack: () => void }) {
+interface CreateAccountScreenProps {
+  method: 'login' | 'create';
+  inviteUrl?: string;
+  goBack: () => void;
+}
+
+export default function CreateAccountScreen({ method, inviteUrl, goBack }: CreateAccountScreenProps) {
   const { addShip } = useStore();
   const emailInputRef = useRef<TextInput | null>(null)
   const otpInputRefs = useRef<{ [box: string]: TextInput | null }>({})
@@ -54,23 +59,8 @@ export default function CreateAccountScreen({ method, goBack } : { method: 'logi
   const [accessToken, setAccessToken] = useState('')
   const [authCookie, setAuthCookie] = useState('')
   const [termsChecked, setChecked] = useState(false)
-  const [initialUrl, setInitialUrl] = useState(Linking.useURL())
 
   const [accountDetails, setAccountDetails] = useState<AccountDetails | null>()
-
-  const { height } = window
-
-  useEffect(() => {
-    // firebase dynamic link format
-    // https://ping.page.link/?link=https%3A%2F%2Fuqbar.network%3Finvite-code%3D067B-CA90-8F0F&apn=network.uqbar.ping&amv=1.0.1&ibi=uqbar.network.ping&isi=1669043343&imv=1.0.1
-    dynamicLinks()
-      .getInitialLink()
-      .then(link => {
-        if (link?.url.includes('invite-code')) {
-          setInitialUrl(link.url)
-        }
-      })
-  }, [])
 
   const onBack = useCallback(() => {
     if (step === 'email') {
@@ -322,8 +312,8 @@ export default function CreateAccountScreen({ method, goBack } : { method: 'logi
         setAccessToken(access_token)
         setStep('invite')
 
-        if (initialUrl) {
-          const { queryParams } = Linking.parse(initialUrl)
+        if (inviteUrl) {
+          const { queryParams } = Linking.parse(inviteUrl)
           
           if (queryParams && queryParams['invite-code'] && typeof queryParams['invite-code'] === 'string') {
             const inviteCode = queryParams['invite-code']
@@ -338,7 +328,7 @@ export default function CreateAccountScreen({ method, goBack } : { method: 'logi
       setOtpError('Something went wrong, please check the code and try again')
     }
     setLoading('')
-  }, [otp, method, initialUrl, registerInviteCode])
+  }, [otp, method, inviteUrl, registerInviteCode])
 
   const content = (
     loading ? (

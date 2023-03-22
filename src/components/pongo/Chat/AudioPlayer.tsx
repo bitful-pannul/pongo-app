@@ -6,7 +6,7 @@ import Slider from '@react-native-community/slider'
 
 import { uq_pink } from "../../../constants/Colors";
 import { formatRecordTime, ONE_SECOND } from "../../../util/time";
-import { isIos, window } from "../../../constants/Layout";
+import useDimensions from "../../../hooks/useDimensions";
 
 const thumbImage = require('../../../../assets/images/slider_thumb.png')
 
@@ -19,7 +19,7 @@ export default function AudioPlayer({ uri, color, ...props }: AudioPlayerProps) 
   const [error, setError] = useState<AVPlaybackStatusError | undefined>()
   const [playing, setPlaying] = useState(false)
 
-  const { width, height } = window
+  const { cWidth } = useDimensions()
 
   useEffect(() => {
     getAudio()
@@ -94,11 +94,11 @@ export default function AudioPlayer({ uri, color, ...props }: AudioPlayerProps) 
     },
     text: { color },
     slider: {
-      width: width * 0.7 - 80,
+      width: cWidth * 0.7 - 80,
       height: 20,
       marginVertical: 4,
     }
-  }), [color, playing, width])
+  }), [color, playing, cWidth])
 
   const duration = (status && 'durationMillis' in status && formatRecordTime(status.durationMillis || 0)) || '0:00'
   const position = (status && 'positionMillis' in status && formatRecordTime(status.positionMillis || 0)) || '0:00'

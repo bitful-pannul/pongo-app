@@ -53,7 +53,7 @@ export interface WalletStore {
   setInsetView: (insetView?: string) => void;
   getAccounts: (api?: Urbit) => Promise<void>;
   setSelectedAccount: (selectedAccount: HotWallet | HardwareWallet) => void;
-  getTransactions: () => Promise<void>;
+  getTransactions: (api?: Urbit) => Promise<void>;
   createAccount: (password: string, nick: string) => Promise<void>;
   deriveNewAddress: (hdpath: string, nick: string, type?: HardwareWalletType) => Promise<void>;
   trackAddress: (address: string, nick: string) => Promise<void>;
@@ -69,7 +69,7 @@ export interface WalletStore {
   sendCustomTransaction: (payload: SendCustomTransactionPayload) => Promise<void>;
   getPendingHash: () => Promise<{ hash: string; txn: any; }>;
   deleteUnsignedTransaction: (address: string, hash: string) => Promise<void>;
-  getUnsignedTransactions: () => Promise<{ [hash: string]: Transaction }>;
+  getUnsignedTransactions: (api?: Urbit) => Promise<{ [hash: string]: Transaction }>;
   submitSignedHash: (from: string, hash: string, rate: number, bud: number, ethHash?: string, sig?: { v: number; r: string; s: string; }) => Promise<void>;
   setMostRecentTransaction: (mostRecentTransaction?: Transaction) => void;
 }
@@ -110,8 +110,8 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
             newSubs.push(api.subscribe(createSubscription('wallet', '/metadata-updates', handleMetadataUpdate(get, set))))
           }
           if (transactions) {
-            getTransactions()
-            getUnsignedTransactions()
+            getTransactions(api)
+            getUnsignedTransactions(api)
             newSubs.push(api.subscribe(createSubscription('wallet', '/tx-updates', handleTxnUpdate(get, set, onReceiveTransaction))))
           }
           await getAccounts(api)
@@ -158,8 +158,8 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
         if (!get().selectedAccount) set({ selectedAccount: (accounts as any[]).concat(importedAccounts)[0] })
       }
     },
-    getTransactions: async () => {
-      const result = await api.scry<any>({ app: 'wallet', path: `/transactions` })
+    getTransactions: async (api?: Urbit) => {
+      const result = await (api || get().api)?.scry<any>({ app: 'wallet', path: `/transactions` })
       const rawTransactions = processTransactions(result)
       const transactions = rawTransactions.sort((a, b) => b.nonce - a.nonce)
       set({ transactions })
@@ -306,13 +306,13 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
       await get().api?.poke({ app: 'wallet', mark: 'wallet-poke', json })
       get().getUnsignedTransactions()
     },
-    getUnsignedTransactions: async () => {
+    getUnsignedTransactions: async (api?: Urbit) => {
       const { accounts, importedAccounts } = get()
       const unsigned: any = await Promise.all(
         accounts
           .map(({ rawAddress }) => rawAddress)
           .concat(importedAccounts.map(({ rawAddress }) => rawAddress))
-          .map(address => api.scry<Transactions>({ app: 'wallet', path: `/pending/${address}` }))
+          .map(address => (api || get().api)?.scry<Transactions>({ app: 'wallet', path: `/pending/${address}` }))
       )
       const unsignedMap = unsigned.reduce((acc: Transactions, cur: Transactions) => ({ ...acc, ...cur }), {})
       const unsignedTransactions = Object.keys(unsignedMap).reduce((acc, hash) => {

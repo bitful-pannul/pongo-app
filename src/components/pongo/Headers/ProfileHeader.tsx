@@ -1,5 +1,5 @@
 import { View } from "react-native";
-import { isIos, window } from "../../../constants/Layout";
+import useDimensions from "../../../hooks/useDimensions";
 import H3 from "../../text/H3";
 import Avatar from "../Avatar";
 
@@ -9,10 +9,10 @@ interface ProfileHeaderProps {
 }
 
 export default function ProfileHeader({ name, showAvatar = false }: ProfileHeaderProps) {
-  const { width } = window
+  const { cWidth } = useDimensions()
 
   return (
-    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', maxWidth: width * 0.7 - 32 }}>
+    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', maxWidth: cWidth * 0.7 - 32 }}>
       {showAvatar && <>
         <Avatar ship={name} size='default' />
         <View style={{ width: 8 }} />

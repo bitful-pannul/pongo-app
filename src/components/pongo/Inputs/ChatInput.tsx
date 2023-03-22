@@ -2,8 +2,9 @@ import { Ionicons, MaterialIcons } from "@expo/vector-icons"
 import React, { useCallback, useEffect, useMemo, useState } from "react"
 import { TextInput, NativeSyntheticEvent, Pressable, TextInputKeyPressEventData, ActivityIndicator, Text } from "react-native"
 import { light_gray, medium_gray, uq_purple } from "../../../constants/Colors"
-import { isIos, isLargeDevice, isWeb } from "../../../constants/Layout"
+import { isIos, isWeb } from "../../../constants/Layout"
 import { MENTION_REGEX } from "../../../constants/Regex"
+import useDimensions from "../../../hooks/useDimensions"
 import useMedia from "../../../hooks/useMedia"
 import usePongoStore from "../../../state/usePongoState"
 import useStore from "../../../state/useStore"
@@ -22,12 +23,13 @@ interface ChatInputProps {
 
 export default function ChatInput({ chatId, inputRef, showMentions, setShowMentions, setPotentialMentions, setShowSendTokensModal }: ChatInputProps) {
   const { ship: self } = useStore()
-  const { chats, drafts, edits, replies, setDraft, sendMessage, setReply, setEdit, editMessage } = usePongoStore()
+  const { chats, drafts, edits, replies, showUqbarWallet, setDraft, sendMessage, setReply, setEdit, editMessage } = usePongoStore()
 
   const chat = chats[chatId]
   const edit = useMemo(() => edits[chatId], [edits, chatId])
   const reply = useMemo(() => replies[chatId], [replies, chatId])
   const isDm = useMemo(() => checkIsDm(chat), [chat])
+  const { isLargeDevice } = useDimensions()
 
   const [text, setText] = useState(drafts[chatId] || '')
   const [sending, setSending] = useState(false)
@@ -121,6 +123,7 @@ export default function ChatInput({ chatId, inputRef, showMentions, setShowMenti
                 fontSize: 16,
                 flex: 6,
               }} multiline
+              autoFocus={isWeb}
             />
           )}
           
@@ -130,7 +133,7 @@ export default function ChatInput({ chatId, inputRef, showMentions, setShowMenti
             </Pressable>
           ) : (
             <>
-              {!isRecording && <Pressable onPress={() => setShowSendTokensModal(true)} style={{ marginRight: 4 }}>
+              {!isRecording && showUqbarWallet && <Pressable onPress={() => setShowSendTokensModal(true)} style={{ marginRight: 4 }}>
                 <MaterialIcons name='attach-money' size={32} style={{ padding: 8 }} color={uq_purple} />
               </Pressable>}
               {!isRecording && <Pressable onPress={pickImage} style={{ marginRight: 6 }}>

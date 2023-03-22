@@ -13,6 +13,7 @@ import useStore from '../../state/useStore'
 import { NotifLevel } from '../../types/Pongo'
 import { getPushNotificationToken } from '../../util/notification'
 import { isIos, isWeb } from '../../constants/Layout'
+import useDimensions from '../../hooks/useDimensions'
 
 interface SettingsScreenProps {
   navigation: NavigationProp<PongoStackParamList>
@@ -20,11 +21,11 @@ interface SettingsScreenProps {
 }
 
 export default function SettingsScreen({ navigation, route }: SettingsScreenProps) {
-  const { ship: self, shipUrl } = useStore()
-  const { set, notifLevel, setNotifications } = usePongoStore()
-  const { color, backgroundColor } = useColors()
+  const { notifLevel, setNotifLevel } = usePongoStore()
   const [notificationsEnabled, setNotificationsEnabled] = useState(true)
   const [notificationLevel, setNotificationLevel] = useState(notifLevel)
+
+  const { cWidth } = useDimensions()
 
   useEffect(() => {
     getPushNotificationToken().then(token => setNotificationsEnabled(Boolean(token)))
@@ -32,7 +33,7 @@ export default function SettingsScreen({ navigation, route }: SettingsScreenProp
 
   useEffect(() => {
     if (notifLevel !== notificationLevel) {
-      setNotifications({ shipUrl, level: notificationLevel })
+      setNotifLevel(notificationLevel)
     }
   }, [notifLevel, notificationLevel])
 
@@ -40,19 +41,20 @@ export default function SettingsScreen({ navigation, route }: SettingsScreenProp
   const [items, setItems] = useState([
     { label: 'Show message contents', value: 'low' },
     { label: 'Show group name', value: 'medium' },
-    { label: 'Display locally', value: 'high' }
+    { label: 'Display locally', value: 'high' },
+    { label: 'Off', value: 'off' }
   ]);
 
   return (
     <View style={{ height: '100%', width: '100%' }}>
       <Col style={{ width: '100%', alignItems: 'center', paddingVertical: 24 }}>
         <H2 text='Settings' />
-        <Col style={{ marginTop: 16, width: '100%', alignItems: 'center' }}>
+        <Col style={{ marginTop: 16, width: cWidth * 0.8, alignItems: 'center' }}>
           {notificationsEnabled ? (
             <>
               <H3 text='Notification Level:' style={{ marginBottom: 16 }} />
               <DropDownPicker
-                style={{ width: '80%', marginHorizontal: '10%' }}
+                style={{ width: cWidth * 0.8 }}
                 open={open}
                 value={notificationLevel}
                 items={items}

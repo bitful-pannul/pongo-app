@@ -21,7 +21,7 @@ import usePongoStore from '../../state/usePongoState'
 import useStore from '../../state/useStore'
 import { MessageKind } from '../../types/Pongo'
 import { addSig, deSig } from '../../util/string'
-import { window } from '../../constants/Layout'
+import useDimensions from '../../hooks/useDimensions'
 
 interface GroupScreenProps {
   navigation: NavigationProp<PongoStackParamList>
@@ -37,6 +37,7 @@ export default function GroupScreen({ navigation, route }: GroupScreenProps) {
   const [newGroupName, setNewGroupName] = useState('')
   const [newMemberError, setNewMemberError] = useState('')
   const [groupNameError, setGroupNameError] = useState('')
+  const { cWidth } = useDimensions()
 
   const convo = route.params.id
   const chat = chats[route.params.id || '']
@@ -89,7 +90,7 @@ export default function GroupScreen({ navigation, route }: GroupScreenProps) {
     return null
   }
 
-  const styles = StyleSheet.create({
+  const styles = useMemo(() => StyleSheet.create({
     headerStyle: {
       padding: 2,
       margin: 12,
@@ -106,10 +107,9 @@ export default function GroupScreen({ navigation, route }: GroupScreenProps) {
       marginLeft: 8,
       color,
     },
-  })
+  }), [color])
 
   const { conversation: { members, leaders } } = chat
-  const { width, height } = window
   const selfIsAdmin = useMemo(() => chat.conversation.leaders.includes(deSig(self)), [chat])
 
   return (
@@ -134,7 +134,7 @@ export default function GroupScreen({ navigation, route }: GroupScreenProps) {
         {display === 'members' && (
           <>
             {selfIsAdmin && (
-              <Col style={{ marginBottom: 4, marginHorizontal: width * 0.1 }}>
+              <Col style={{ marginBottom: 4, marginHorizontal: cWidth * 0.1 }}>
                 <Row>
                   <TextInput
                     value={newMember}
@@ -145,20 +145,20 @@ export default function GroupScreen({ navigation, route }: GroupScreenProps) {
                     autoCapitalize='none'
                     autoComplete='off'
                   />
-                  <Button title='Add' onPress={addNewMember} style={{ width: undefined, marginLeft: 8, marginRight: 0 }} />
+                  <Button title='Add' onPress={addNewMember} style={{ width: 90, marginLeft: 8, marginRight: 0 }} />
                 </Row>
                 {Boolean(newMemberError) && <Text style={{ fontSize: 16, color: 'red', margin: 4 }}>{newMemberError}</Text>}
               </Col>
             )}
 
-            <ScrollView style={{ width, paddingHorizontal: width / 10, flex: 1, marginTop: 4 }} keyboardShouldPersistTaps='handled'>
+            <ScrollView style={{ width: cWidth, paddingHorizontal: cWidth / 10, flex: 1, marginTop: 4 }} keyboardShouldPersistTaps='handled'>
               {members.map(mem => {
                 const isAdmin = leaders?.includes(deSig(mem))
 
                 return (
                   <TouchableOpacity key={mem} onPress={() => navigation.navigate('Profile', { ship: addSig(mem) })} style={styles.member}>
-                    <Row style={{ justifyContent: 'space-between', width: width * 0.75 }}>
-                      <Row style={{ width: '84%' }}>
+                    <Row style={{ justifyContent: 'space-between', width: cWidth * 0.8 }}>
+                      <Row style={{ width: cWidth * 0.8 - 40 }}>
                         <Avatar ship={addSig(mem)} size={'large'} />
                         <ShipName numberOfLines={1} style={styles.shipName} name={addSig(mem)} />
                         {isAdmin && <Text style={{ fontSize: 18, marginLeft: 8 }}>(admin)</Text>}
@@ -202,7 +202,7 @@ export default function GroupScreen({ navigation, route }: GroupScreenProps) {
         {display === 'settings' && (
           <Col style={{ marginTop: 8 }}>
             {/* TODO: change group name, other permissions that we think of */}
-            <Button onPress={changeMute} style={{ width: width * 0.6 }} title={`${chat.conversation.muted ? 'Unmute' : 'Mute'} Chat`} />
+            <Button onPress={changeMute} style={{ width: cWidth * 0.6 }} title={`${chat.conversation.muted ? 'Unmute' : 'Mute'} Chat`} />
             {selfIsAdmin && (
               <Col style={{ marginTop: 8 }}>
                 <Text style={{ marginBottom: 9, fontSize: 18 }}>Update Group Name</Text>

@@ -3,10 +3,10 @@ import create from "zustand"
 import Urbit from "@uqbar/react-native-api";
 
 import { resetSubscriptions } from "./util";
-import { Chats, Message, NotifSettings, SendMessagePayload, SetNotifParams, GetMessagesParams, MessageStatus, SearchMessagesParams, SendTokensPayload } from "../types/Pongo";
+import { Chats, Message, NotifSettings, SendMessagePayload, SetNotifParams, GetMessagesParams, MessageStatus, SearchMessagesParams, SendTokensPayload, NotifLevel } from "../types/Pongo";
 import { addSig, deSig } from "../util/string";
 import { ONE_SECOND } from "../util/time";
-import { dedupeAndSort, sortChats, sortMessages } from "../util/ping";
+import { dedupeAndSort, sortChats } from "../util/ping";
 import { getPushNotificationToken } from "../util/notification";
 import { HAS_MENTION_REGEX } from "../constants/Regex";
 import { PongoStore } from './types/pongo';
@@ -16,6 +16,7 @@ import { ALL_MESSAGES_UID } from '../constants/Pongo';
 const usePongoStore = create<PongoStore>((set, get) => ({
   loading: null,
   connected: true,
+  showUqbarWallet: false,
   showJoinChatModal: false,
   api: null,
   searchTerm: '',
@@ -49,6 +50,9 @@ const usePongoStore = create<PongoStore>((set, get) => ({
     // await get().getBlocklist(api)
     const notifSettings = await api.scry<{ 'notif-settings': NotifSettings }>({ app: 'pongo', path: '/notif-settings' })
     const { expo_token, level } = notifSettings['notif-settings']
+    if (level === 'off') {
+      get().setNotifLevel('medium', api)
+    }
 
     set({ notifLevel: level, expoToken: expo_token })
   },
@@ -89,12 +93,12 @@ const usePongoStore = create<PongoStore>((set, get) => ({
     set({ edits, drafts })
   },
   refresh: async (shipUrl: string) => {
-    const { api, notifLevel, setNotifications, getChats } = get()
+    const { api, setNotifToken, getChats } = get()
     if (api) {
       getPushNotificationToken()
         .then((token) => {
           if (token) {
-            setNotifications({ shipUrl, expoToken: token, level: notifLevel === 'off' ? 'medium' : notifLevel })
+            setNotifToken({ shipUrl, expoToken: token })
           }
         }).catch(console.error)
 
@@ -106,6 +110,16 @@ const usePongoStore = create<PongoStore>((set, get) => ({
     const json = { "set-notifications": { 'ship-url': shipUrl, 'expo-token': token, level } }
     await get().api?.poke({ app: 'pongo', mark: 'pongo-action', json })
     set({ notifLevel: level, expoToken: token })
+  },
+  setNotifToken: async ({ shipUrl, expoToken }: { shipUrl: string, expoToken: string }) => {
+    const json = { 'set-notif-token': { 'ship-url': shipUrl, 'expo-token': expoToken } }
+    await get().api?.poke({ app: 'pongo', mark: 'pongo-action', json })
+    set({ expoToken })
+  },
+  setNotifLevel: async (level: NotifLevel, api?: Urbit) => {
+    const json = { 'set-notif-level': { level } }
+    await (api || get().api)?.poke({ app: 'pongo', mark: 'pongo-action', json })
+    set({ notifLevel: level })
   },
   getChats: async (api: Urbit, maintainMessages = true) => {
     const existingChats = get().chats

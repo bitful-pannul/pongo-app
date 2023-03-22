@@ -9,8 +9,8 @@ import { gray_overlay } from '../../../constants/Colors'
 import Col from '../../spacing/Col'
 import { HEART, THUMB_UP, THUMB_DOWN, THANK_YOU, FIRE, LAUGHING, CLAPPING } from '../../../constants/Emojis'
 import { Message } from '../../../types/Pongo'
-import { window, isIos } from '../../../constants/Layout'
-const { height } = window
+import { isIos } from '../../../constants/Layout'
+import useDimensions from '../../../hooks/useDimensions'
 
 interface MessageMenuProps {
   selected?: { msg: Message; offsetY: number; height: number };
@@ -26,6 +26,7 @@ interface MessageMenuProps {
 const MessageMenu = React.memo(({
   selected, canEdit, canResend, canDelete, isOwnMsg, color, react, interactWithSelected
 }: MessageMenuProps) => {
+  const { height } = useDimensions()
 
   const styles = useMemo(() => StyleSheet.create({
     messageInteractionModal: {
@@ -54,7 +55,7 @@ const MessageMenu = React.memo(({
       fontSize: 18,
       marginLeft: 16,
     },
-  }), [])
+  }), [height])
 
   const blurContents = (
     <Col style={styles.messageInteractionModal}>

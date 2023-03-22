@@ -21,16 +21,15 @@ export default function DrawerContent({
 }: DrawerContentComponentProps) {
   const { ships, ship, setShip, removeShip, removeAllShips, setNeedLogin } = useStore()
   const { api } = useApi()
-  const { set } = usePongoStore()
+  const { set, showUqbarWallet } = usePongoStore()
   const backgroundShips = ships.filter((s) => s.ship !== ship)
   const [showManageShips, setShowManageShips] = useState(false)
-  const [showUqbarWallet, setShowUqbarWallet] = useState(false)
 
   useEffect(() => {
     if (api) {
       api.scry({ app: 'wallet', path: '/accounts' })
-        .then(() => setShowUqbarWallet(true))
-        .catch(() => setShowUqbarWallet(false))
+        .then(() => set({ showUqbarWallet: true }))
+        .catch(() => set({ showUqbarWallet: false }))
     }
   }, [ship, api])
 

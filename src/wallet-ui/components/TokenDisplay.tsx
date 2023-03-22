@@ -15,7 +15,8 @@ import NftImage from './NftImage';
 import HexNum from './text/HexNum';
 import { Text } from '../../components/Themed';
 import Button from '../../components/form/Button';
-import { isWeb, window } from '../../constants/Layout';
+import { isWeb } from '../../constants/Layout';
+import useDimensions from '../../hooks/useDimensions';
 
 interface TokenDisplayProps {
   token: Token
@@ -36,6 +37,7 @@ const TokenDisplay: React.FC<TokenDisplayProps> = ({
   const balance = +removeDots(String(data.balance!))
   const [open, setOpen] = useState(false)
   const isToken = token.token_type === 'token'
+  const { isLargeDevice } = useDimensions()
 
   const styles = useMemo(() => StyleSheet.create({
     displayStyle: {
@@ -50,7 +52,7 @@ const TokenDisplay: React.FC<TokenDisplayProps> = ({
     smallStyle: small ? {
       margin: 0,
       maxWidth: '94%',
-      marginHorizontal: isWeb ? 'auto' : '3%'
+      marginHorizontal: isLargeDevice ? 'auto' : '3%'
     } : {},
     tokenName: {
       paddingLeft: 4,
@@ -69,13 +71,11 @@ const TokenDisplay: React.FC<TokenDisplayProps> = ({
       paddingLeft: 8,
       paddingTop: 8,
     }
-  }), [open])
+  }), [open, isLargeDevice])
 
   const select = useCallback(() => {
     selectToken(id, data.id)
   }, [id, data.id])
-
-  const { width } = window
 
   const iconName = tokenMetadata?.data?.symbol.toLowerCase() === 'ueth' ? 'ethereum' :
     isToken ? 'coins' : 'portrait'

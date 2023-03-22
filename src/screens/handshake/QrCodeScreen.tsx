@@ -6,12 +6,11 @@ import useScanStore from '../../state/useHandshakeState'
 import { Text, View } from '../../components/Themed'
 import UqbarExperience from '../../components/handshake/UqbarExperience'
 import { TouchableOpacity } from 'react-native'
-import useStore from '../../state/useStore'
 import Col from '../../components/spacing/Col'
-import { window } from '../../constants/Layout'
 import Row from '../../components/spacing/Row'
 import useColors from '../../hooks/useColors'
 import { ONE_SECOND } from '../../util/time'
+import useDimensions from '../../hooks/useDimensions'
 
 const padSeconds = (s: number) => `${s < 10 ? '0' : ''}${s}`
 const calcDiff = (expiresAt: Date | null) => Math.round(((expiresAt?.getTime() || new Date().getTime()) - new Date().getTime()) / ONE_SECOND)
@@ -19,8 +18,8 @@ const calcDiff = (expiresAt: Date | null) => Math.round(((expiresAt?.getTime() |
 const QrCodeScreen = () => {
   const { createCode, code, expiresAt, loading } = useScanStore()
   const [diff, setDiff] = useState(calcDiff(expiresAt))
-  const { ship } = useStore()
   const { color } = useColors()
+  const { width } = useDimensions()
 
   useEffect(() => {
     setTimeout(createCode, ONE_SECOND)
@@ -49,8 +48,6 @@ const QrCodeScreen = () => {
     </Text>
   }
 
-  const width = window.width - 120
-
   return (
     <View style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 16 }}>
       <Text style={{ lineHeight: 24, marginBottom: 24, textAlign: 'center' }}>
@@ -58,7 +55,7 @@ const QrCodeScreen = () => {
       </Text>
       {code ? (
         <Col style={{ padding: 4, backgroundColor: 'white', marginBottom: 12, alignItems: 'center' }}>
-          <QRCode size={width} value={code} />
+          <QRCode size={width * 0.75} value={code} />
         </Col>
       ) : (
         <Col style={{ height: 320, marginBottom: 12, alignItems: 'center', justifyContent: 'center' }}>

@@ -1,6 +1,6 @@
 import { isValidPatp } from 'urbit-ob'
 import React from 'react'
-import { Image, View, Text } from 'react-native'
+import { Image, View } from 'react-native'
 import _ from 'lodash'
 import { deSig, Contact, cite } from '@urbit/api'
 import { darken, lighten, parseToHsla } from 'color2k'
@@ -10,9 +10,8 @@ import { addSig, isValidUrl } from '../../util/string'
 import { normalizeUrbitColor } from '../../util/color'
 import useColorScheme from '../../hooks/useColorScheme'
 import Sigil from '../Sigil'
-import { window } from '../../constants/Layout'
-import { uq_purple } from '../../constants/Colors'
 import useColors from '../../hooks/useColors'
+import useDimensions from '../../hooks/useDimensions'
 
 export type AvatarSizes = 'xs' | 'small' | 'default' | 'large' | 'group-chat' | 'huge' | 'quarter-screen' | 'half-screen'
 
@@ -42,8 +41,8 @@ const sizeMap: Record<AvatarSizes, AvatarMeta> = {
   large: { style: { borderRadius: 6 }, size: 32 },
   'group-chat': { style: { borderRadius: 6 }, size: 40 },
   huge: { style: { borderRadius: 8 }, size: 48 },
-  'quarter-screen': { style: { borderRadius: 12 }, size: window.width / 4 },
-  'half-screen': { style: { borderRadius: 20 }, size: window.width / 2 },
+  'quarter-screen': { style: { borderRadius: 12 }, size: 120 },
+  'half-screen': { style: { borderRadius: 20 }, size: 240 },
 }
 
 export const foregroundFromBackground = (
@@ -116,7 +115,7 @@ function getSigilElement(
 
   if (ship.length > 14) {
     return <View>
-      <Sigil size={sigilSize} ship={deSig(ship)?.slice(-13) || ''} color={bg} icon />
+      <Sigil size={Math.min(sigilSize, 200)} ship={deSig(ship)?.slice(-13) || ''} color={bg} icon />
       <View style={{
         backgroundColor: 'white',
         height: sigilSize / 6,
@@ -139,7 +138,7 @@ function getSigilElement(
     </View>
   }
 
-  return <Sigil size={sigilSize} ship={deSig(citedShip) || ''} color={bg} icon />
+  return <Sigil size={Math.min(sigilSize, 200)} ship={deSig(citedShip) || ''} color={bg} icon />
 }
 
 export default function Avatar({
@@ -158,10 +157,18 @@ export default function Avatar({
   const previewAvatarIsValid =
     previewAvatar && previewAvatar !== null && isValidUrl(previewAvatar)
   const { avatar } = contact || emptyContact
+  const { cWidth } = useDimensions()
 
   const showImage = loadImage
-  const { style: iconStyle, size: sigilSize } = sizeMap[size]
-  const sigilElement = getSigilElement(ship, sigilSize, icon, color)
+
+  let sigilSize = sizeMap[size].size
+  let iconStyle = sizeMap[size].style
+  if (size === 'quarter-screen') {
+    sigilSize = cWidth / 4
+  } else if (size == 'half-screen') {
+    sigilSize = cWidth / 2
+  }
+  const sigilElement = getSigilElement(ship, Math.min(sigilSize, 200), icon, color)
 
   if (
     // !calm.disableRemoteContent &&
