@@ -59,15 +59,14 @@ const MessageMenu = React.memo(({
 
   const blurContents = (
     <Col style={styles.messageInteractionModal}>
-      {!isOwnMsg && (
-        <Row style={{ borderRadius: 8, marginBottom: 4, paddingHorizontal: 4 }}>
-          <Picker
-            onSelect={(emoji) => react(emoji.native)()}
-            showPreview={false}
-            showSkinTones={false}
-            style={{ width: '100%', marginBottom: 4 }}
-          />
-      )}
+      <Row style={{ borderRadius: 8, marginBottom: 4, paddingHorizontal: 4 }}>
+        <Picker
+          onSelect={(emoji: any) => react(emoji.native)()}
+          showPreview={false}
+          showSkinTones={false}
+          style={{ width: '100%', marginBottom: 4 }}
+        />
+      </Row>
       <Col style={styles.iconButtonContainer}>
         <TouchableOpacity onPress={interactWithSelected('reply')}>
           <Row style={styles.iconButton}>
