@@ -38,6 +38,7 @@
     "aws-sdk": "^2.1323.0",
     "babel-plugin-inline-import": "^3.0.0",
     "color2k": "^2.0.2",
+    "emoji-mart-native": "^0.6.5-beta",
     "expo": "^48.0.0",
     "expo-asset": "~8.9.1",
     "expo-av": "~13.2.1",

@@ -1,3 +1,4 @@
+import { Picker } from 'emoji-mart-native'
 import { MaterialIcons, Ionicons } from '@expo/vector-icons'
 import React, { useMemo } from 'react'
 import { TouchableOpacity, StyleSheet } from 'react-native'
@@ -7,7 +8,6 @@ import Row from '../../spacing/Row'
 import { Text, View } from '../../Themed'
 import { gray_overlay } from '../../../constants/Colors'
 import Col from '../../spacing/Col'
-import { HEART, THUMB_UP, THUMB_DOWN, THANK_YOU, FIRE, LAUGHING, CLAPPING } from '../../../constants/Emojis'
 import { Message } from '../../../types/Pongo'
 import { isIos } from '../../../constants/Layout'
 import useDimensions from '../../../hooks/useDimensions'
@@ -61,13 +61,12 @@ const MessageMenu = React.memo(({
     <Col style={styles.messageInteractionModal}>
       {!isOwnMsg && (
         <Row style={{ borderRadius: 8, marginBottom: 4, paddingHorizontal: 4 }}>
-          {/* SHOW 6 EMOJIS */}
-          {[THUMB_UP, THUMB_DOWN, HEART, THANK_YOU, FIRE, LAUGHING, CLAPPING].map(emoji => (
-            <TouchableOpacity onPress={react(emoji)} style={{ padding: 4 }} key={emoji}>
-              <Text style={{ fontSize: 28 }}>{emoji}</Text>
-            </TouchableOpacity>
-          ))}
-        </Row>
+          <Picker
+            onSelect={(emoji) => react(emoji.native)()}
+            showPreview={false}
+            showSkinTones={false}
+            style={{ width: '100%', marginBottom: 4 }}
+          />
       )}
       <Col style={styles.iconButtonContainer}>
         <TouchableOpacity onPress={interactWithSelected('reply')}>
