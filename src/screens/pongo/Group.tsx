@@ -202,9 +202,9 @@ export default function GroupScreen({ navigation, route }: GroupScreenProps) {
         {display === 'settings' && (
           <Col style={{ marginTop: 8 }}>
             {/* TODO: change group name, other permissions that we think of */}
-            <Button onPress={changeMute} style={{ width: cWidth * 0.6 }} title={`${chat.conversation.muted ? 'Unmute' : 'Mute'} Chat`} />
+            <Button onPress={changeMute} style={{ width: cWidth * 0.6, marginHorizontal: 0 }} title={`${chat.conversation.muted ? 'Unmute' : 'Mute'} Chat`} />
             {selfIsAdmin && (
-              <Col style={{ marginTop: 8 }}>
+              <Col style={{ marginTop: 16 }}>
                 <Text style={{ marginBottom: 9, fontSize: 18 }}>Update Group Name</Text>
                 <Row>
                   <TextInput
@@ -213,7 +213,7 @@ export default function GroupScreen({ navigation, route }: GroupScreenProps) {
                     onChangeText={changeNewGroupName}
                     style={{ height: 40, width: 200 }}
                   />
-                  <Button title='Update' onPress={changeGroupName} style={{ width: undefined, marginLeft: 8, marginRight: 0 }} />
+                  <Button title='Update' onPress={changeGroupName} small style={{ marginLeft: 8, marginRight: 0 }} />
                 </Row>
                 {Boolean(groupNameError) && <Text style={{ fontSize: 16, color: 'red', margin: 4 }}>{groupNameError}</Text>}
               </Col>

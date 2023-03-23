@@ -103,6 +103,18 @@ const usePongoStore = create<PongoStore>((set, get) => ({
         }).catch(console.error)
 
       await getChats(api)
+
+      resetSubscriptions(set, api, get().subscriptions, [
+        api.subscribe({
+          app: 'pongo',
+          path: '/updates',
+          event: messageSub(set, get)
+        }),
+        api.subscribe({ app: 'pongo', path: `/search-results/${ALL_MESSAGES_UID}`, event: (result) => {
+          console.log('MESSAGE SEARCH RESULTS:', result)
+          // set({ messageSearchResults: result })
+        } })
+      ])
     }
   },
   setNotifications: async ({ shipUrl, expoToken, level }: SetNotifParams) => {
@@ -314,13 +326,18 @@ const usePongoStore = create<PongoStore>((set, get) => ({
     }
   },
   setLastReadMsg: async (convo: string, msgId: string) => {
-    await get().api?.poke({ app: 'pongo', mark: 'pongo-action', json: {
-      'read-message': { convo, message: msgId }
-    } })
-    const newChats = { ...get().chats }
-    newChats[convo].unreads = 0
-    newChats[convo].conversation.last_read = msgId
-    set({ chats: newChats })
+    const { api } = get()
+
+    if (api) {
+      await api.poke({ app: 'pongo', mark: 'pongo-action', json: {
+        'read-message': { convo, message: msgId }
+      } })
+      await get().getChats(api, true)
+    }
+    // const newChats = { ...get().chats }
+    // newChats[convo].unreads = 0
+    // newChats[convo].conversation.last_read = msgId
+    // set({ chats: newChats })
   },
   sendTokens: async (payload: SendTokensPayload) => {
     const { api } = get()

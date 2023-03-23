@@ -120,7 +120,7 @@ const MessagesList = React.memo(({
         inverted
         scrollEventThrottle={50}
         onScroll={onScroll}
-        windowSize={15}
+        windowSize={isWeb ? 25 : 15}
         renderItem={renderMessage}
         keyExtractor={keyExtractor}
         keyboardShouldPersistTaps="handled"

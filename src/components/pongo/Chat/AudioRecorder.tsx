@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { PermissionsAndroid, Platform, Pressable, StyleSheet, Text, View, Animated, Easing, EasingFunction, Keyboard } from "react-native"
+import { PermissionsAndroid, Platform, StyleSheet, Text, View, Animated, Easing, EasingFunction, Keyboard } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { Audio } from 'expo-av'
 import { Gesture, GestureDetector, GestureUpdateEvent, PanGestureHandlerEventPayload } from "react-native-gesture-handler"
@@ -58,10 +58,6 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ storeAudio, setIsRecordin
   }, [])
 
   const startRecording = useCallback(async function(cancel: boolean) {
-    if (cancel) {
-      Keyboard.dismiss()
-      return
-    }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)
     setIsRecording(true)
     isRecordingStuff.value = true
@@ -152,6 +148,12 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ storeAudio, setIsRecordin
       display: 'flex',
       flexDirection: 'row',
       justifyContent: 'space-between',
+      position: 'absolute',
+      width: recordingStatus?.isRecording ? cWidth : undefined,
+      right: 0,
+      backgroundColor: 'white',
+      minHeight: 48,
+      height: '100%'
     },
     buttonContainer: {
       
@@ -189,7 +191,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ storeAudio, setIsRecordin
       alignItems: 'center',
       marginLeft: -50,
     }
-  }), [recordingStatus])
+  }), [recordingStatus, cWidth])
 
   const panGesture = Gesture.Pan()
     .activateAfterLongPress(600)
@@ -202,10 +204,10 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ storeAudio, setIsRecordin
     })
     .onEnd((e: GestureUpdateEvent<PanGestureHandlerEventPayload>) => {
       console.log('X', e.translationX)
-      runOnJS(stopRecording)(Math.abs(e.translationX) > (cWidth / 3.5))
+      runOnJS(stopRecording)(Math.abs(e.translationX) > (cWidth / 4))
     })
     .onTouchesUp(() => {
-      runOnJS(stopRecording)(lastTranslationX.value < -(cWidth / 3.5))
+      runOnJS(stopRecording)(lastTranslationX.value < -(cWidth / 4))
     })
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -218,10 +220,10 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ storeAudio, setIsRecordin
       <AnimatedNode.View style={[animatedStyle, styles.container]}>
         {isRecordingStuff.value && (
           <>
-            {lastTranslationX.value < -(cWidth / 3.5) ? (
-              <View style={styles.recordingInfo}>
+            {lastTranslationX.value < -(cWidth / 4) ? (
+              <Animated.View style={[styles.recordingInfo, { marginLeft: 16 }, { transform: [{ scale: micTransform }, {perspective: 1000}] }]}>
                 <Ionicons name='trash' size={24} style={{ marginLeft: 16 }} color='red' />
-              </View>
+              </Animated.View>
             ) : (
               <View style={styles.recordingInfo}>
                 <Animated.View style={[styles.recordingIndicator, { opacity: recordOpacity }]} />
@@ -236,7 +238,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ storeAudio, setIsRecordin
         )}
 
         <View style={styles.buttonContainer}>
-          <Ionicons name='mic-outline' size={32} style={{ marginRight: 8, padding: 8 }} color={uq_purple} />
+          <Ionicons name='mic-outline' size={32} style={{ marginRight: 8, marginTop: 2, padding: 4 }} color={uq_purple} />
           {isRecordingStuff.value && (
             <Animated.View style={[styles.recordingButton, { transform: [{ scale: micTransform }, {perspective: 1000}] }]}>
               <Ionicons name='mic' color='white' size={32} />

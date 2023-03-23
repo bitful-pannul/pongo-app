@@ -7,11 +7,10 @@ export default function useDimensions() {
 
   const isLargeDevice = useMemo(() => width > 700, [width])
   const isSmallDevice = useMemo(() => width < 375, [width])
-  const cWidth = useMemo(() => isLargeDevice ? width * 0.75 : width, [width])
+  const cWidth = useMemo(() => isLargeDevice ? width * 2 / 3 : width, [width])
 
   useEffect(() => {
     const onDimensionsChange = ({ window, screen, }: { window: ScaledSize; screen: ScaledSize; }) => {
-      console.log('CHANGE')
       setWidth(window.width)
       setHeight(window.height)
     }

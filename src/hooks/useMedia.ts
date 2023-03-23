@@ -1,10 +1,10 @@
-import { useCallback, useState } from "react"
+import { useCallback } from "react"
 import * as ImagePicker from "expo-image-picker"
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator'
 
 import { isIos } from "../constants/Layout"
 import { Message } from "../types/Pongo"
-import { fetchFileFromUri, getFileExt, uploadFile } from "../util/file-upload"
+import { fetchFileFromUri, getFileExt, getImageExt, uploadFile } from "../util/file-upload"
 import usePongoStore from "../state/usePongoState"
 import useSettingsState from "../state/useSettingsState"
 
@@ -39,8 +39,8 @@ export default function useMedia({ ship, chatId, reply, setUploading } : UseMedi
         setUploading(true)
         const imgInfo = result.assets?.[0]
         if (imgInfo) {
-          const ext = getFileExt(imgInfo.fileName)
-          const resizedWidth = imgInfo.width > 400 ? 400 : imgInfo.width
+          const ext = getImageExt(imgInfo)
+          const resizedWidth = imgInfo.width > 900 ? 900 : imgInfo.width
 
           let imgBlob: Blob = await (
             ext === 'gif' ?
@@ -48,13 +48,13 @@ export default function useMedia({ ship, chatId, reply, setUploading } : UseMedi
             manipulateAsync(
               imgInfo.uri,
               [{ resize: { width: resizedWidth }}],
-              { compress: 1, format: ext === 'png' ? SaveFormat.PNG : SaveFormat.JPEG }
+              { compress: 1, format: ext === 'png' ? SaveFormat.PNG : ext === 'webp' ? SaveFormat.WEBP : SaveFormat.JPEG }
             ).then(({ uri }) => fetchFileFromUri(uri))
           )
 
-          const filename = `${chatId.slice(2, 10).replace(/\./g, '')}${Date.now()}.${ext || 'jpg'}`
+          const filename = `${chatId.slice(2, 10).replace(/\./g, '')}${Date.now()}.${ext}`
 
-          const uploadUrl = await uploadFile(imgBlob, filename, s3Creds, s3Config)
+          const uploadUrl = await uploadFile(imgBlob, filename, ext, s3Creds, s3Config)
           console.log('FILE URL:', uploadUrl)
           // I need to somehow push the message in before the image is actually uploaded
           await sendMessage({ self: ship, convo: chatId, kind: 'text', content: uploadUrl, ref: reply?.id })
@@ -72,7 +72,7 @@ export default function useMedia({ ship, chatId, reply, setUploading } : UseMedi
     try {
       const imgBlob = await fetchFileFromUri(audioUri)
       const filename = `${ship}${Date.now()}.${getFileExt(audioUri)}` 
-      const uploadUrl = await uploadFile(imgBlob, filename, s3Creds, s3Config)
+      const uploadUrl = await uploadFile(imgBlob, filename, 'm4a', s3Creds, s3Config)
       console.log('FILE URL:', uploadUrl)
       await sendMessage({ self: ship, convo: chatId, kind: 'text', content: uploadUrl, ref: reply?.id })
       setReply(chatId, undefined)

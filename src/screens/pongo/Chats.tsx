@@ -29,7 +29,7 @@ export default function ChatsScreen({ drawerNavigator }: ChatsScreenProps) {
   const { api, shipUrl } = useStore()
   const appState = useRef(AppState.currentState)
   const navigation = useNavigation<NavigationProp<PongoStackParamList>>()
-  const { isLargeDevice, cWidth, width } = useDimensions()
+  const { isLargeDevice, width } = useDimensions()
 
   const onRefresh = useCallback(async () => {
     try {
@@ -40,7 +40,6 @@ export default function ChatsScreen({ drawerNavigator }: ChatsScreenProps) {
   }, [api])
 
   useEffect(() => {
-    if (!isWeb) {
       const handleAppStateChange = (nextAppState: AppStateStatus) => {
         if (appState.current.match(/inactive|background/) && nextAppState === "active") {
           refresh(shipUrl)
@@ -49,7 +48,6 @@ export default function ChatsScreen({ drawerNavigator }: ChatsScreenProps) {
       }
       const appStateListener = AppState.addEventListener("change", handleAppStateChange)
       return appStateListener.remove
-    }
   }, [shipUrl])
 
   useEffect(() => {

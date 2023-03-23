@@ -1,9 +1,10 @@
 import AWS from 'aws-sdk'
+import * as ImagePicker from "expo-image-picker"
 
 import { ACCESS_KEY, BUCKET_NAME, SECRET_KEY } from '../s3-creds'
 import { S3Config, S3Creds } from '../state/useSettingsState'
 
-export const uploadFile = async (blob: Blob, filename: string, s3Creds?: S3Creds, s3Config?: S3Config) => {
+export const uploadFile = async (blob: Blob, filename: string, ext: string, s3Creds?: S3Creds, s3Config?: S3Config) => {
   const s3 = new AWS.S3({
     accessKeyId: ACCESS_KEY,
     secretAccessKey: SECRET_KEY,
@@ -13,6 +14,8 @@ export const uploadFile = async (blob: Blob, filename: string, s3Creds?: S3Creds
     Bucket: BUCKET_NAME,
     Key: filename,
     Body: blob,
+    ContentType: `image/${ext}`,
+    // ContentDisposition: `inline; filename=${filename}`,
     ACL: 'public-read'
   }).promise()
 
@@ -27,6 +30,16 @@ export const fetchFileFromUri = async (uri: string) => {
 
 export const getFileExt = (filename?: string | null) => !filename ? '' : filename.substring(filename.lastIndexOf('.')+1, filename.length)
 
+export const getImageExt = (imgInfo: ImagePicker.ImagePickerAsset) => {
+  const fn = imgInfo.fileName
+  if (fn) {
+    return fn.substring(fn.lastIndexOf('.')+1, fn.length) || 'jpeg'
+  } else if (/^data:image\//.test(imgInfo.uri)) {
+    return imgInfo.uri.match(/^data:image\/.+?;/)?.[0].slice(11, -1) || 'jpeg'
+  }
+
+  return 'jpeg'
+}
 
 // import AWS from 'aws-sdk'
 

@@ -1,6 +1,7 @@
 import { Ionicons, MaterialIcons } from "@expo/vector-icons"
 import React, { useCallback, useEffect, useMemo, useState } from "react"
-import { TextInput, NativeSyntheticEvent, Pressable, TextInputKeyPressEventData, ActivityIndicator, Text } from "react-native"
+import { Keyboard, ScrollView, StyleSheet } from "react-native"
+import { TextInput, NativeSyntheticEvent, Pressable, TextInputKeyPressEventData, ActivityIndicator, Text, View } from "react-native"
 import { light_gray, medium_gray, uq_purple } from "../../../constants/Colors"
 import { isIos, isWeb } from "../../../constants/Layout"
 import { MENTION_REGEX } from "../../../constants/Regex"
@@ -29,7 +30,7 @@ export default function ChatInput({ chatId, inputRef, showMentions, setShowMenti
   const edit = useMemo(() => edits[chatId], [edits, chatId])
   const reply = useMemo(() => replies[chatId], [replies, chatId])
   const isDm = useMemo(() => checkIsDm(chat), [chat])
-  const { isLargeDevice } = useDimensions()
+  const { isLargeDevice, cWidth } = useDimensions()
 
   const [text, setText] = useState(drafts[chatId] || '')
   const [sending, setSending] = useState(false)
@@ -45,6 +46,11 @@ export default function ChatInput({ chatId, inputRef, showMentions, setShowMenti
   useEffect(() => {
     setText(drafts[chatId] || '')
   }, [drafts[chatId]])
+
+  const sendTokens = useCallback(() => {
+    Keyboard.dismiss()
+    setShowSendTokensModal(true)
+  }, [])
 
   const send = useCallback(async () => {
     if (text.trim().length > 0) {
@@ -103,8 +109,41 @@ export default function ChatInput({ chatId, inputRef, showMentions, setShowMenti
     }
   }, [chatId, chat, isDm, setText, setShowMentions, showMentions])
 
+  const styles = useMemo(() => StyleSheet.create({
+    textInput: {
+      backgroundColor: 'white',
+      padding: 12,
+      paddingRight: 40,
+      borderRadius: 4,
+      borderWidth: 0,
+      fontSize: 16,
+      flex: 1,
+      width: cWidth,
+      minHeight: 48,
+      paddingTop: 12,
+    },
+    sendButton: {
+      position: 'absolute',
+      right: 4,
+      top: 0
+    },
+    sendTokensButton: {
+      position: 'absolute',
+      right: 106,
+      top: 4,
+    },
+    attachButton: {
+      position: 'absolute',
+      right: 60,
+      top: 2,
+    },
+  }), [cWidth])
+
   return (
-    <Row style={{ marginBottom: isIos ? 40 : 0, borderBottomWidth: 1, borderBottomColor: light_gray, backgroundColor: 'white', maxHeight: 120 }}>
+    <Row
+      style={{ marginBottom: isIos ? 40 : 0, borderBottomWidth: 1, borderBottomColor: light_gray, backgroundColor: 'white', maxHeight: 120 }}
+      onStartShouldSetResponder={(e) => { e.stopPropagation(); return false }} onTouchEnd={(e) => { e.stopPropagation(); e.preventDefault() }}
+    >
       {uploading ? (
         <>
           <ActivityIndicator size='large' style={{ margin: 8, marginLeft: 16 }} color='black' />
@@ -112,32 +151,22 @@ export default function ChatInput({ chatId, inputRef, showMentions, setShowMenti
         </>
       ) : (
         <>
-          {!isRecording && (
-            <TextInput ref={inputRef} placeholder='Message' value={text} onKeyPress={onKeyPress}
-              onChangeText={onChangeTextInput} maxLength={1024} style={{
-                backgroundColor: 'white',
-                padding: 12,
-                paddingRight: 8,
-                borderRadius: 4,
-                borderWidth: 0,
-                fontSize: 16,
-                flex: 6,
-              }} multiline
-              autoFocus={isWeb}
-            />
-          )}
+          <TextInput ref={inputRef} placeholder='Message' value={text} onKeyPress={onKeyPress}
+            onChangeText={onChangeTextInput} maxLength={1024} style={styles.textInput} multiline
+            autoFocus={isWeb}
+          />
           
           {Boolean(text) ? (
-            <Pressable onPress={send} disabled={sending}>
-              <MaterialIcons name='send' size={32} style={{ padding: 8 }} color={sending ? medium_gray : uq_purple} />
+            <Pressable onPress={send} disabled={sending} style={styles.sendButton}>
+              <MaterialIcons name='send' size={32} style={{ padding: 4 }} color={sending ? medium_gray : uq_purple} />
             </Pressable>
           ) : (
             <>
-              {!isRecording && showUqbarWallet && <Pressable onPress={() => setShowSendTokensModal(true)} style={{ marginRight: 4 }}>
-                <MaterialIcons name='attach-money' size={32} style={{ padding: 8 }} color={uq_purple} />
+              {!isRecording && showUqbarWallet && <Pressable onPress={sendTokens} style={styles.sendTokensButton}>
+                <MaterialIcons name='attach-money' size={32} style={{ padding: 4 }} color={uq_purple} />
               </Pressable>}
-              {!isRecording && <Pressable onPress={pickImage} style={{ marginRight: 6 }}>
-                <Ionicons name='attach' size={32} style={{ padding: 8 }} color={uq_purple} />
+              {!isRecording && <Pressable onPress={pickImage} style={styles.attachButton}>
+                <Ionicons name='attach' size={32} style={{ padding: 4 }} color={uq_purple} />
               </Pressable>}
               {!isWeb && <AudioRecorder {...{ storeAudio, setIsRecording }} />}
             </>
