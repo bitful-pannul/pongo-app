@@ -424,7 +424,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
 
       {Boolean(selected) && (
         <TouchableOpacity onPress={clearSelected} style={{ width: '100%', height: '100%', position: 'absolute' }}>
-          <MessageMenu {...{ interactWithSelected, react, selected, color, isOwnMsg, canEdit, canResend, canDelete }} />
+          <MessageMenu {...{ interactWithSelected, react, selected, color, isOwnMsg, canEdit, canResend, canDelete, backgroundColor }} />
         </TouchableOpacity>
       )}
 

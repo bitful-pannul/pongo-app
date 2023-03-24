@@ -69,45 +69,45 @@ export default function Content({ onLongPress, content, color, depth = 0, delayL
 
   if (CODE_REGEX.test(content)) {
     return (
-      <>
+      <Text>
         {splitByRegex(content, CODE_REGEX).map((c, i) => CODE_REGEX.test(c) ?
-          <Text {...{ onLongPress }} onPress={() => Clipboard.setStringAsync(c.replace(REPLACE_CODE_REGEX, ''))} style={[styles.textStyle, styles.code]}>
+          <Text key={`${i}-i-${depth}`} {...{ onLongPress }} onPress={() => Clipboard.setStringAsync(c.replace(REPLACE_CODE_REGEX, ''))} style={[styles.textStyle, styles.code]}>
             {c.replace(REPLACE_CODE_REGEX, '')}
           </Text>:
           <Content {...{ onLongPress, delayLongPress }} content={c} color={color} depth={depth + 1} key={`${i}-i-${depth}`} />
         )}
-      </>
+      </Text>
     )
   }
   
   if (BOLD_REGEX.test(content)) {
     return (
-      <>
+      <Text>
         {splitByRegex(content, BOLD_REGEX).map((c, i) => BOLD_REGEX.test(c) ?
-          <Text {...{ onLongPress, delayLongPress }} style={[styles.textStyle, styles.bold]}>{c.replace(REPLACE_BOLD_REGEX, '')}</Text>:
+          <Text {...{ onLongPress, delayLongPress }} key={`${i}-i-${depth}`} style={[styles.textStyle, styles.bold]}>{c.replace(REPLACE_BOLD_REGEX, '')}</Text>:
           <Content {...{ onLongPress, delayLongPress }} content={c} color={color} depth={depth + 1} key={`${i}-i-${depth}`} />
         )}
-      </>
+      </Text>
     )
   }
 
   if (ITALIC_REGEX.test(content)) {
     return (
-      <>
+      <Text>
         {splitByRegex(content, ITALIC_REGEX).map((c, i) => ITALIC_REGEX.test(c) ?
-          <Text {...{ onLongPress, delayLongPress }} style={[styles.textStyle, styles.italic]}>{c.replace(REPLACE_ITALIC_REGEX, '')}</Text>:
+          <Text key={`${i}-i-${depth}`} {...{ onLongPress, delayLongPress }} style={[styles.textStyle, styles.italic]}>{c.replace(REPLACE_ITALIC_REGEX, '')}</Text>:
           <Content {...{ onLongPress, delayLongPress }} content={c} color={color} depth={depth + 1} key={`${i}-i-${depth}`} />
         )}
-      </>
+      </Text>
     )
   }
 
   return (
-    <>
+    <Text>
       {splitByRegex(content, SPLIT_BY_URL_REGEX).map((c, i) => SPLIT_BY_URL_REGEX.test(c) ?
         <A href={c} key={`${i}-${depth}`} style={styles.linkStyle} target='_blank'>{c}</A>:
         <Text {...{ onLongPress, delayLongPress }} style={styles.textStyle} key={`${i}-${depth}`}>{c}</Text>
       )}
-    </>
+    </Text>
   )  
 }

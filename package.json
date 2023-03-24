@@ -76,6 +76,7 @@
     "react-native": "0.71.4",
     "react-native-bidirectional-infinite-scroll": "^0.3.3",
     "react-native-dropdown-picker": "^5.4.4",
+    "react-native-emoji-selector": "^0.2.0",
     "react-native-gesture-handler": "~2.9.0",
     "react-native-popup-menu": "^0.16.1",
     "react-native-qrcode-svg": "^6.1.2",

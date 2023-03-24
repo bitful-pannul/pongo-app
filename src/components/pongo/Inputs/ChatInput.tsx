@@ -64,13 +64,14 @@ export default function ChatInput({ chatId, inputRef, showMentions, setShowMenti
           setReply(chatId, undefined)
         }
         setText('')
+        setDraft(chatId, '')
         if (showMentions) {
           setShowMentions(false)
         }
       } catch {}
       setSending(false)
     }
-  }, [self, reply, edit, chatId, text, showMentions, setSending])
+  }, [self, reply, edit, chatId, text, showMentions, setSending, setDraft])
 
   const onKeyPress = useCallback((e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
     if (e.nativeEvent.key === 'Enter' && isLargeDevice) {

@@ -25,9 +25,8 @@ interface NewChatScreenProps {
 export default function NewChatScreen({ navigation }: NewChatScreenProps) {
   const { set, isSearching, searchResults, createConversation, sortedChats, loading, searchTerm } = usePongoStore()
   const { tags } = usePosseState()
-  const { color, shadedBackground } = useColors()
   const { ship: self } = useStore()
-  const { isLargeDevice } = useDimensions()
+  const { isLargeDevice, cWidth } = useDimensions()
 
   useEffect(() => {
     setTimeout(() => set({ isSearching: true }), ONE_SECOND / 3)
@@ -65,7 +64,7 @@ export default function NewChatScreen({ navigation }: NewChatScreenProps) {
         </Col>
       ) : (
         <>
-          <Button style={{ marginTop: 16, marginHorizontal: isLargeDevice ? 'auto' : undefined }} onPress={() => navigation.navigate('NewGroup')} iconName='add' title='New Group' />
+          <Button style={{ marginTop: 16, marginHorizontal: isLargeDevice ? 'auto' : cWidth / 2 - 120, width: 240 }} onPress={() => navigation.navigate('NewGroup')} iconName='add' title='New Group' />
           {Object.keys(tags).length > 0 && (
             <Button style={{ marginTop: 16 }} onPress={() => navigation.navigate('NewPosseGroup')} title='New Group From Posse' />
           )}

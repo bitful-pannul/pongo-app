@@ -267,7 +267,7 @@ const usePongoStore = create<PongoStore>((set, get) => ({
     const mentions: string[] = (kind === 'text' ? content.match(HAS_MENTION_REGEX) || [] as string[] : []).concat(mens).map(m => addSig(m.trim())).filter(isValidPatp)
     chat.unreads = 0
 
-    chat.messages = resend ? chat.messages.map(m => m.id === resend.id ? { ...m, status: 'pending' } : m) :
+    chat.messages = resend ? chat.messages.map(m => m.id === resend?.id ? { ...m, status: 'pending' } : m) :
       [{
         id: identifier,
         author: self,
@@ -276,6 +276,7 @@ const usePongoStore = create<PongoStore>((set, get) => ({
         content,
         reactions: {},
         edited: false,
+        mentions,
         reference: ref || null,
         status: 'pending' as MessageStatus,
       } as Message].concat(chat.messages)
