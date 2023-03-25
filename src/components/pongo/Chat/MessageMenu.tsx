@@ -1,6 +1,6 @@
 import { MaterialIcons, Ionicons } from '@expo/vector-icons'
 import React, { useCallback, useMemo, useState } from 'react'
-import { TouchableOpacity, StyleSheet, ScrollView } from 'react-native'
+import { TouchableOpacity, StyleSheet, ScrollView, Pressable } from 'react-native'
 import { BlurView } from "expo-blur"
 import EmojiSelector from 'react-native-emoji-selector'
 
@@ -12,6 +12,7 @@ import { THUMB_UP, THUMB_DOWN, THANK_YOU, FIRE, LAUGHING, CLAPPING, EYES } from 
 import { Message } from '../../../types/Pongo'
 import { isIos, isWeb } from '../../../constants/Layout'
 import useDimensions from '../../../hooks/useDimensions'
+import Modal from '../../popup/Modal'
 
 interface MessageMenuProps {
   selected?: { msg: Message; offsetY: number; height: number };
@@ -35,7 +36,7 @@ const MessageMenu = React.memo(({
     messageInteractionModal: {
       alignSelf: 'center',
       backgroundColor: 'transparent',
-      marginTop: Math.max(
+      marginTop: showEmojis ? 80 : Math.max(
         0,
         Math.min(
           (selected?.offsetY || 200) - (isOwnMsg ? 200 : 240),
@@ -58,11 +59,14 @@ const MessageMenu = React.memo(({
       fontSize: 18,
       marginLeft: 16,
     },
-  }), [height])
+  }), [height, showEmojis])
 
   const toggleEmojis = useCallback(() => setShowEmojis(!showEmojis), [showEmojis])
 
-  const selectEmoji = useCallback((emoji: string) => react(emoji)(), [react])
+  const selectEmoji = useCallback((emoji: string) => {
+    react(emoji)()
+    setShowEmojis(false)
+  }, [react])
 
   const blurContents = (
     <Col style={styles.messageInteractionModal}>
@@ -82,19 +86,7 @@ const MessageMenu = React.memo(({
           />
         </Row>
       )}
-      {showEmojis ? (
-        isWeb ? (
-          <ScrollView style={[styles.iconButtonContainer, { maxWidth: 320, height: 200, backgroundColor }]}>
-            {/* SHOW a react native emoji picker */}
-            <EmojiSelector onEmojiSelected={selectEmoji} showTabs={false} />
-          </ScrollView>
-        ) : (
-          <Col style={[styles.iconButtonContainer, { maxWidth: 320, backgroundColor }]}>
-            {/* SHOW a react native emoji picker */}
-            <EmojiSelector onEmojiSelected={selectEmoji} showTabs={false} />
-          </Col>
-        )
-      ) : (
+      {!showEmojis && (
         <Col style={styles.iconButtonContainer}>
           <TouchableOpacity onPress={interactWithSelected('reply')}>
             <Row style={styles.iconButton}>
@@ -128,11 +120,26 @@ const MessageMenu = React.memo(({
           </TouchableOpacity>}
         </Col>
       )}
+      {showEmojis && (
+        <Pressable onPress={e => e.stopPropagation()}>
+          {isWeb ? (
+            <ScrollView style={[styles.iconButtonContainer, { maxWidth: 400, height: 300, backgroundColor }]}>
+              <EmojiSelector onEmojiSelected={selectEmoji} showTabs={false} columns={8} />
+            </ScrollView>
+          ) : (
+            <Col style={[styles.iconButtonContainer, { maxWidth: 320, backgroundColor }]}>
+              <EmojiSelector onEmojiSelected={selectEmoji} showTabs={false} />
+            </Col>
+          )}
+        </Pressable>
+      )}
     </Col>
   )
 
   return isIos ? (
-    <BlurView style={{ width: '100%', height: '100%', backgroundColor: gray_overlay }} intensity={2}>
+    <BlurView style={{ width: '100%', height: '100%', backgroundColor: gray_overlay }} intensity={2}
+      onStartShouldSetResponder={(e) => true} onTouchEnd={(e) => { e.stopPropagation(); e.preventDefault() }}
+    >
       {blurContents}
     </BlurView>
   ) : (

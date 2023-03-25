@@ -48,7 +48,7 @@ const Reaction = ({ color, emoji, reactions, addReaction }: ReactionProps) => {
       {reactions[emoji].map(ship => (
         <Row key={`react=${ship}`} style={{ alignSelf: 'flex-start', marginTop: 4 }}>
           <Avatar ship={ship} />
-          <ShipName name={ship} style={{ color: textColor, fontSize: 16, marginTop: 4 }} />
+          <ShipName name={ship} style={{ color: textColor, fontSize: 16, marginTop: 2 }} />
         </Row>
       ))}
     </Col>

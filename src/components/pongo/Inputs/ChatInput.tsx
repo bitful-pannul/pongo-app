@@ -74,7 +74,16 @@ export default function ChatInput({ chatId, inputRef, showMentions, setShowMenti
   }, [self, reply, edit, chatId, text, showMentions, setSending, setDraft])
 
   const onKeyPress = useCallback((e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
-    if (e.nativeEvent.key === 'Enter' && isLargeDevice) {
+    if (isWeb) {
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.style.height = 0;
+          inputRef.current.style.height = inputRef.current.scrollHeight + "px";
+        }
+      }, 1)
+    }
+
+    if (e.nativeEvent.key === 'Enter' && !(e.nativeEvent as any).shiftKey && isLargeDevice) {
       e.preventDefault()
       e.stopPropagation()
       send()
@@ -113,7 +122,6 @@ export default function ChatInput({ chatId, inputRef, showMentions, setShowMenti
   const styles = useMemo(() => StyleSheet.create({
     textInput: {
       backgroundColor: 'white',
-      padding: 12,
       paddingRight: 40,
       borderRadius: 4,
       borderWidth: 0,
@@ -121,30 +129,31 @@ export default function ChatInput({ chatId, inputRef, showMentions, setShowMenti
       flex: 1,
       width: cWidth,
       minHeight: 48,
+      maxHeight: 120,
+      paddingLeft: 12,
       paddingTop: 12,
+      paddingBottom: 8,
+      overflowY: 'scroll',
     },
     sendButton: {
       position: 'absolute',
       right: 4,
-      top: 0
+      top: isWeb ? 4 : 0
     },
     sendTokensButton: {
       position: 'absolute',
-      right: 106,
+      right: isWeb ? 62 : 106,
       top: 4,
     },
     attachButton: {
       position: 'absolute',
-      right: 60,
+      right: isWeb ? 16 : 60,
       top: 2,
     },
-  }), [cWidth])
+  }), [cWidth, isWeb])
 
   return (
-    <Row
-      style={{ marginBottom: isIos ? 40 : 0, borderBottomWidth: 1, borderBottomColor: light_gray, backgroundColor: 'white', maxHeight: 120 }}
-      onStartShouldSetResponder={(e) => { e.stopPropagation(); return false }} onTouchEnd={(e) => { e.stopPropagation(); e.preventDefault() }}
-    >
+    <Row style={{ marginBottom: isIos ? 40 : 0, borderBottomWidth: 1, borderBottomColor: light_gray, backgroundColor: 'white', maxHeight: 120 }}>
       {uploading ? (
         <>
           <ActivityIndicator size='large' style={{ margin: 8, marginLeft: 16 }} color='black' />
