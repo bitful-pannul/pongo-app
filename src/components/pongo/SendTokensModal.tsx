@@ -14,10 +14,11 @@ import { addSig, deSig } from "../../util/string"
 import { DEFAULT_TXN_COST, ZIGS_CONTRACT } from "../../wallet-ui/utils/constants"
 import { addDecimalDots } from "../../wallet-ui/utils/format"
 import useStore from "../../state/useStore"
-import { ActivityIndicator, View } from "react-native"
+import { ActivityIndicator, StyleSheet, View } from "react-native"
 import useColors from "../../hooks/useColors"
 import { ONE_SECOND } from "../../util/time"
 import { fromUd } from "../../util/number"
+import ShipRow from "./ShipRow"
 
 interface SendTokensModalProps {
   show: boolean
@@ -27,15 +28,18 @@ interface SendTokensModalProps {
 
 export default function SendTokensModal({ show, hide, convo }: SendTokensModalProps) {
   const { ship: self } = useStore()
-  const { set, sendTokens, chats } = usePongoStore()
-  const { assets, selectedAccount } = useWalletStore()
+  const { sendTokens, chats } = usePongoStore()
+  const { assets } = useWalletStore()
   const { color } = useColors()
+  const chat = useMemo(() => chats[convo], [chats, convo])
   
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [recipient, setRecipient] = useState('')
   const [amount, setAmount] = useState('')
   const [asset, setAsset] = useState<Token | undefined>()
+  const [showMembersList, setShowMembersList] = useState(false)
+  const [displayedMembers, setDisplayedMembers] = useState<string[]>(chat.conversation.members)
 
   const allAssets = useMemo(
     () => Object.values(assets).reduce((acc: Token[], cur) => acc.concat(Object.values(cur)), [])
@@ -54,7 +58,6 @@ export default function SendTokensModal({ show, hide, convo }: SendTokensModalPr
   )
   const isNft = useMemo(() => asset?.token_type === 'nft', [asset])
 
-  const chat = useMemo(() => chats[convo], [chats, convo])
   const dm = Boolean(chat?.conversation.dm)
 
   useEffect(() => {
@@ -64,7 +67,7 @@ export default function SendTokensModal({ show, hide, convo }: SendTokensModalPr
         setRecipient(dmCounterparty)
       }
     }
-  }, [dm, self])
+  }, [dm, self, chats, convo])
 
   const send = useCallback(async () => {
     if (zigsBalance < DEFAULT_TXN_COST) {
@@ -101,6 +104,32 @@ export default function SendTokensModal({ show, hide, convo }: SendTokensModalPr
 
   const selectToken = useCallback((id: string) => setAsset(allAssets.find(a => a.id === id)), [allAssets, setAsset])
 
+  const displayMembersList = useCallback(() => setShowMembersList(true), [setShowMembersList])
+
+  const selectRecipient = useCallback((ship: string) => () => {
+    setRecipient(deSig(ship))
+    setShowMembersList(false)
+  }, [setRecipient, setShowMembersList])
+
+  const changeRecipient = useCallback((text: string) => {
+    const cleaned = text.replace(/[^~A-Za-z-]/gi, '')
+    setRecipient(cleaned)
+
+    if (chat.conversation.members.includes(deSig(cleaned.toLowerCase()))) {
+      setShowMembersList(false)
+    }
+
+    setDisplayedMembers(chat.conversation.members.filter(m => deSig(m).includes(cleaned.toLowerCase())))
+    setError('')
+  }, [setRecipient, setShowMembersList, chat.conversation.members])
+
+  const styles = useMemo(() => StyleSheet.create({
+    memberList: {
+      width: '100%',
+      height: 260,
+    },
+  }), [])
+
   return (
     <Modal show={show} hide={hide}>
       <ScrollView style={{ minHeight: 200 }}>
@@ -128,24 +157,33 @@ export default function SendTokensModal({ show, hide, convo }: SendTokensModalPr
               <TextInput
                 placeholder="Recipient"
                 value={recipient}
-                onChangeText={(text) => { setRecipient(text.replace(/[^~a-zA-Z-]/, '')); setError('') }}
+                onChangeText={changeRecipient}
                 autoFocus={!dm}
+                editable={!dm}
+                onFocus={displayMembersList}
                 style={{ marginTop: 4, width: '80%' }}
               />
               {!isNft && <Text style={{ alignSelf: 'flex-start', fontSize: 16, marginTop: 12, marginLeft: '10%' }}>Amount:</Text>}
-              <TextInput
-                placeholder="Amount"
-                value={amount}
-                onChangeText={(text) => { setAmount(text.replace(NON_NUM_REGEX, '')); setError('') }}
-                style={{ marginTop: 4, width: '80%' }}
-                autoFocus={dm}
-              />
-              {Number(amount) <= 0 || isNaN(Number(amount)) ? null : amountDiff < 0 ? (
-                <Text style={{ marginTop: 2, fontSize: 14, color: 'red' }}>Not enough assets: {displayTokenAmount(tokenBalance, 18, 18)}</Text>
+              {showMembersList ? (
+                <ScrollView style={styles.memberList} keyboardShouldPersistTaps='handled'>
+                  {displayedMembers.map(m => <ShipRow key={m} noBorder ship={m} onPress={selectRecipient} />)}
+                </ScrollView>
               ) : (
-                <Text style={{ marginTop: 2, fontSize: 14, color: '#444' }}>({addDecimalDots(Number(amount) * Math.pow(10, 18))})</Text>
+                <>
+                  <TextInput
+                    value={amount}
+                    onChangeText={(text) => { setAmount(text.replace(NON_NUM_REGEX, '')); setError('') }}
+                    style={{ marginTop: 4, width: '80%' }}
+                    autoFocus={!!recipient}
+                  />
+                  {Number(amount) <= 0 || isNaN(Number(amount)) ? null : amountDiff < 0 ? (
+                    <Text style={{ marginTop: 2, fontSize: 14, color: 'red' }}>Not enough assets: {displayTokenAmount(tokenBalance, 18, 18)}</Text>
+                  ) : (
+                    <Text style={{ marginTop: 2, fontSize: 14, color: '#444' }}>({addDecimalDots(Number(amount) * Math.pow(10, 18))})</Text>
+                  )}
+                  <Button title='Send' onPress={send} style={{ marginTop: 16 }} />
+                </>
               )}
-              <Button title='Send' onPress={send} style={{ marginTop: 16 }} />
               <Button title='Back' onPress={() => setAsset(undefined)} style={{ marginVertical: 16 }} />
             </>
           )}

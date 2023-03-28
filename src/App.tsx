@@ -9,6 +9,8 @@ import * as TaskManager from 'expo-task-manager'
 import * as Network from 'expo-network'
 import { Ionicons } from "@expo/vector-icons"
 import { MenuProvider } from 'react-native-popup-menu'
+import { RootSiblingParent } from 'react-native-root-siblings'
+import Toast from 'react-native-root-toast'
 import dynamicLinks from '@react-native-firebase/dynamic-links'
 
 import useCachedResources from "./hooks/useCachedResources"
@@ -23,6 +25,8 @@ import useColorScheme from './hooks/useColorScheme'
 import usePongoStore from './state/usePongoState'
 import { NotifPayload } from './types/Pongo'
 import { isWeb } from './constants/Layout'
+import { ONE_SECOND } from './util/time'
+import { defaultOptions } from './util/toast'
 
 // if (!window.ship) {
 //   window.ship = 'fabnev-hinmur'
@@ -50,7 +54,7 @@ Notifications.setNotificationHandler({
 export default function App() {
   const isLoadingComplete = useCachedResources()
   const { loading, setLoading, ship: self, shipUrl, authCookie, loadStore, needLogin, setNeedLogin, setShip, addShip } = useStore()
-  const { currentChat, set } = usePongoStore()
+  const { currentChat, set, connected: shipConnected } = usePongoStore()
   const { color, backgroundColor } = useColors()
   const colorScheme = useColorScheme()
   const [connected, setConnected] = useState(true)
@@ -162,15 +166,6 @@ export default function App() {
       checkNetwork()
     }
 
-    return () => {
-      if (notificationListener.current)
-        Notifications.removeNotificationSubscription(notificationListener.current)
-      if (responseListener.current)
-        Notifications.removeNotificationSubscription(responseListener.current)
-    }
-  }, [])
-
-  useEffect(() => {
     // firebase dynamic link format
     // https://ping.page.link/?link=https%3A%2F%2Fuqbar.network%3Finvite-code%3D067B-CA90-8F0F&apn=network.uqbar.ping&amv=1.0.1&ibi=uqbar.network.ping&isi=1669043343&imv=1.0.1
     dynamicLinks()
@@ -188,8 +183,34 @@ export default function App() {
     }
 
     const appStateListener = AppState.addEventListener("change", handleAppStateChange)
-    return appStateListener.remove
+
+    return () => {
+      if (notificationListener.current) Notifications.removeNotificationSubscription(notificationListener.current)
+      if (responseListener.current) Notifications.removeNotificationSubscription(responseListener.current)
+      appStateListener.remove()
+    }
   }, [])
+
+  useEffect(() => {
+    if (shipUrl) {
+      const checkShipInterval = setInterval(() => {
+        fetch(shipUrl)
+          .then(res => {
+            const isConnected = res.status < 400
+            if (!shipConnected && isConnected) {
+              Toast.show('Ship connection restored', defaultOptions)
+            }
+            set({ connected: isConnected })
+          })
+          .catch(() => {
+            set({ connected: false })
+            Toast.show('Ship connection lost', defaultOptions)
+          })
+      }, 10 * ONE_SECOND)
+
+      return () => clearInterval(checkShipInterval)
+    }
+  }, [shipUrl, shipConnected])
 
   if (!connected) {
     return (
@@ -214,21 +235,23 @@ export default function App() {
   }
 
   return (
-    <MenuProvider>
-      <SafeAreaProvider style={{ backgroundColor, height: '100%', width: '100%' }}>
-        <StatusBar translucent style={colorScheme === 'dark' ? 'light' : 'dark'} />
-        {(needLogin && (!shipUrl || !self || !authCookie)) ? (
-          <LoginScreen inviteUrl={inviteUrl} />
-        ) : (
-          <Navigation colorScheme={colorScheme} />
-        )}
-        {(!isLoadingComplete || loading) && (
-          <View style={{ ...styles.loadingOverlay, backgroundColor }}>
-            <ActivityIndicator size="large" color={color} />
-          </View>
-        )}
-      </SafeAreaProvider>
-    </MenuProvider>
+    <RootSiblingParent>
+      <MenuProvider>
+        <SafeAreaProvider style={{ backgroundColor, height: '100%', width: '100%' }}>
+          <StatusBar translucent style={colorScheme === 'dark' ? 'light' : 'dark'} />
+          {(needLogin && (!shipUrl || !self || !authCookie)) ? (
+            <LoginScreen inviteUrl={inviteUrl} />
+          ) : (
+            <Navigation colorScheme={colorScheme} />
+          )}
+          {(!isLoadingComplete || loading) && (
+            <View style={{ ...styles.loadingOverlay, backgroundColor }}>
+              <ActivityIndicator size="large" color={color} />
+            </View>
+          )}
+        </SafeAreaProvider>
+      </MenuProvider>
+    </RootSiblingParent>
   )
 }
 

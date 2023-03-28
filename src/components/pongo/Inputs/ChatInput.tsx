@@ -100,12 +100,16 @@ export default function ChatInput({ chatId, inputRef, showMentions, setShowMenti
   const onChangeTextInput = useCallback((text: string) => {
     setText(text)
 
+    if (!text.length) {
+      setDraft(chatId, '')
+    }
+
     if (isDm) {
       return
     }
 
     const mentionMatch = text.match(MENTION_REGEX)
-    if (mentionMatch && !showMentions) {
+    if (mentionMatch) {
       const mentionName = mentionMatch[0].replace(/\s?@/, '')
       if (mentionName.length) {
         setPotentialMentions(chat.conversation.members.filter(m => m.includes(mentionName)))
@@ -122,7 +126,7 @@ export default function ChatInput({ chatId, inputRef, showMentions, setShowMenti
   const styles = useMemo(() => StyleSheet.create({
     textInput: {
       backgroundColor: 'white',
-      paddingRight: 40,
+      paddingRight: 44,
       borderRadius: 4,
       borderWidth: 0,
       fontSize: 16,
@@ -133,7 +137,6 @@ export default function ChatInput({ chatId, inputRef, showMentions, setShowMenti
       paddingLeft: 12,
       paddingTop: 12,
       paddingBottom: 8,
-      overflowY: 'scroll',
     },
     sendButton: {
       position: 'absolute',
@@ -162,7 +165,7 @@ export default function ChatInput({ chatId, inputRef, showMentions, setShowMenti
       ) : (
         <>
           <TextInput ref={inputRef} placeholder='Message' value={text} onKeyPress={onKeyPress}
-            onChangeText={onChangeTextInput} maxLength={1024} style={styles.textInput} multiline
+            onChangeText={onChangeTextInput} maxLength={1024} style={[styles.textInput, isWeb && { overflow: 'scroll' }]} multiline
             autoFocus={isWeb}
           />
           

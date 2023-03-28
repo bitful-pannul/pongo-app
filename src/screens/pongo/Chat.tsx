@@ -36,6 +36,7 @@ import MentionSelector from '../../components/pongo/Inputs/MentionSelector'
 import MessagesList from '../../components/pongo/Chat/MessageList'
 import SendTokensModal from '../../components/pongo/SendTokensModal'
 import useDimensions from '../../hooks/useDimensions'
+import AudioHeader from '../../components/pongo/Chat/AudioHeader'
 
 const RETRIEVAL_NUM = 50
 
@@ -194,7 +195,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
   const setUnreadIndicator = useCallback((data: { unreads: number; lastRead: string }, message?: Message) => {
     setUnreadInfo(data)
     message && data.lastRead !== message.id && setTimeout(() => listRef.current?.scrollToItem({ item: message, animated: true, viewPosition: 0.5 }), ONE_SECOND)
-    setTimeout(() => setUnreadInfo(undefined), ONE_SECOND * 15)
+    // setTimeout(() => setUnreadInfo(undefined), ONE_SECOND * 15)
   }, [])
 
   const onPressMessage = useCallback((msg: Message) => (offsetY: number, height: number) => {
@@ -359,6 +360,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
       behavior={keyboardAvoidBehavior}
       keyboardVerticalOffset={keyboardOffset}
     >
+      <AudioHeader chatId={chatId} />
       <DefaultView style={{ flex: 1 }}>
         <Image contentFit="cover"
           source={require('../../../assets/images/retro-background-small.jpg')}

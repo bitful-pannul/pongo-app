@@ -1,4 +1,4 @@
-import create, { SetState } from "zustand"
+import { create, SetState } from "zustand"
 
 import Urbit from "@uqbar/react-native-api";
 import { addSig } from "../util/string";
@@ -36,12 +36,9 @@ const usePosseState = create<PosseStore>((set, get) => ({
     }
   },
   getTags: async (ship: string) => {
-    console.log(2)
     const { api } = get()
     if (api) {
-      console.log(3)
       const tagList = await api.scry<string[]>({ app: 'posse', path: `/contact/${addSig(ship)}` })
-      console.log('SHIP:', tagList)
       const tags = { ...get().tags }
       tags[ship] = tagList
       set({ tags })
@@ -50,7 +47,6 @@ const usePosseState = create<PosseStore>((set, get) => ({
   addTag: async (who: string, tag: string) => {
     const { api } = get()
     if (api) {
-      console.log({ 'add-tag': { who, tag } })
       await api.poke({ app: 'posse', mark: 'posse-action', json: { 'add-tag': { who, tag } } })
       const tags = { ...get().tags }
       tags[who] = (tags[who] || []).concat([tag])

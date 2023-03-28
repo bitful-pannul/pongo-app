@@ -1,5 +1,4 @@
-import create, { SetState } from "zustand"
-import { persist } from "zustand/middleware"
+import { create, SetState } from "zustand"
 import Urbit from '@uqbar/react-native-api'
 
 import { HotWallet, processAccount, RawAccount, HardwareWallet, HardwareWalletType, Seed } from "@uqbar/wallet-ui/types/Accounts"

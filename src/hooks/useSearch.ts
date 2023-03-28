@@ -31,7 +31,7 @@ export default function useSearch() {
         // fuzzy search both nicknames and patps fuzzy#filter only supports
         // string comparision, so concat nickname + patp
         const searchSpace = Object.entries(contacts).map(
-          ([patp, contact]) => `${contact.nickname}${patp}`
+          ([patp, contact]: any) => `${contact.nickname}${patp}`
         )
   
         if (valid && !contactNames.includes(sigged)) {

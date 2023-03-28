@@ -137,9 +137,7 @@ const MessageMenu = React.memo(({
   )
 
   return isIos ? (
-    <BlurView style={{ width: '100%', height: '100%', backgroundColor: gray_overlay }} intensity={2}
-      onStartShouldSetResponder={(e) => true} onTouchEnd={(e) => { e.stopPropagation(); e.preventDefault() }}
-    >
+    <BlurView style={{ width: '100%', height: '100%', backgroundColor: gray_overlay }} intensity={2}>
       {blurContents}
     </BlurView>
   ) : (

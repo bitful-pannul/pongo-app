@@ -8,7 +8,7 @@ import {
 } from 'immer';
 import { compose } from 'lodash/fp';
 import _ from 'lodash';
-import create, { GetState, SetState, UseStore } from 'zustand';
+import { create, GetState, SetState } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Poke } from '@urbit/api';
 import { clearStorageMigration, createStorageKey, storageVersion } from './util';
@@ -49,12 +49,12 @@ export const optStateSetter = <T extends Record<string, unknown>>(
 };
 
 export const reduceState = <S extends Record<string, unknown>, U>(
-  state: UseStore<S & BaseState<S>>,
+  state: any,
   data: U,
   reducers: ((payload: U, current: S & BaseState<S>) => S & BaseState<S>)[]
 ): void => {
   const reducer = compose(reducers.map((r) => (sta) => r(data, sta)));
-  state.getState().set((s) => {
+  state.getState().set((s: any) => {
     reducer(s);
   });
 };
@@ -69,12 +69,12 @@ export const reduceStateN = <S extends Record<string, unknown>, U>(
 };
 
 export const optReduceState = <S extends Record<string, unknown>, U>(
-  state: UseStore<S & BaseState<S>>,
+  state: any,
   data: U,
   reducers: ((payload: U, current: S & BaseState<S>) => BaseState<S> & S)[]
 ): string => {
   const reducer = compose(reducers.map((r) => (sta) => r(data, sta)));
-  return state.getState().optSet((s) => {
+  return state.getState().optSet((s: any) => {
     reducer(s);
   });
 };
@@ -134,7 +134,7 @@ export const createState = <T extends Record<string, unknown>>(
     set: SetState<T & BaseState<T>>,
     get: GetState<T & BaseState<T>>
   ) => any)[] = []
-): UseStore<T & BaseState<T>> =>
+): any =>
   create<T & BaseState<T>>(
     persist<T & BaseState<T>>(
       (set, get) => ({
@@ -175,7 +175,7 @@ export const createState = <T extends Record<string, unknown>>(
   );
 
 export async function doOptimistically<A, S extends Record<string, unknown>>(
-  state: UseStore<S & BaseState<S>>,
+  state: any,
   action: A,
   call: (a: A) => Promise<any>,
   reduce: ((a: A, fn: S & BaseState<S>) => S & BaseState<S>)[]
@@ -195,7 +195,7 @@ export async function doOptimistically<A, S extends Record<string, unknown>>(
 
 export async function pokeOptimisticallyN<A, S extends Record<string, unknown>>(
   api: Urbit,
-  state: UseStore<S & BaseState<S>>,
+  state: any,
   poke: Poke<any>,
   reduce: ((a: A, fn: S & BaseState<S>) => S & BaseState<S>)[]
 ) {

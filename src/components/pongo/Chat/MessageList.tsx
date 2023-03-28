@@ -75,7 +75,7 @@ const MessagesList = React.memo(({
       />
       {unreadInfo && unreadInfo?.unreads > 0 && Number(unreadInfo?.lastRead) === idNum(item.id) - 1 && (
         <View style={{ maxWidth: '84%', alignSelf: 'center', marginHorizontal: '8%', marginVertical: 4, backgroundColor: blue_overlay, borderRadius: 8, padding: 4, paddingHorizontal: 32 }}>
-          <Text style={{ fontSize: 16, color: 'white' }}>{unreadInfo?.unreads} Unread{unreadInfo?.unreads && unreadInfo?.unreads > 1 ? 's' : ''}</Text>
+          <Text style={{ fontSize: 16, color: 'white' }}>Unread Messages</Text>
         </View>
       )}
       {showDateIndicator && (

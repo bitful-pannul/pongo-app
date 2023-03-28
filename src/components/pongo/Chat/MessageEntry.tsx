@@ -20,6 +20,7 @@ import { getShipColor } from "../../../util/number"
 import usePongoStore from "../../../state/usePongoState"
 import { Ionicons } from "@expo/vector-icons"
 import useDimensions from "../../../hooks/useDimensions"
+import useStore from "../../../state/useStore"
 
 const processReference = (msg: { notification: { author: string, content: string } }, id: string): Message => {
   const { notification: { author, content } } = msg
@@ -193,7 +194,11 @@ const MessageEntry = React.memo(({
   const replyToMessage = useCallback(() => onSwipe(message), [message])
 
   const goToAppLink = useCallback((path: string) => () => {
-    navigation.navigate('Grid', { path })
+    if (isWeb) {
+      window.open(`${window.location.host}${path}`, '_blank')
+    } else {
+      navigation.navigate('Grid', { path })
+    }
   }, [])
 
   const measure = useCallback(() => {
@@ -251,7 +256,12 @@ const MessageEntry = React.memo(({
                     <ActivityIndicator color={color} style={{ alignSelf: 'flex-start', marginLeft: 2, marginBottom: 14, marginTop: 13 }} />
                   ))}
                   <MessageWrapper {...{ message, color, showStatus, addReaction }}>
-                    <Content onLongPress={measure} content={kind !== 'send-tokens' ? content : formatTokenContent(content)} color={color} delayLongPress={200} />
+                    <Content
+                      onLongPress={measure} delayLongPress={200}
+                      color={color} author={message.author}
+                      nextMessage={messages[index - 1]}
+                      content={kind !== 'send-tokens' ? content : formatTokenContent(content)}
+                    />
                   </MessageWrapper>
                 {/* </Swipeable> */}
             </Animated.View>

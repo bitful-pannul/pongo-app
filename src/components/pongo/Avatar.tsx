@@ -5,7 +5,6 @@ import _ from 'lodash'
 import { deSig, Contact, cite } from '@urbit/api'
 import { darken, lighten, parseToHsla } from 'color2k'
 
-import { useContact } from '../../state/useContactState'
 import { addSig, isValidUrl } from '../../util/string'
 import { normalizeUrbitColor } from '../../util/color'
 import useColorScheme from '../../hooks/useColorScheme'
@@ -151,12 +150,11 @@ export default function Avatar({
   previewData,
   color,
 }: AvatarProps) {
-  const contact = useContact(ship)
   const currentTheme = useColorScheme()
   const { previewColor, previewAvatar } = previewData ?? {}
   const previewAvatarIsValid =
     previewAvatar && previewAvatar !== null && isValidUrl(previewAvatar)
-  const { avatar } = contact || emptyContact
+  const { avatar } = emptyContact
   const { cWidth } = useDimensions()
 
   const showImage = loadImage
@@ -205,9 +203,8 @@ export function useProfileColor(
   }
 ) {
   const currentTheme = useColorScheme()
-  const contact = useContact(ship)
   const { previewColor } = previewData ?? {}
-  const { color } = contact || emptyContact
+  const { color } = emptyContact
   const adjustedColor = themeAdjustColor(
     normalizeUrbitColor(previewColor || color),
     currentTheme

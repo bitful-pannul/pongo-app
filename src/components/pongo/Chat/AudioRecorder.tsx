@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { PermissionsAndroid, Platform, StyleSheet, Text, View, Animated, Easing, EasingFunction, Keyboard } from "react-native"
+import { PermissionsAndroid, Platform, StyleSheet, Text, View, Animated, Easing } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { Audio } from 'expo-av'
 import { Gesture, GestureDetector, GestureUpdateEvent, PanGestureHandlerEventPayload } from "react-native-gesture-handler"
@@ -10,31 +10,14 @@ import { uq_pink, uq_purple } from "../../../constants/Colors"
 import { formatRecordTime } from "../../../util/time"
 import useKeyboard from "../../../hooks/useKeyboard"
 import useDimensions from "../../../hooks/useDimensions"
+import { createPulse } from "../../../util/animation"
 
 interface AudioRecorderProps {
   setIsRecording: (value: boolean) => void
-  storeAudio: (uri: string) => void
+  storeAudio: (uri: string) => Promise<void>
 }
 
-const createPulse = (value: Animated.Value, max: number, min: number, easing: EasingFunction) => Animated.loop(
-  Animated.sequence([
-    Animated.timing(value, {
-        toValue: max,
-        duration: 500,
-        useNativeDriver: true,
-        easing,
-    }),
-    Animated.timing(value, {
-        toValue: min,
-        duration: 500,
-        useNativeDriver: true,
-        easing,
-    }),
-  ]),
-  {
-    iterations: -1
-  }
-)
+
 
 const AudioRecorder: React.FC<AudioRecorderProps> = ({ storeAudio, setIsRecording }: AudioRecorderProps) => {
   const [androidGranted, setAndroidGranted] = useState(false)

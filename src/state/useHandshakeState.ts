@@ -1,4 +1,4 @@
-import create, { SetState } from "zustand"
+import { create, SetState } from "zustand"
 import Urbit from "@uqbar/react-native-api";
 
 import { Guest } from "../types/Handshake";

@@ -1,5 +1,5 @@
 import { NavigateFunction } from "react-router-dom"
-import create from "zustand"
+import { create } from "zustand"
 import api from "../api"
 import { Game } from "../types/Game"
 import { Lobby } from "../types/Lobby"
@@ -123,12 +123,10 @@ const usePokurStore = create<PokurStore>((set, get) => ({
   },
   getOurTable: async () => {
     const ourTable = await api.scry({ app: 'pokur', path: '/our-table' })
-    console.log(2, ourTable)
 
     if (ourTable) {
       try {
         const table = await get().getTable(ourTable)
-        console.log(3, table)
         set({ table })
         return table
       } catch (err) {}

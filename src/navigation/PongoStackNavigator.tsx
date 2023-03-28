@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createNativeStackNavigator } from "@react-navigation/native-stack"
 import { NavigationProp, RouteProp, useNavigation } from '@react-navigation/native'
+import { Ionicons, MaterialIcons } from '@expo/vector-icons'
 import * as Network from 'expo-network'
 
 import { PongoStackParamList } from "../types/Navigation"
@@ -24,7 +25,7 @@ import GroupScreen from '../screens/pongo/Group'
 import usePosseState from '../state/usePosseState'
 import { getPushNotificationToken } from '../util/notification'
 import NewPosseGroupScreen from '../screens/pongo/NewPosseGroup'
-import { Image, Pressable, View } from 'react-native'
+import { Alert, Image, Pressable, View } from 'react-native'
 import { ONE_SECOND } from '../util/time'
 import { NECTAR_APP, NECTAR_HOST } from '../constants/Nectar'
 import { PING_APP, PING_HOST } from '../constants/Pongo'
@@ -33,7 +34,6 @@ import Loader from '../components/Loader'
 import { isWeb } from '../constants/Layout'
 import SettingsScreen from '../screens/pongo/Settings'
 import Button from '../components/form/Button'
-import { Ionicons } from '@expo/vector-icons'
 import ShipTitle from '../components/header/ShipTitle'
 import ContactsScreen from '../screens/pongo/Contacts'
 import { useWalletStore } from '../wallet-ui'
@@ -54,7 +54,7 @@ export default function PongoStackNavigator() {
   const { init: initPosse, clearSubscriptions: clearPosse } = usePosseState()
   const { init: initContact, clearSubscriptions: clearContact } = useContactState()
   const { init: initSettings, clearSubscriptions: clearSettings } = useSettingsState()
-  const { init: initPongo, isSearching, clearSubscriptions: clearPongo, notifLevel, setNotifToken } = usePongoStore()
+  const { init: initPongo, isSearching, connected, clearSubscriptions: clearPongo, setNotifToken } = usePongoStore()
   const { initWallet, clearSubscriptions: clearWallet } = useWalletStore()
   const { api, ship: self, shipUrl } = useStore()
   const [loadingText, setLoadingText] = useState<string | undefined>()
@@ -161,9 +161,15 @@ export default function PongoStackNavigator() {
     }
   }, [api])
 
-  const openDrawer = useCallback((navigation: any) => () => {
-    navigation.toggleDrawer()
-  }, [])
+  const openDrawer = useCallback((navigation: any) => navigation.toggleDrawer, [])
+
+  const showDisconnectInfo = useCallback(() =>
+    Alert.alert('Cannot connect to ship', `Unable to reach your ship '${self}' at ${shipUrl}.\n\n Please check your network connection and ${shipUrl}`)
+  , [self, shipUrl])
+
+  const disconnectedIcon = useMemo(() =>
+    <MaterialIcons onPress={showDisconnectInfo} style={{ padding: 2, paddingBottom: 4 }} name='wifi-off' size={24} color='white' />
+  , [showDisconnectInfo])
 
   if (loadingText) {
     return (
@@ -186,7 +192,7 @@ export default function PongoStackNavigator() {
           </View>
           <Image style={{ marginLeft: 8, height: 24, width: 24, marginTop: 1 }} source={require('../../assets/images/pongo-logo.png')} />
         </View>,
-        headerRight: () => null
+        headerRight: () => connected ? null : disconnectedIcon
       })}
     />
     <Stack.Screen name="Chat" component={ChatScreen}
@@ -197,7 +203,7 @@ export default function PongoStackNavigator() {
         headerTitleAlign: 'center',
         headerLeft: NavBackButton,
         headerTitle: () => <ChatHeader chatId={(route as RouteProp<PongoStackParamList, 'Chat'>).params.id} />,
-        headerRight: () => isSearching ? <CloseSearch /> : <ChatMenu id={(route as RouteProp<PongoStackParamList, 'Chat'>).params.id} />
+        headerRight: () => !connected ? disconnectedIcon : isSearching ? <CloseSearch /> : <ChatMenu id={(route as RouteProp<PongoStackParamList, 'Chat'>).params.id} />
       })}
     />
     <Stack.Screen name="Contacts" component={ContactsScreen}
@@ -207,7 +213,7 @@ export default function PongoStackNavigator() {
         headerTitleAlign: 'center',
         headerLeft: NavBackButton,
         headerTitle: () => isSearching ? <SearchHeader searchType='ship' /> : <H3 style={{ color: 'white' }} text='Contacts' />,
-        headerRight: () => isSearching ? <CloseSearch /> : <OpenSearch />
+        headerRight: () => !connected ? disconnectedIcon : isSearching ? <CloseSearch /> : <OpenSearch />
       })}
     />
     <Stack.Screen name="NewChat" component={NewChatScreen}
@@ -217,7 +223,7 @@ export default function PongoStackNavigator() {
         headerTitleAlign: 'center',
         headerLeft: NavBackButton,
         headerTitle: () => isSearching ? <SearchHeader searchType='ship' /> : <H3 style={{ color: 'white' }} text='New Chat' />,
-        headerRight: () => isSearching ? <CloseSearch /> : <OpenSearch />
+        headerRight: () => !connected ? disconnectedIcon : isSearching ? <CloseSearch /> : <OpenSearch />
       })}
     />
     <Stack.Screen name="NewGroup" component={NewGroupScreen}
@@ -227,7 +233,7 @@ export default function PongoStackNavigator() {
         headerTitleAlign: 'center',
         headerLeft: NavBackButton,
         headerTitle: () => isSearching ? <SearchHeader searchType='ship' /> : <H3 style={{ color: 'white' }} text='New Group' />,
-        headerRight: () => isSearching ? <CloseSearch /> : <OpenSearch />
+        headerRight: () => !connected ? disconnectedIcon : isSearching ? <CloseSearch /> : <OpenSearch />
       })}
     />
     <Stack.Screen name="NewPosseGroup" component={NewPosseGroupScreen}
@@ -237,7 +243,7 @@ export default function PongoStackNavigator() {
         headerTitleAlign: 'center',
         headerLeft: NavBackButton,
         headerTitle: () => isSearching ? <SearchHeader searchType='tag' /> : <H3 style={{ color: 'white' }} text='New Group' />,
-        headerRight: () => isSearching ? <CloseSearch /> : <OpenSearch />
+        headerRight: () => !connected ? disconnectedIcon : isSearching ? <CloseSearch /> : <OpenSearch />
       })}
     />
     <Stack.Screen name="SearchResults" component={SearchResultsScreen}
@@ -247,7 +253,7 @@ export default function PongoStackNavigator() {
         headerTitleAlign: 'center',
         headerLeft: NavBackButton,
         headerTitle: () => isSearching ? <SearchHeader searchType='chat' /> : <H3 style={{ color: 'white' }} text='Search Chats' />,
-        headerRight: () => isSearching ? <CloseSearch /> : <OpenSearch />
+        headerRight: () => !connected ? disconnectedIcon : isSearching ? <CloseSearch /> : <OpenSearch />
       })}
     />
     <Stack.Screen name="Profile" component={ProfileScreen}
@@ -257,7 +263,7 @@ export default function PongoStackNavigator() {
         headerTitleAlign: 'center',
         headerLeft: NavBackButton,
         headerTitle: () => <H3 style={{ color: 'white' }} text='Profile' />,
-        headerRight: () => null
+        headerRight: () => !connected ? disconnectedIcon : null
       })}
     />
     <Stack.Screen name="Group" component={GroupScreen}
@@ -267,7 +273,7 @@ export default function PongoStackNavigator() {
         headerTitleAlign: 'center',
         headerLeft: NavBackButton,
         headerTitle: () => <H3 style={{ color: 'white' }} text='Group Info' />,
-        headerRight: () => null
+        headerRight: () => !connected ? disconnectedIcon : null
       })}
     />
     <Stack.Screen name="Settings" component={SettingsScreen}
@@ -277,7 +283,7 @@ export default function PongoStackNavigator() {
         headerTitleAlign: 'center',
         headerLeft: NavBackButton,
         headerTitle: () => <H3 style={{ color: 'white' }} text='Settings' />,
-        headerRight: () => null
+        headerRight: () => !connected ? disconnectedIcon : null
       })}
     />
   </Stack.Navigator>

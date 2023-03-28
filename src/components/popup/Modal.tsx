@@ -23,8 +23,8 @@ const Modal = ({
   ...props
 }: ModalProps) => {
   const { color, backgroundColor, shadedBackground } = useColors()
-  const { width, height } = useDimensions()
-  const offset = useMemo(() => width / 2 - 160, [width])
+  const { cWidth, height, width, isLargeDevice } = useDimensions()
+  const offset = useMemo(() => cWidth / 2 - 160, [cWidth])
 
   if (!show) {
     return null
@@ -47,30 +47,29 @@ const Modal = ({
         height,
         backgroundColor: shadedBackground,
       }}>
-        <Col {...props} style={[
-          {
-            position: 'absolute',
-            left: offset,
-            right: offset,
-            width: 320,
-            backgroundColor,
-            borderRadius: 8,
-            marginTop: 24,
-            paddingBottom: 8,
-          },
-          props.style
-        ]}
-          onStartShouldSetResponder={(event) => true}
-          onTouchEnd={(e) => { e.stopPropagation(); }}
-        >
-          <TouchableOpacity onPress={hide} style={{ padding: 4, alignSelf: 'flex-end' }}>
-          {Boolean(title) && <H3 text={title!} />}
-            <Ionicons name='close' size={20} color={color} />
-          </TouchableOpacity>
-          <Col>
-            {props.children}
+        <Pressable onPress={e => e.stopPropagation()}>
+          <Col {...props} style={[
+            {
+              position: 'absolute',
+              left: offset,
+              right: offset,
+              width: 320,
+              backgroundColor,
+              borderRadius: 8,
+              marginTop: isLargeDevice ? 48 : 24,
+              paddingBottom: 8,
+            },
+            props.style
+          ]}>
+            <TouchableOpacity onPress={hide} style={{ padding: 4, alignSelf: 'flex-end' }}>
+            {Boolean(title) && <H3 text={title!} />}
+              <Ionicons name='close' size={20} color={color} />
+            </TouchableOpacity>
+            <Col>
+              {props.children}
+            </Col>
           </Col>
-        </Col>
+        </Pressable>
       </Col>
     </Pressable>
   )
