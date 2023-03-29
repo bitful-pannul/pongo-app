@@ -20,10 +20,11 @@ interface MentionSelectorProps {
   potentialMentions: string[]
   color: string
   backgroundColor: string
+  onSelectMention: (ship: string) => void
   setShowMentions: (value: boolean) => void
 }
 
-export default function MentionSelector({ chatId, potentialMentions, color, backgroundColor, setShowMentions }: MentionSelectorProps) {
+export default function MentionSelector({ chatId, potentialMentions, color, backgroundColor, setShowMentions, onSelectMention }: MentionSelectorProps) {
   const { drafts, setDraft } = usePongoStore()
   const [cancelTranslate] = useState(new Animated.Value(-6))
   const [cancelAnimation, setCancelAnimation] = useState(createPulse(cancelTranslate, 0, -6, Easing.linear))
@@ -36,11 +37,12 @@ export default function MentionSelector({ chatId, potentialMentions, color, back
 
   const selectMention = useCallback((ship: string) => () => {
     setDraft(chatId, text.replace(MENTION_REGEX, (match: string) => `${match[0] === ' ' ? ' ' : ''}~${ship} `))
+    onSelectMention(ship)
     setShowMentions(false)
   }, [text])
 
   const styles = useMemo(() => StyleSheet.create({
-    swipeList: { position: 'absolute', bottom: 0, backgroundColor },
+    swipeList: { position: 'absolute', bottom: 0, backgroundColor, overflow: 'hidden' },
     prompt: {
       marginTop: 4,
       display: 'flex',
@@ -62,9 +64,9 @@ export default function MentionSelector({ chatId, potentialMentions, color, back
     <SwipeList style={styles.swipeList} minHeight={minHeight}>
       {potentialMentions.length > 3 && <Animated.View style={[styles.prompt, { transform: [{ translateY: cancelTranslate }, {perspective: 1000}] }]}>
         <Ionicons name='chevron-up' size={16} color='black' />
-        <Text style={styles.swipeText}>Swipe up for more</Text>
+        <Text style={styles.swipeText}>Drag up for more</Text>
       </Animated.View>}
-      {potentialMentions.map(mem => <ShipRow ship={mem} onPress={selectMention} />)}
+      {potentialMentions.map(mem => <ShipRow noBorder ship={mem} onPress={selectMention} />)}
     </SwipeList>
   )
 }

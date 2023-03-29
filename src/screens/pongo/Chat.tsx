@@ -25,7 +25,7 @@ import MessageMenu from '../../components/pongo/Chat/MessageMenu'
 import { addSig } from '../../util/string'
 import { isAdminMsg } from '../../util/ping'
 import { ONE_SECOND } from '../../util/time'
-import { isIos, keyboardAvoidBehavior, keyboardOffset } from '../../constants/Layout'
+import { isIos, isWeb, keyboardAvoidBehavior, keyboardOffset } from '../../constants/Layout'
 import { uq_pink, uq_purple } from '../../constants/Colors'
 import { PongoStackParamList } from '../../types/Navigation'
 import { Message } from '../../types/Pongo'
@@ -211,11 +211,9 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
 
       if (message) {
         setHighlighted(msgId)
-        setTimeout(() => setHighlighted(null), 2 * ONE_SECOND)
       } else {
-        await getMessages({ chatId, msgId, numBefore: RETRIEVAL_NUM, numAfter: RETRIEVAL_NUM })
+        await getMessages({ chatId, msgId, numBefore: RETRIEVAL_NUM, numAfter: isWeb ? 5 : RETRIEVAL_NUM })
         setHighlighted(msgId)
-        setTimeout(() => setHighlighted(null), 3 * ONE_SECOND)
       }
     }
   }, [listRef, messages, setHighlighted])
@@ -309,15 +307,23 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
     setAtEnd(atTheEnd)
     const fetchedRecently = (Date.now() - lastFetch.current) < ONE_SECOND / 2
 
+    if (highlighted) {
+      setTimeout(() => setHighlighted(null), 4 * ONE_SECOND)
+    }
+
     if (!fetchedRecently && !atTheEnd && y <= (height * 2) && y <= scrollYRef.current) {
       getMessagesOnScroll({ prepend: true })()
     }
     scrollYRef.current = y
-  }, [getMessagesOnScroll])
+  }, [getMessagesOnScroll, highlighted])
 
   const onViewableItemsChanged = useCallback(({ viewableItems }: { viewableItems: any[] }) => {
     indexRef.current = viewableItems[viewableItems.length - 1]?.index || 0
   }, [])
+
+  const onSelectMention = useCallback((mention: string) => {
+    inputRef.current?.focus()
+  }, [inputRef])
 
   const isOwnMsg = useMemo(() => selected?.msg.author.includes(ship), [selected, ship])
   const canDelete = isOwnMsg
@@ -388,7 +394,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
           focusReply={focusReply}
         />
         
-        {showMentions && <MentionSelector {...{ chatId, potentialMentions, color, backgroundColor, setShowMentions }} />}
+        {showMentions && <MentionSelector {...{ chatId, potentialMentions, color, backgroundColor, setShowMentions, onSelectMention }} />}
         {!messages?.length && (
           initialLoading ? (
             <ActivityIndicator size="large" style={{ width: '100%', padding: 40, position: 'absolute' }} />

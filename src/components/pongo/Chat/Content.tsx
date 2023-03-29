@@ -21,7 +21,7 @@ import AudioPlayer from "./AudioPlayer";
 import ScaledImage from "./ScaledImage";
 import useDimensions from "../../../hooks/useDimensions";
 import { Message } from "../../../types/Pongo";
-import { uq_lightpurple, uq_purple } from "../../../constants/Colors";
+import { uq_darkpink, uq_lightpurple, uq_pink, uq_purple } from "../../../constants/Colors";
 import Toast from "react-native-root-toast";
 import { defaultOptions } from "../../../util/toast";
 
@@ -43,7 +43,7 @@ export default function Content({ onLongPress, content, author, nextMessage, col
     code: { fontFamily: isIos ? 'Courier New' : 'monospace', backgroundColor: 'rgba(127, 127, 127, 0.5)' },
     italic: { fontStyle: 'italic' },
     bold: { fontWeight: 'bold' },
-    patp: { color: uq_purple },
+    patp: { color: uq_pink, fontWeight: '600' },
   }), [color])
 
   const copyCode = useCallback((code: string) => () => {

@@ -83,3 +83,18 @@ export const getNotificationData = (notification?: Notifications.Notification): 
   const message_id = notification?.request?.content?.data?.message_id as (string | undefined);
   return { ship, ship_url, conversation_id, message_id };
 }
+
+export const showWebNotification = async (message: string) => {
+  if (isWeb && window.Notification) {
+    if (Notification.permission === 'granted') {
+      new Notification(message)
+    } else if (Notification.permission !== 'denied') {
+      Notification.requestPermission().then((permission) => {
+        // If the user accepts, let's create a notification
+        if (permission === "granted") {
+          new Notification(message)
+        }
+      })
+    }
+  }
+}

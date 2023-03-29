@@ -1,8 +1,9 @@
 import { GetState, SetState } from "zustand"
-import { dedupeAndSort, idNum, sortChats, sortMessages } from "../../util/ping"
+import { dedupeAndSort, idNum, sortChats } from "../../util/ping"
 import { deSig } from "../../util/string"
 import { Message, MessageStatus, Update } from "../../types/Pongo"
 import { PongoStore } from "../types/pongo"
+import { showWebNotification } from "../../util/notification"
 
 export const messageSub = (set: SetState<PongoStore>, get: GetState<PongoStore>) => (update: Update) => {
   console.log('UPDATE:', JSON.stringify(update))
@@ -57,6 +58,8 @@ export const messageSub = (set: SetState<PongoStore>, get: GetState<PongoStore>)
       }
       chat.messages = dedupeAndSort(chat.messages)
       set({ chats })
+    } else if (deSig(author) !== deSig(get().api?.ship || '')) {
+      showWebNotification(`Message in ${chat.conversation.name}`)
     }
     
     // Handle admin message types

@@ -7,7 +7,7 @@ import { gray_overlay, uq_pink } from "../../../constants/Colors"
 import useDimensions from "../../../hooks/useDimensions"
 import useColors from "../../../hooks/useColors"
 import useAudioState from "../../../state/useAudioState"
-import { isIos, isWeb } from "../../../constants/Layout"
+import { isAndroid, isIos, isWeb } from "../../../constants/Layout"
 import usePongoStore from "../../../state/usePongoState"
 import { AUDIO_URL_REGEX } from "../../../util/string"
 import { Text } from "../../Themed"
@@ -21,10 +21,9 @@ export default function AudioHeader({ chatId, ...props }: AudioHeaderProps) {
   const { color, backgroundColor } = useColors()
   const [showSpeedSlider, setShowSpeedSlider] = useState(false)
 
-  // Clear audio header if chat is changed
-  useEffect(() => () => set({ audio: undefined }), [])
-
   const playPrevious = useCallback(() => {
+    if (!messages.find(({ content }) => content === audioUri)) return
+
     let prevUri: string | undefined
     for (let i = messages.length - 1; i >= 0; i--) {
       if (messages[i].content === audioUri) break
@@ -35,6 +34,8 @@ export default function AudioHeader({ chatId, ...props }: AudioHeaderProps) {
   }, [audioUri, messages, set])
 
   const playNext = useCallback(() => {
+    if (!messages.find(({ content }) => content === audioUri)) return
+
     let nextUri: string | undefined
     for (let i = 0; i < messages.length; i++) {
       if (messages[i].content === audioUri) break
@@ -44,7 +45,10 @@ export default function AudioHeader({ chatId, ...props }: AudioHeaderProps) {
     if (nextUri) set({ playNextAudio: true, audioUri: nextUri })
   }, [audioUri, messages, set])
 
-  const closeHeader = useCallback(() => set({ audio: undefined }), [set])
+  const closeHeader = useCallback(() => {
+    audio?.pauseAsync().catch(console.warn)
+    set({ audio: undefined })
+  }, [set, audio])
 
   const openSpeedSlider = useCallback(() => setShowSpeedSlider(true), [])
 
@@ -125,7 +129,7 @@ export default function AudioHeader({ chatId, ...props }: AudioHeaderProps) {
         minimumValue={0.5}
         maximumValue={2.5}
         minimumTrackTintColor={uq_pink}
-        maximumTrackTintColor={gray_overlay}
+        maximumTrackTintColor={isAndroid ? color : gray_overlay}
         thumbTintColor={uq_pink}
         onSlidingComplete={handleSpeedSlide}
         tapToSeek
@@ -173,7 +177,7 @@ export default function AudioHeader({ chatId, ...props }: AudioHeaderProps) {
         minimumValue={0}
         maximumValue={status?.durationMillis || 1}
         minimumTrackTintColor={uq_pink}
-        maximumTrackTintColor={gray_overlay}
+        maximumTrackTintColor={isAndroid ? color : gray_overlay}
         thumbTintColor='transparent'
         onSlidingComplete={handlePositionSlide}
         tapToSeek

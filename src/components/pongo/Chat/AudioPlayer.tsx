@@ -8,14 +8,14 @@ import { gray_overlay, uq_pink } from "../../../constants/Colors";
 import { formatRecordTime, ONE_SECOND } from "../../../util/time";
 import useDimensions from "../../../hooks/useDimensions";
 import useAudioState from "../../../state/useAudioState";
-import { isIos } from "../../../constants/Layout";
+import { isAndroid, isIos } from "../../../constants/Layout";
 
 const thumbImage = require('../../../../assets/images/slider_thumb.png')
 
 type AudioPlayerProps = View['props'] & { uri: string, author: string, color: string, nextAudioUri?: string }
 
 export default function AudioPlayer({ uri, author, color, nextAudioUri, ...props }: AudioPlayerProps) {
-  const { audio, playing, status: headerStatus, audioUri, playNextAudio, speed, handlePositionSlide, playPauseAudio, set } = useAudioState()
+  const { audio, status: headerStatus, audioUri, playNextAudio, speed, handlePositionSlide, playPauseAudio, set } = useAudioState()
   const [audioData, setAudioData] = useState<Audio.Sound | undefined>()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<AVPlaybackStatusError | undefined>()
@@ -42,7 +42,11 @@ export default function AudioPlayer({ uri, author, color, nextAudioUri, ...props
             set({ playing: false })
 
             // TODO: play the next voice message if it's the next message
-            if (nextAudioUri) set({ audioUri: nextAudioUri, playNextAudio: true })
+            if (nextAudioUri) {
+              set({ audioUri: nextAudioUri, playNextAudio: true })
+            } else {
+              set({ audio: undefined, audioUri: undefined, playing: false, status: undefined })
+            }
           }
         } else {
           set({ error: status })
@@ -113,7 +117,7 @@ export default function AudioPlayer({ uri, author, color, nextAudioUri, ...props
       height: 20,
       marginVertical: 4,
     }
-  }), [color, playing, cWidth])
+  }), [color, status?.isPlaying, cWidth])
 
   const duration = (status && 'durationMillis' in status && formatRecordTime(status.durationMillis || 0)) || '0:00'
   const position = (status && 'positionMillis' in status && formatRecordTime(status.positionMillis || 0)) || '0:00'
@@ -126,7 +130,7 @@ export default function AudioPlayer({ uri, author, color, nextAudioUri, ...props
         ) : loading ? (
           <ActivityIndicator color='white' />
         ) : (
-          <Ionicons name={isCurrentAudio && playing ? 'pause' : 'play'} color='white' size={28} style={{ marginLeft: playing ? 1 : 2 }} />
+          <Ionicons name={isCurrentAudio && status?.isPlaying ? 'pause' : 'play'} color='white' size={28} style={{ marginLeft: status?.isPlaying ? 1 : 2 }} />
         )}
       </Pressable>
       <View style={styles.progressInfo}>
@@ -136,7 +140,7 @@ export default function AudioPlayer({ uri, author, color, nextAudioUri, ...props
           minimumValue={0}
           maximumValue={status?.durationMillis || 1}
           minimumTrackTintColor={uq_pink}
-          maximumTrackTintColor={isIos ? gray_overlay : color}
+          maximumTrackTintColor={isAndroid ? color : gray_overlay}
           thumbTintColor={uq_pink}
           onSlidingComplete={handlePositionSlide}
           tapToSeek
