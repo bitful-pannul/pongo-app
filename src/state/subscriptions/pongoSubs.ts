@@ -58,7 +58,7 @@ export const messageSub = (set: SetState<PongoStore>, get: GetState<PongoStore>)
       }
       chat.messages = dedupeAndSort(chat.messages)
       set({ chats })
-    } else if (deSig(author) !== deSig(get().api?.ship || '')) {
+    } else if (deSig(author) !== deSig(get().api?.ship || '') && !chat.conversation.muted) {
       showWebNotification(`Message in ${chat.conversation.name}`)
     }
     

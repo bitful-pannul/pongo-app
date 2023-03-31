@@ -58,7 +58,7 @@ export default function PongoStackNavigator() {
   const { initWallet, clearSubscriptions: clearWallet } = useWalletStore()
   const { api, ship: self, shipUrl } = useStore()
   const [loadingText, setLoadingText] = useState<string | undefined>()
-  const { isLargeDevice } = useDimensions()
+  const { isLargeDevice, cWidth } = useDimensions()
 
   const drawerNavigator = navigation.getParent('drawer' as any)
 
@@ -292,7 +292,7 @@ export default function PongoStackNavigator() {
     return (
       <Row style={{ flex: 1 }}>
         <ChatsScreen drawerNavigator={drawerNavigator} />
-        <View style={{ flex: 1, height: '100%' }}>
+        <View style={{ flex: 1, height: '100%', maxWidth: cWidth }}>
           {stack}
         </View>
       </Row>

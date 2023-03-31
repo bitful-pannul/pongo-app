@@ -23,7 +23,7 @@ import { Text, View } from '../../components/Themed'
 import Col from '../../components/spacing/Col'
 import MessageMenu from '../../components/pongo/Chat/MessageMenu'
 import { addSig } from '../../util/string'
-import { isAdminMsg } from '../../util/ping'
+import { INBOX_CHAT_ID, isAdminMsg } from '../../util/ping'
 import { ONE_SECOND } from '../../util/time'
 import { isIos, isWeb, keyboardAvoidBehavior, keyboardOffset } from '../../constants/Layout'
 import { uq_pink, uq_purple } from '../../constants/Colors'
@@ -37,6 +37,7 @@ import MessagesList from '../../components/pongo/Chat/MessageList'
 import SendTokensModal from '../../components/pongo/SendTokensModal'
 import useDimensions from '../../hooks/useDimensions'
 import AudioHeader from '../../components/pongo/Chat/AudioHeader'
+import PollInput from '../../components/pongo/Inputs/PollInput'
 
 const RETRIEVAL_NUM = 50
 
@@ -70,6 +71,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
   const [potentialMentions, setPotentialMentions] = useState<string[]>([])
   const [unreadInfo, setUnreadInfo] = useState<{unreads: number; lastRead: string} | undefined>()
   const [showSendTokensModal, setShowSendTokensModal] = useState(false)
+  const [showPollModal, setShowPollModal] = useState(false)
 
   const chatId = route.params.id
   const msgId = route.params.msgId
@@ -194,7 +196,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
 
   const setUnreadIndicator = useCallback((data: { unreads: number; lastRead: string }, message?: Message) => {
     setUnreadInfo(data)
-    message && data.lastRead !== message.id && setTimeout(() => listRef.current?.scrollToItem({ item: message, animated: true, viewPosition: 0.5 }), ONE_SECOND)
+    message && data.lastRead !== message.id && setTimeout(() => listRef.current?.scrollToItem({ item: message, animated: true, viewPosition: 0.5 }), 2 * ONE_SECOND)
     // setTimeout(() => setUnreadInfo(undefined), ONE_SECOND * 15)
   }, [])
 
@@ -415,7 +417,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
         </TouchableOpacity>
       )}
       
-      <Col>
+      {chatId !== INBOX_CHAT_ID && <Col>
         {Boolean(reply || edit) && (
           <Row style={{ padding: 8, paddingHorizontal: 12 }}>
             <TouchableOpacity onPress={removeEditReply} style={{ marginRight: 8 }}>
@@ -426,9 +428,9 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
           </Row>
         )}
 
-        <ChatInput {...{ inputRef, chatId, showMentions, setShowMentions, setPotentialMentions, setShowSendTokensModal }} />
+        <ChatInput {...{ inputRef, chatId, showMentions, setShowMentions, setPotentialMentions, setShowSendTokensModal, setShowPollModal }} />
 
-      </Col>
+      </Col>}
 
       {Boolean(selected) && (
         <TouchableOpacity onPress={clearSelected} style={{ width: '100%', height: '100%', position: 'absolute' }}>
@@ -437,6 +439,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
       )}
 
       {showSendTokensModal && <SendTokensModal convo={chatId} show={showSendTokensModal} hide={() => setShowSendTokensModal(false)} />}
+      {showPollModal && <PollInput convo={chatId} show={showPollModal} hide={() => setShowPollModal(false)} />}
     </KeyboardAvoidingView>
   )
 }

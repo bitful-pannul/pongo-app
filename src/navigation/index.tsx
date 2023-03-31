@@ -51,7 +51,7 @@ export default function Navigation({
           headerShown: false,
         })} />
         <Drawer.Screen name="Grid" component={Grid}
-          options={({ navigation }) => ({
+          options={({ navigation, route }) => ({
             headerLeft: () => <ShipSelector navigation={navigation} />,
             headerTitle: () => <ShipTitle navigation={navigation} color={color} />,
             headerRight: () => <GridRefresh />,

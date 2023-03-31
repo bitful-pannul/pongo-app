@@ -1,6 +1,6 @@
 import { NavigationProp, RouteProp } from "@react-navigation/native";
 import React, { useEffect, useRef, useCallback } from "react";
-import { AppState, AppStateStatus, BackHandler, Platform, SafeAreaView, StyleSheet, useColorScheme } from "react-native";
+import { ActivityIndicator, AppState, AppStateStatus, BackHandler, Platform, SafeAreaView, StyleSheet, useColorScheme } from "react-native";
 import { WebView, WebViewMessageEvent } from "react-native-webview";
 import useStore from "../state/useStore";
 import { RootDrawerParamList } from "../types/Navigation";
@@ -52,21 +52,29 @@ const Grid = ({
     };
   }, []); // INITIALIZE ONLY ONCE
 
+  if (!shipUrl) {
+
+  }
+
   return (
     <SafeAreaView style={styles.container}>
-      <WebView
-        ref={webView}
-        source={{ uri: url }}
-        startInLoadingState
-        allowsBackForwardNavigationGestures
-        scalesPageToFit
-        sharedCookiesEnabled
-        forceDarkOn={colorScheme === 'dark'}
-        setSupportMultipleWindows={false}
-        onMessage={onMessage}
-        injectedJavaScript='window.isMobileApp = true'
-        pullToRefreshEnabled
-      />
+      {!shipUrl ? (
+        <ActivityIndicator size="large" style={{ marginTop: 80 }} color="#0000ff" />
+      ) : (
+        <WebView
+          ref={webView}
+          source={{ uri: url }}
+          startInLoadingState
+          allowsBackForwardNavigationGestures
+          scalesPageToFit
+          sharedCookiesEnabled
+          forceDarkOn={colorScheme === 'dark'}
+          setSupportMultipleWindows={false}
+          onMessage={onMessage}
+          injectedJavaScript='window.isMobileApp = true'
+          pullToRefreshEnabled
+        />
+      )}
     </SafeAreaView>
   );
 };

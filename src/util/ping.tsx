@@ -5,6 +5,8 @@ import { displayTokenAmount } from "../wallet-ui/utils/number"
 import { fromUd } from "./number"
 import { addSig, AUDIO_URL_REGEX, deSig, IMAGE_URL_REGEX } from "./string"
 
+export const INBOX_CHAT_ID = '0x78.6f62.6e69'
+
 export const sortChats = (chats: Chats) =>
   Object.keys(chats)
     .reduce((acc, cur) => acc.concat([chats[cur]]), [] as Chat[])

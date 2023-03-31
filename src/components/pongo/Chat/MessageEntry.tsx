@@ -1,26 +1,22 @@
-import { NavigationProp, useNavigation } from "@react-navigation/native"
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { Pressable, StyleSheet, Text, View, Animated, ActivityIndicator, Keyboard, TouchableOpacity } from "react-native"
 import * as Haptics from 'expo-haptics'
+import { StyleSheet, Text, View, Animated, Keyboard } from "react-native"
+import { NavigationProp, useNavigation } from "@react-navigation/native"
 
 import { blue_overlay, blue_overlay_transparent, medium_gray, uq_pink } from "../../../constants/Colors"
 import { isWeb } from "../../../constants/Layout"
 import useColors from "../../../hooks/useColors"
 import { Message } from "../../../types/Pongo"
 import { formatTokenContent, getAdminMsgText, getAppLinkText, isAdminMsg } from "../../../util/ping"
-import { addSig, AUDIO_URL_REGEX, deSig, IMAGE_URL_REGEX } from "../../../util/string"
+import { addSig, deSig } from "../../../util/string"
 import { ONE_SECOND } from "../../../util/time"
-import Col from "../../spacing/Col"
-import Avatar from "../Avatar"
-import ShipName from "../ShipName"
 import Content from "./Content"
 import MessageWrapper from "./MessageWrapper"
 import Swipeable from 'react-native-gesture-handler/Swipeable'
-import { getShipColor } from "../../../util/number"
 import usePongoStore from "../../../state/usePongoState"
-import { Ionicons } from "@expo/vector-icons"
 import useDimensions from "../../../hooks/useDimensions"
-import useStore from "../../../state/useStore"
+import ReactionsWrapper from "./ReactionsWrapper"
+import PollMessage from "./PollMessage"
 
 const processReference = (msg: { notification: { author: string, content: string } }, id: string): Message => {
   const { notification: { author, content } } = msg
@@ -144,14 +140,14 @@ const MessageEntry = React.memo(({
       alignSelf: isSelf ? 'flex-end' : 'flex-start',
       marginRight: isSelf ? chatWidth * 0.02 : 0,
       marginLeft: isSelf ? 0 : chatWidth * 0.02,
-      backgroundColor: isSelf ? ownChatBackground : backgroundColor,
+      backgroundColor: message.kind === 'send-tokens' ? 'rgb(150, 200, 150)' : isSelf ? ownChatBackground : backgroundColor,
       borderTopLeftRadius: isSelf ? 15 : 0,
       borderTopRightRadius: isSelf ? 6 : 15,
       borderBottomLeftRadius: isSelf ? 15 : 6,
       borderBottomRightRadius: isSelf ? 0 : 15,
       padding: 3,
       paddingHorizontal: 12,
-      opacity: 0.85
+      opacity: 0.85,
     },
     adminMessage: {
       maxWidth: '84%',
@@ -184,11 +180,13 @@ const MessageEntry = React.memo(({
     image: {
       width: '100%',
     },
-  }), [differentAuthor, isSelected, isSelf, ownChatBackground, backgroundColor, chatWidth])
+  }), [differentAuthor, isSelected, isSelf, ownChatBackground, backgroundColor, chatWidth, message])
 
   const pressReply = useCallback(() => {
     focusReply(reference)
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)
+    if (!isWeb) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)
+    }
   }, [reference])
 
   const replyToMessage = useCallback(() => onSwipe(message), [message])
@@ -202,7 +200,9 @@ const MessageEntry = React.memo(({
   }, [])
 
   const measure = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)
+    if (!isWeb) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)
+    }
     msgRef.current?.measure((fx, fy, width, height, px, py) => { onPress(py, height) })
     Animated.sequence([
       Animated.timing(shakeAnimation, { toValue: 10, duration: 60, useNativeDriver: true }),
@@ -212,94 +212,38 @@ const MessageEntry = React.memo(({
     ]).start();
   }, [msgRef])
 
-  const dismissKeyboard = useCallback(() => {
-    Keyboard.dismiss()
-  }, [measure])
+  const dismissKeyboard = useCallback(Keyboard.dismiss, [measure])
 
   const renderContent = () => {
+    const textColor = kind === 'send-tokens' ? 'black' : color
+    const messageWrapperProps = {
+      isDm, showAvatar, isSelf, author, styles, navigation, msgRef, shakeAnimation, reference, quotedMsg, color: textColor,
+      showStatus,quotedMsgNotFound, message, pressReply, replyToMessage, addReaction, measure, dismissKeyboard,
+    }
+
     if (kind === 'text' || kind === 'code' || kind === 'send-tokens') {
       return (
-        <View style={styles.authorWrapper}>
-          {!isDm && !isSelf && (
-            <View style={{ marginLeft: '2%', marginTop: 2, width: 40 }}>
-              {showAvatar && (
-                <Pressable onPress={() => navigation.navigate('Profile', { ship: author })}>
-                  <Avatar ship={author} size="group-chat" />
-                </Pressable>
-              )}
-            </View>
-          )}
-
-          <Pressable ref={msgRef} onLongPress={measure} onPress={dismissKeyboard} delayLongPress={200}>
-            <Animated.View style={[styles.message, { transform: [{translateX: shakeAnimation}] }]}>
-                {/* <Swipeable ref={swipeRef} rightThreshold={100} onSwipeableWillOpen={swipeReply}
-                  renderRightActions={() => <Ionicons name="chatbubble" color={backgroundColor} size={20} style={{ marginRight: 16 }} />}
-                  overshootFriction={8}
-                > */}
-                  {showAvatar && <ShipName name={author} style={{ fontSize: 16, fontWeight: '600', color: getShipColor(author) }} />}
-                  {Boolean(reference) && (quotedMsg ? (
-                    <TouchableOpacity onPress={pressReply}>
-                      <Col style={styles.reply}>
-                        <Text style={styles.replyAuthor}>{quotedMsg?.author}</Text>
-                        <Text numberOfLines={1} style={[styles.text, { fontSize: 14 }]}>
-                          {AUDIO_URL_REGEX.test(quotedMsg?.content) ? 'Voice Message' :
-                            IMAGE_URL_REGEX.test(quotedMsg?.content) ? 'Image' :
-                            quotedMsg?.content}
-                        </Text>
-                      </Col>
-                    </TouchableOpacity>
-                  ) : quotedMsgNotFound ? (
-                    <Col style={[styles.reply, { height: 20 }]}>
-                      <Text style={[styles.text, { fontSize: 14, marginTop: 2 }]}>Message not found</Text>
-                    </Col>
-                  ) : (
-                    <ActivityIndicator color={color} style={{ alignSelf: 'flex-start', marginLeft: 2, marginBottom: 14, marginTop: 13 }} />
-                  ))}
-                  <MessageWrapper {...{ message, color, showStatus, addReaction }}>
-                    <Content
-                      onLongPress={measure} delayLongPress={200}
-                      color={color} author={message.author}
-                      nextMessage={messages[index - 1]}
-                      content={kind !== 'send-tokens' ? content : formatTokenContent(content)}
-                    />
-                  </MessageWrapper>
-                {/* </Swipeable> */}
-            </Animated.View>
-          </Pressable>
-
-          {isWeb && !isSelf && <Ionicons style={{ marginLeft: 8, alignSelf: 'center' }} name='chatbubble' color='white' size={16} onPress={replyToMessage} />}
-        </View>
+        <MessageWrapper {...messageWrapperProps}>
+          <Content
+            onLongPress={measure} delayLongPress={200}
+            color={textColor} author={message.author}
+            nextMessage={messages[index - 1]}
+            content={kind !== 'send-tokens' ? content : formatTokenContent(content)}
+          />
+        </MessageWrapper>
       )
     } else if (kind === 'app-link') {
       return (
-        <View style={styles.authorWrapper}>
-          {!isDm && !isSelf && (
-            <View style={{ marginLeft: '2%', marginTop: 2, width: 40 }}>
-              {showAvatar && (
-                <Pressable onPress={() => navigation.navigate('Profile', { ship: author })}>
-                  <Avatar ship={author} size="group-chat" />
-                </Pressable>
-              )}
-            </View>
-          )}
-
-          <Pressable ref={msgRef} onLongPress={measure} onPress={dismissKeyboard}>
-            <Animated.View style={[styles.message, { transform: [{translateX: shakeAnimation}] }]}>
-              {/* <Swipeable ref={swipeRef} rightThreshold={100} onSwipeableWillOpen={swipeReply}
-                renderRightActions={() => <Ionicons name="chatbubble" color={backgroundColor} size={20} style={{ marginRight: 16 }} />}
-                overshootFriction={8}
-              > */}
-                {showAvatar && <ShipName name={author} style={{ fontSize: 16, fontWeight: '600', color: getShipColor(author) }} />}
-                <MessageWrapper {...{ message, color, showStatus, addReaction }}>
-                  {content.includes('/apps/pokur') && <Text style={styles.text}>Join my Pokur table: </Text>}
-                  <Text onPress={goToAppLink(content)} style={[styles.text, { textDecorationLine: 'underline' }]}>{getAppLinkText(content)}</Text>
-                </MessageWrapper>
-              {/* </Swipeable> */}
-            </Animated.View>
-          </Pressable>
-
-          {isWeb && !isSelf && <Ionicons style={{ marginLeft: 8, alignSelf: 'center' }} name='chatbubble' color='white' size={16} onPress={replyToMessage} />}
-        </View>
+        <MessageWrapper {...messageWrapperProps}>
+          {content.includes('/apps/pokur') && <Text style={styles.text}>Join my Pokur table: </Text>}
+          <Text onPress={goToAppLink(content)} style={[styles.text, { textDecorationLine: 'underline' }]}>{getAppLinkText(content)}</Text>
+        </MessageWrapper>
+      )
+    } else if (kind === 'poll') {
+      return (
+        <MessageWrapper {...messageWrapperProps} hideReactions>
+          <PollMessage {...{ message, self, color, addReaction }} />
+        </MessageWrapper>
       )
     } else if (kind === 'member-add' ||
       kind === 'member-remove' ||
@@ -308,9 +252,9 @@ const MessageEntry = React.memo(({
       kind === 'leader-remove' ||
       kind === 'change-router'
     ) {
-      return <MessageWrapper style={styles.adminMessage} {...{ message }} color='white'>
+      return <ReactionsWrapper style={styles.adminMessage} {...{ message }} color='white'>
         <Text style={[styles.text, { color: 'white' }]}>{getAdminMsgText(kind, content)}</Text>
-      </MessageWrapper>
+      </ReactionsWrapper>
     }
 
     return null

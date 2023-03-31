@@ -20,9 +20,12 @@ interface ChatInputProps {
   setShowMentions: (value: boolean) => void
   setPotentialMentions: (value: string[]) => void
   setShowSendTokensModal: (value: boolean) => void
+  setShowPollModal: (value: boolean) => void
 }
 
-export default function ChatInput({ chatId, inputRef, showMentions, setShowMentions, setPotentialMentions, setShowSendTokensModal }: ChatInputProps) {
+export default function ChatInput({
+  chatId, inputRef, showMentions, setShowMentions, setPotentialMentions, setShowSendTokensModal, setShowPollModal
+}: ChatInputProps) {
   const { ship: self } = useStore()
   const { chats, drafts, edits, replies, showUqbarWallet, setDraft, sendMessage, setReply, setEdit, editMessage } = usePongoStore()
 
@@ -50,6 +53,11 @@ export default function ChatInput({ chatId, inputRef, showMentions, setShowMenti
   const sendTokens = useCallback(() => {
     Keyboard.dismiss()
     setShowSendTokensModal(true)
+  }, [])
+
+  const createPoll = useCallback(() => {
+    Keyboard.dismiss()
+    setShowPollModal(true)
   }, [])
 
   const send = useCallback(async () => {
@@ -143,15 +151,20 @@ export default function ChatInput({ chatId, inputRef, showMentions, setShowMenti
       right: 4,
       top: isWeb ? 4 : 0
     },
-    sendTokensButton: {
-      position: 'absolute',
-      right: isWeb ? 62 : 106,
-      top: 4,
-    },
     attachButton: {
       position: 'absolute',
-      right: isWeb ? 16 : 60,
+      right: isWeb ? 10 : 54,
       top: 2,
+    },
+    sendTokensButton: {
+      position: 'absolute',
+      right: isWeb ? 54 : 98,
+      top: 4,
+    },
+    createPollButton: {
+      position: 'absolute',
+      right: isWeb ? 98 : 142,
+      top: 4,
     },
   }), [cWidth, isWeb])
 
@@ -175,6 +188,9 @@ export default function ChatInput({ chatId, inputRef, showMentions, setShowMenti
             </Pressable>
           ) : (
             <>
+              {!isRecording && !isDm && <Pressable onPress={createPoll} style={styles.createPollButton}>
+                <MaterialIcons name='poll' size={32} style={{ padding: 4 }} color={uq_purple} />
+              </Pressable>}
               {!isRecording && showUqbarWallet && <Pressable onPress={sendTokens} style={styles.sendTokensButton}>
                 <MaterialIcons name='attach-money' size={32} style={{ padding: 4 }} color={uq_purple} />
               </Pressable>}

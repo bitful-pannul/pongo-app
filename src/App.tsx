@@ -168,13 +168,15 @@ export default function App() {
 
     // firebase dynamic link format
     // https://ping.page.link/?link=https%3A%2F%2Fuqbar.network%3Finvite-code%3D067B-CA90-8F0F&apn=network.uqbar.ping&amv=1.0.1&ibi=uqbar.network.ping&isi=1669043343&imv=1.0.1
-    dynamicLinks()
-      .getInitialLink()
-      .then(link => {
-        if (link?.url.includes('invite-code')) {
-          setInviteUrl(link.url)
-        }
-      })
+    if (!isWeb) {
+      dynamicLinks()
+        .getInitialLink()
+        .then(link => {
+          if (link?.url.includes('invite-code')) {
+            setInviteUrl(link.url)
+          }
+        })
+    }
 
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
       if (appState.current.match(/inactive|background/) && nextAppState === "active")

@@ -59,7 +59,7 @@ const usePongoStore = create(
           get().setNotifLevel('medium', api)
         }
     
-        set({ notifLevel: level, expoToken: expo_token })
+        set({ notifLevel: level, expoToken: expo_token, drafts: {}, replies: {}, edits: {} })
       },
       clearSubscriptions: async () => {
         const { api, subscriptions } = get()
@@ -319,7 +319,6 @@ const usePongoStore = create(
           set({ chats })
           
           try {
-            
             const json = { 'send-reaction': { convo, on: msgId, reaction } }
             await api.poke({ app: 'pongo', mark: 'pongo-action', json })
           } catch {

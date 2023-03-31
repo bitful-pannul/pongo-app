@@ -1,145 +1,109 @@
+import React from 'react'
+import { Pressable, Text, View, Animated, ActivityIndicator, TouchableOpacity } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
-import { BlurView } from "expo-blur"
-import { capitalize } from "lodash"
-import moment from "moment"
-import { useCallback, useState } from "react"
-import { Animated, View, Pressable, Modal } from "react-native"
-import * as Haptics from 'expo-haptics'
+import { NavigationProp } from '@react-navigation/native'
 
-import { gray_overlay } from "../../../constants/Colors"
-import { Message, Reactions } from "../../../types/Pongo"
-import { ONE_SECOND } from "../../../util/time"
+import ReactionsWrapper from './ReactionsWrapper'
+import { AUDIO_URL_REGEX, IMAGE_URL_REGEX } from "../../../util/string"
 import Col from "../../spacing/Col"
-import Row from "../../spacing/Row"
-import ShipName from "../ShipName"
 import Avatar from "../Avatar"
-import { isIos } from "../../../constants/Layout"
-import useColors from "../../../hooks/useColors"
-import { Text } from "../../Themed"
+import ShipName from "../ShipName"
+import { getShipColor } from "../../../util/number"
+import { Message } from "../../../types/Pongo"
+import { isWeb } from '../../../constants/Layout'
 
-interface ReactionProps {
+interface MessageWrapperProps {
+  isDm: boolean;
+  showAvatar: boolean;
+  isSelf: boolean;
+  author: string;
+  styles: any;
+  navigation: NavigationProp<any>
+  msgRef: React.RefObject<View>;
+  shakeAnimation: Animated.Value;
+  reference: string | null;
+  quotedMsg?: Message;
   color: string;
-  emoji: string;
-  reactions: Reactions;
-  addReaction?: (emoji: string) => void;
-}
-
-const Reaction = ({ color, emoji, reactions, addReaction }: ReactionProps) => {
-  const { color: textColor } = useColors()
-  const [showReactors, setShowReactors] = useState(false)
-
-  const onPressReaction = useCallback((emoji: string) => () => {
-    if (addReaction) {
-      addReaction(emoji)
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-    }
-  }, [addReaction])
-
-  const onLongPressReaction = useCallback((emoji: string) => () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-    setShowReactors(true)
-  }, [addReaction])
-
-  const hideReactors = useCallback(() => setShowReactors(false), [])
-
-  const blurContents = (
-    <Col style={{ justifyContent: 'center', alignItems: 'center', alignSelf: 'center', padding: 24, borderRadius: 8 }}>
-      <Text style={{ fontSize: 18, color: textColor, fontWeight: '600', marginBottom: 4 }}>Reacted with {emoji}:</Text>
-      {reactions[emoji].map(ship => (
-        <Row key={`react=${ship}`} style={{ alignSelf: 'flex-start', marginTop: 4 }}>
-          <Avatar ship={ship} />
-          <ShipName name={ship} style={{ color: textColor, fontSize: 16, marginTop: 2 }} />
-        </Row>
-      ))}
-    </Col>
-  )
-
-  return (
-    <>
-      <Pressable onPress={onPressReaction(emoji)} onLongPress={onLongPressReaction(emoji)} key={emoji} style={{ marginRight: 6 }}>
-        <Text style={{ color, padding: 4, paddingHorizontal: 6 }}>
-          {emoji}{reactions[emoji].length > 1 ? ` ${reactions[emoji].length}`: ''}
-        </Text>
-      </Pressable>
-      {showReactors && (
-        <Modal transparent>
-          <Pressable onPress={hideReactors} style={{ position: 'absolute', width: '100%', height: '100%' }}>
-            {isIos ? (
-              <BlurView style={{ width: '100%', height: '100%', backgroundColor: gray_overlay, flex: 1, paddingTop: 400 }} intensity={2}>
-                {blurContents}
-              </BlurView>
-            ) : (
-              <View style={{ width: '100%', height: '100%', backgroundColor: gray_overlay, flex: 1, paddingTop: 400 }}>
-                {blurContents}
-              </View>
-            )}
-          </Pressable>
-        </Modal>
-        
-      )}
-    </>
-  )
-}
-
-type MessageWrapperProps = View['props'] & {
-  color: string;
+  showStatus: boolean;
+  quotedMsgNotFound: boolean;
+  children: React.ReactNode;
   message: Message;
-  showStatus?: boolean;
-  addReaction?: (emoji: string) => void;
+  hideReactions?: boolean
+  pressReply: () => void;
+  addReaction: (emoji: string) => void;
+  measure: () => void;
+  dismissKeyboard: () => void;
+  replyToMessage: () => void;
 }
 
 const MessageWrapper = ({
+  isDm,
+  showAvatar,
+  isSelf,
+  author,
+  styles,
+  navigation,
+  msgRef,
+  shakeAnimation,
+  reference,
+  quotedMsg,
   color,
-  message: {
-    id,
-    edited,
-    timestamp,
-    reactions,
-    status,
-  },
-  showStatus = false,
+  showStatus,
+  quotedMsgNotFound,
+  children,
+  message,
+  hideReactions = false,
+  pressReply,
+  replyToMessage,
   addReaction,
-  style,
-  ...props
+  measure,
+  dismissKeyboard,
 }: MessageWrapperProps) => {
   return (
-    <View {...props} style={[style,
-      { display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center' }
-    ]}>
-      {props.children}
-
-      <View style={{
-        display: 'flex',
-        flexDirection: 'row',
-        justifyContent: Object.keys(reactions).length > 0 ? 'space-between' : 'flex-end',
-        flexWrap: 'wrap',
-        alignSelf: 'flex-end',
-        alignItems: 'flex-end',
-        marginTop: 3,
-        flexGrow: 1,
-        marginLeft: 4,
-      }}>
-        {Object.keys(reactions).length > 0 && (
-          <View style={{ display: 'flex', flexDirection: 'row', marginHorizontal: 8 }}>
-            {Object.keys(reactions).map(emoji => (
-              !reactions[emoji]?.length ? null : <Reaction emoji={emoji} color={color} reactions={reactions} key={emoji} addReaction={addReaction} />
-            ))}
-          </View>
-        )}
-        <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-end' }}>
-          {edited && <Text style={{ color, marginLeft: 8, marginRight: -2 }}>edited</Text>}
-          {status === 'pending' && showStatus && id[0] === '-' ? (
-            <Ionicons name='time-outline' size={16} color={color} style={{ marginLeft: 8 }} />
-          ) : status === 'failed' ? (
-            <Ionicons name='alert-circle' size={16} color={color} style={{ marginLeft: 8 }} />
-          ) : (
-            <View style={{ display: 'flex', flexDirection: 'column', marginLeft: 8, alignItems: 'flex-end', minWidth: 60 }}>
-              <Text style={{ color, fontSize: 12 }}>{moment(timestamp * ONE_SECOND).format('h:mm a')}</Text>
-              {showStatus && !!status && status !== 'pending' && <Text style={{ color, alignSelf: 'flex-end', fontSize: 12 }}>{capitalize(status)}</Text>}
-            </View>
+    <View style={styles.authorWrapper}>
+      {!isDm && !isSelf && (
+        <View style={{ marginLeft: '2%', marginTop: 2, width: 40 }}>
+          {showAvatar && (
+            <Pressable onPress={() => navigation.navigate('Profile', { ship: author })}>
+              <Avatar ship={author} size="group-chat" />
+            </Pressable>
           )}
         </View>
-      </View>
+      )}
+
+      <Pressable ref={msgRef} onLongPress={measure} onPress={dismissKeyboard} delayLongPress={200}>
+        <Animated.View style={[styles.message, { transform: [{translateX: shakeAnimation}] }]}>
+            {/* <Swipeable ref={swipeRef} rightThreshold={100} onSwipeableWillOpen={swipeReply}
+              renderRightActions={() => <Ionicons name="chatbubble" color={backgroundColor} size={20} style={{ marginRight: 16 }} />}
+              overshootFriction={8}
+            > */}
+              {showAvatar && <ShipName name={author} style={{ fontSize: 16, fontWeight: '600', color: getShipColor(author) }} />}
+              {Boolean(reference) && (quotedMsg ? (
+                <TouchableOpacity onPress={pressReply}>
+                  <Col style={styles.reply}>
+                    <Text style={styles.replyAuthor}>{quotedMsg?.author}</Text>
+                    <Text numberOfLines={1} style={[styles.text, { fontSize: 14 }]}>
+                      {AUDIO_URL_REGEX.test(quotedMsg?.content) ? 'Voice Message' :
+                        IMAGE_URL_REGEX.test(quotedMsg?.content) ? 'Image' :
+                        quotedMsg?.content}
+                    </Text>
+                  </Col>
+                </TouchableOpacity>
+              ) : quotedMsgNotFound ? (
+                <Col style={[styles.reply, { height: 20 }]}>
+                  <Text style={[styles.text, { fontSize: 14, marginTop: 2 }]}>Message not found</Text>
+                </Col>
+              ) : (
+                <ActivityIndicator color={color} style={{ alignSelf: 'flex-start', marginLeft: 2, marginBottom: 14, marginTop: 13 }} />
+              ))}
+              <ReactionsWrapper {...{ message, color, showStatus, addReaction, hideReactions }}>
+                {children}
+              </ReactionsWrapper>
+            {/* </Swipeable> */}
+        </Animated.View>
+      </Pressable>
+
+      {isWeb && !isSelf && <Ionicons style={{ marginLeft: 8, alignSelf: 'center' }} name='chatbubble' color='white' size={16} onPress={replyToMessage} />}
     </View>
   )
 }
