@@ -16,6 +16,7 @@ import { getRelativeTime, ONE_SECOND } from "../../../util/time"
 import { addSig, deSig } from "../../../util/string"
 import { useCallback, useMemo } from "react"
 import useDimensions from "../../../hooks/useDimensions"
+import usePongoStore from "../../../state/usePongoState"
 
 interface ChatProps {
   chat: Chat
@@ -24,6 +25,7 @@ interface ChatProps {
 
 export default function ChatsEntry({ chat, navigation }: ChatProps) {
   const { ship } = useStore()
+  const { currentChat } = usePongoStore()
   const { isLargeDevice } = useDimensions()
   const { unreads, last_message, conversation: { id, members, last_active, name, leaders, muted } } = chat
   const chatName = getChatName(ship, chat)
@@ -43,11 +45,11 @@ export default function ChatsEntry({ chat, navigation }: ChatProps) {
   }), [muted])
 
   const goToChat = useCallback(() => {
-    if (isWeb) {
+    if (isWeb && currentChat !== id) {
       navigation.reset({ index: 0, routes: [ { name: 'Chats' } ] })
     }
     setTimeout(() => navigation.navigate('Chat', { id }), 10)
-  }, [isLargeDevice])
+  }, [isLargeDevice, id, currentChat])
 
   const messageDisplay = (
     <Col style={{ maxWidth: '100%' }}>

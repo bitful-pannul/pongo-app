@@ -29,7 +29,7 @@ export default function ChatMenu({ id }: ChatMenuProps) {
     try {
       await leaveConversation(id)
       if (api) {
-        getChats(api!)
+        getChats(api)
       }
       navigation.goBack()
     } catch {}

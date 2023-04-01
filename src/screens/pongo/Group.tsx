@@ -32,15 +32,17 @@ export default function GroupScreen({ navigation, route }: GroupScreenProps) {
   const { ship: self } = useStore()
   const { set, chats, sendMessage, makeInvite, toggleMute } = usePongoStore()
   const { color, backgroundColor } = useColors()
+  const { cWidth } = useDimensions()
+  const convo = route.params.id
+  const chat = chats[route.params.id || '']
+  const { conversation: { members, leaders } } = chat
+
   const [display, setDisplay] = useState<'members' | 'settings'>('members')
   const [newMember, setNewMember] = useState('~')
   const [newGroupName, setNewGroupName] = useState('')
   const [newMemberError, setNewMemberError] = useState('')
   const [groupNameError, setGroupNameError] = useState('')
-  const { cWidth } = useDimensions()
-
-  const convo = route.params.id
-  const chat = chats[route.params.id || '']
+  const [displayedMembers, setDisplayedMembers] = useState(members)
 
   const updateShip = useCallback((ship: string, kind: MessageKind) => () => {
     sendMessage({ self, convo, kind, content: ship })
@@ -48,8 +50,15 @@ export default function GroupScreen({ navigation, route }: GroupScreenProps) {
 
   const changeNewMember = useCallback((text: string) => {
     setNewMember(text)
+
+    if (!text.length || text === '~') {
+      setDisplayedMembers(members)
+    } else {
+      setDisplayedMembers(members.filter((m) => m.includes(text.replace('~', ''))))
+    }
+    
     setNewMemberError('')
-  }, [])
+  }, [members])
 
   const changeNewGroupName = useCallback((text: string) => {
     setNewGroupName(text)
@@ -59,7 +68,7 @@ export default function GroupScreen({ navigation, route }: GroupScreenProps) {
   const changeMute = useCallback(() => toggleMute(convo), [convo])
 
   const addNewMember = useCallback(async () => {
-    if (isValidPatp(newMember)) {
+    if (isValidPatp(addSig(newMember))) {
       try {
         setNewMember('~')
         await makeInvite(convo, newMember)
@@ -109,8 +118,8 @@ export default function GroupScreen({ navigation, route }: GroupScreenProps) {
     },
   }), [color])
 
-  const { conversation: { members, leaders } } = chat
   const selfIsAdmin = useMemo(() => chat.conversation.leaders.includes(deSig(self)), [chat])
+  const showAddButton = isValidPatp(addSig(newMember)) && !members.includes(deSig(newMember))
 
   return (
     <View style={{ height: '100%', width: '100%' }}>
@@ -145,14 +154,18 @@ export default function GroupScreen({ navigation, route }: GroupScreenProps) {
                     autoCapitalize='none'
                     autoComplete='off'
                   />
-                  <Button title='Add' onPress={addNewMember} style={{ width: 90, marginLeft: 8, marginRight: 0 }} />
+                  {showAddButton ? (
+                    <Button title='Add' onPress={addNewMember} style={{ width: 90, marginLeft: 8, marginRight: 0 }} />
+                  ) : (
+                    <View style={{ width: 98 }} />
+                  )}
                 </Row>
                 {Boolean(newMemberError) && <Text style={{ fontSize: 16, color: 'red', margin: 4 }}>{newMemberError}</Text>}
               </Col>
             )}
 
             <ScrollView style={{ width: cWidth, paddingHorizontal: cWidth / 10, flex: 1, marginTop: 4 }} keyboardShouldPersistTaps='handled'>
-              {members.map(mem => {
+              {displayedMembers.map(mem => {
                 const isAdmin = leaders?.includes(deSig(mem))
 
                 return (

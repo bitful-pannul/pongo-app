@@ -147,12 +147,12 @@ export default function DrawerContent({
           <Button small style={{ marginTop: 12, marginLeft: 4 }} title="Clear all ships" onPress={showClearAlert} />
         </>
       )}
-      <TouchableOpacity onPress={joinChat} style={{ marginTop: 16 }}>
+      {/* <TouchableOpacity onPress={joinChat} style={{ marginTop: 16 }}>
         <View style={{ ...styles.row, ...styles.rowStart }}>
           <Ionicons name="add" size={24} color={color} />
           <Text style={styles.app}>Join Chat</Text>
         </View>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
       <TouchableOpacity onPress={() => navigation.navigate('Settings')} style={{ marginTop: 16 }}>
         <View style={{ ...styles.row, ...styles.rowStart }}>
           <Ionicons name="settings-outline" size={24} color={color} />

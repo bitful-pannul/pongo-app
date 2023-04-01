@@ -64,6 +64,7 @@ export interface Chat {
     last_read: string;
     muted: boolean;
     dm: boolean;
+    deleted: boolean;
   }
   messages: Message[];
   last_message: Message | null;

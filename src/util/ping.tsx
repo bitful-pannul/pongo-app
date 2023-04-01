@@ -9,7 +9,7 @@ export const INBOX_CHAT_ID = '0x78.6f62.6e69'
 
 export const sortChats = (chats: Chats) =>
   Object.keys(chats)
-    .reduce((acc, cur) => acc.concat([chats[cur]]), [] as Chat[])
+    .reduce((acc, cur) => acc.concat(chats[cur].conversation.deleted ? [] : [chats[cur]]), [] as Chat[])
     .sort((a, b) => b.conversation.last_active - a.conversation.last_active)
 
 export const isAdminMsg = (msg: Message) => 

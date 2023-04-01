@@ -24,7 +24,7 @@ export default function PollMessage({
   const [title, ...options] = message.content.split('\n')
 
   const totalVotes = Object.values(message.reactions).reduce((acc, cur) => acc + cur.length, 0)
-  const showResults = message.author === self || Object.values(message.reactions).reduce((acc, cur) => acc || cur.includes(deSig(self)), false)
+  const showResults = Object.values(message.reactions).reduce((acc, cur) => acc || cur.includes(deSig(self)), false)
 
   const castVote = useCallback((option: string) => () => {
     if (!isWeb) {
