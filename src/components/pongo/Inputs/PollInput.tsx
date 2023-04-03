@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
   ActivityIndicator,
+  KeyboardAvoidingView,
 } from 'react-native'
 import useColors from '../../../hooks/useColors'
 import usePongoStore from '../../../state/usePongoState'
@@ -16,6 +17,7 @@ import Button from '../../form/Button'
 import Modal from '../../popup/Modal'
 import Col from '../../spacing/Col'
 import { Text } from '../../Themed'
+import useDimensions from '../../../hooks/useDimensions'
 
 interface PollInputProps {
   convo: string
@@ -26,7 +28,8 @@ interface PollInputProps {
 const PollInput = ({ convo, show, hide }: PollInputProps) => {
   const { ship: self } = useStore()
   const { sendMessage } = usePongoStore()
-  const { color } = useColors()
+  const { color, backgroundColor } = useColors()
+  const { height } = useDimensions()
 
   const [error, setError] = useState<string | null>(null)
   const [title, setTitle] = useState('')
@@ -35,7 +38,9 @@ const PollInput = ({ convo, show, hide }: PollInputProps) => {
 
   const addOption = useCallback(() => {
     setError(null)
-    setOptions([...questions, ''])
+    if (questions.length < 8) {
+      setOptions([...questions, ''])
+    }
   }, [questions])
 
   const removeOption = useCallback((index: number) => () => {
@@ -76,11 +81,13 @@ const PollInput = ({ convo, show, hide }: PollInputProps) => {
   const styles = useMemo(() => StyleSheet.create({
     container: {
       padding: 20,
-      alignItems: 'center',
+      paddingTop: 8,
+      backgroundColor,
+      flex: 1,
+      flexShrink: 1,
     },
-    options: {
-      maxHeight: 300,
-    },
+    contentContainer: { alignItems: 'center', display: 'flex', flexDirection: 'column', width: '100%' },
+    title: { marginTop: -4 },
     label: {
       fontSize: 18,
       fontWeight: 'bold',
@@ -91,6 +98,7 @@ const PollInput = ({ convo, show, hide }: PollInputProps) => {
       alignItems: 'center',
       justifyContent: 'space-between',
       height: 40,
+      marginBottom: 8,
     },
     input: {
       borderWidth: 1,
@@ -105,49 +113,50 @@ const PollInput = ({ convo, show, hide }: PollInputProps) => {
     button: {
       marginTop: 16,
       width: 200,
+      alignSelf: 'center',
     },
     error: { color: 'red' },
   }), [])
 
   return (
     <Modal show={show} hide={hide}>
-      <Col style={styles.container}>
-        {sending ? (
-          <ActivityIndicator size='large' style={{ marginTop: 40 }} />
-        ) : (
-          <>
-            <ScrollView style={styles.options}>
-              <Text style={styles.label}>Poll Title:</Text>
-              <TextInput
-                style={styles.input}
-                value={title}
-                onChangeText={text => { setTitle(text); setError(null) }}
-                placeholder="Enter poll title"
-              />
+      <KeyboardAvoidingView style={{ flex: 0 }}>
+        <ScrollView keyboardShouldPersistTaps="handled" style={styles.container} contentContainerStyle={styles.contentContainer}>
+          {sending ? (
+            <ActivityIndicator size='large' style={{ marginTop: 40 }} />
+          ) : (
+            <>
+                <Text style={[styles.label, styles.title]}>Poll Title:</Text>
+                <TextInput
+                  style={styles.input}
+                  value={title}
+                  onChangeText={text => { setTitle(text); setError(null) }}
+                  placeholder="Enter poll title"
+                />
 
-              <Text style={[styles.label, { marginTop: 16 }]}>Options:</Text>
-              {questions.map((question, index) => (
-                <View key={index} style={styles.questionContainer}>
-                  <TextInput
-                    style={styles.input}
-                    value={question}
-                    onChangeText={updateOption(index)}
-                    placeholder={`Option ${index + 1}`}
-                  />
-                  <TouchableOpacity style={{ padding: 4, marginLeft: 8 }} onPress={removeOption(index)}>
-                    <Ionicons name='close-circle-outline' color={color} size={24} />
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </ScrollView>
-            {Boolean(error) && <Text style={styles.error}>{error}</Text>}
+                <Text style={[styles.label, { marginTop: 16 }]}>Options (max 7):</Text>
+                {questions.map((question, index) => (
+                  <View key={index} style={styles.questionContainer}>
+                    <TextInput
+                      style={styles.input}
+                      value={question}
+                      onChangeText={updateOption(index)}
+                      placeholder={`Option ${index + 1}`}
+                    />
+                    <TouchableOpacity style={{ padding: 4, marginLeft: 8 }} onPress={removeOption(index)}>
+                      <Ionicons name='close-circle-outline' color={color} size={24} />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              {Boolean(error) && <Text style={styles.error}>{error}</Text>}
 
-            <Button title='Add Option' onPress={addOption} small style={styles.button} />
+              {questions.length < 8 && <Button title='Add Option' onPress={addOption} small style={styles.button} />}
 
-            <Button title='Create Poll' onPress={handleSubmit} small style={styles.button} />
-          </>
-        )}
-      </Col>
+              <Button title='Create Poll' onPress={handleSubmit} small style={styles.button} />
+            </>
+          )}
+        </ScrollView>
+      </KeyboardAvoidingView>
     </Modal>
   )
 }

@@ -32,6 +32,7 @@ export const messageSub = (set: SetState<PongoStore>, get: GetState<PongoStore>)
     // Check that the chat is the current chat and the message is the next one in order
     if (deSig(author) === deSig(get().api?.ship || '')) {
       chat.unreads = 0
+      get().setLastReadMsg(chatId, id)
     } else if (isMostRecent) {
       chat.unreads = Number(chat.unreads) + 1
     }

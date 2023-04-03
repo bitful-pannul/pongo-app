@@ -102,27 +102,39 @@ export default function PongoStackNavigator() {
         ])
         .catch(async () => {
           // Only go here if one of the above apps is not installed
-          try {
-            await api.scry({ app: 'pongo', path: '/conversations' })
-          } catch {
-            setLoadingText('Installing urbit apps...')
-            try {
-              await api.poke({ app: 'hood', mark: 'kiln-install', json: { local: PING_APP, desk: PING_APP, ship: PING_HOST } })
-              setTimeout(() => initPongo(api), 20 * ONE_SECOND)
-            } catch {}
-          }
-    
+          console.log(1)
           try {
             await api.scry({ app: 'social-graph', path: '/is-installed' })
           } catch {
             setLoadingText('Installing urbit apps...')
             try {
+              console.log(2)
               await api.poke({ app: 'hood', mark: 'kiln-install', json: { local: NECTAR_APP, desk: NECTAR_APP, ship: NECTAR_HOST } })
               setTimeout(() => initPosse(api), 20 * ONE_SECOND)
             } catch {}
           }
-  
-          // Add a setTimeout here?
+
+          await new Promise((resolve) => {
+            const interval = setInterval(async () => {
+              try {
+                console.log(3)
+                await api.scry({ app: 'pongo', path: '/conversations' })
+              } catch {
+                setLoadingText('Installing urbit apps...')
+                try {
+                  console.log(4)
+                  await api.scry({ app: 'social-graph', path: '/is-installed' })
+                  await api.poke({ app: 'hood', mark: 'kiln-install', json: { local: PING_APP, desk: PING_APP, ship: PING_HOST } })
+                  console.log(5)
+                  setTimeout(() => initPongo(api), 20 * ONE_SECOND)
+                  clearInterval(interval)
+                  resolve(true)
+                } catch {}
+              }
+            }, 5 * ONE_SECOND)
+          })
+
+          console.log(6)
 
           checkAppsInstalledInterval = setInterval(() => {
             Promise.all([

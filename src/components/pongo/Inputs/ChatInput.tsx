@@ -149,21 +149,21 @@ export default function ChatInput({
     sendButton: {
       position: 'absolute',
       right: 4,
-      top: isWeb ? 4 : 0
+      top: isWeb ? 4 : 2
     },
     attachButton: {
       position: 'absolute',
-      right: isWeb ? 10 : 54,
-      top: 2,
+      right: isWeb ? 10 : 50,
+      top: 3,
     },
     sendTokensButton: {
       position: 'absolute',
-      right: isWeb ? 54 : 98,
+      right: isWeb ? 50 : 90,
       top: 4,
     },
     createPollButton: {
       position: 'absolute',
-      right: isWeb ? 98 : 142,
+      right: isWeb ? 94 : 134,
       top: 4,
     },
   }), [cWidth, isWeb])

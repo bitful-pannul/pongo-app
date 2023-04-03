@@ -15,7 +15,7 @@ import ShipName from "../ShipName"
 import Avatar from "../Avatar"
 import { isIos, isWeb } from "../../../constants/Layout"
 import useColors from "../../../hooks/useColors"
-import { Text } from "../../Themed"
+import { ScrollView, Text } from "../../Themed"
 
 interface ReactionProps {
   color: string;
@@ -49,12 +49,14 @@ const Reaction = ({ color, emoji, reactions, addReaction }: ReactionProps) => {
   const blurContents = (
     <Col style={{ justifyContent: 'center', alignItems: 'center', alignSelf: 'center', padding: 24, borderRadius: 8 }}>
       <Text style={{ fontSize: 18, color: textColor, fontWeight: '600', marginBottom: 4 }}>Reacted with {emoji}:</Text>
-      {reactions[emoji].map(ship => (
-        <Row key={`react=${ship}`} style={{ alignSelf: 'flex-start', marginTop: 4 }}>
-          <Avatar ship={ship} />
-          <ShipName name={ship} style={{ color: textColor, fontSize: 16, marginTop: 2 }} />
-        </Row>
-      ))}
+      <ScrollView>
+        {reactions[emoji].map(ship => (
+          <Row key={`react=${ship}`} style={{ alignSelf: 'flex-start', marginTop: 4 }}>
+            <Avatar ship={ship} />
+            <ShipName name={ship} style={{ color: textColor, fontSize: 16, marginTop: 2 }} />
+          </Row>
+        ))}
+      </ScrollView>
     </Col>
   )
 
