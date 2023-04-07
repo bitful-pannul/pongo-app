@@ -1,7 +1,5 @@
-import { stringRenderer, sigil } from '@tlon/sigil-js';
 import React, { memo } from 'react';
 import { Text, View } from 'react-native';
-import { SvgXml } from 'react-native-svg';
 import { getShipColor } from '../util/number';
 import { deSig } from '../util/string';
 

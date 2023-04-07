@@ -27,7 +27,7 @@ export default function ChatInput({
   chatId, inputRef, showMentions, setShowMentions, setPotentialMentions, setShowSendTokensModal, setShowPollModal
 }: ChatInputProps) {
   const { ship: self } = useStore()
-  const { chats, drafts, edits, replies, showUqbarWallet, setDraft, sendMessage, setReply, setEdit, editMessage } = usePongoStore()
+  const { chats, drafts, edits, replies, showUqbarWallet, connected, setDraft, sendMessage, setReply, setEdit, editMessage } = usePongoStore()
 
   const chat = chats[chatId]
   const edit = useMemo(() => edits[chatId], [edits, chatId])
@@ -166,7 +166,11 @@ export default function ChatInput({
       right: isWeb ? 94 : 134,
       top: 4,
     },
+    padding4: { padding: 4 },
   }), [cWidth, isWeb])
+
+  const disabled = !connected
+  const iconColor = disabled ? medium_gray : uq_purple
 
   return (
     <Row style={{ marginBottom: isIos ? 40 : 0, borderBottomWidth: 1, borderBottomColor: light_gray, backgroundColor: 'white', maxHeight: 120 }}>
@@ -183,21 +187,21 @@ export default function ChatInput({
           />
           
           {Boolean(text) ? (
-            <Pressable onPress={send} disabled={sending} style={styles.sendButton}>
-              <MaterialIcons name='send' size={32} style={{ padding: 4 }} color={sending ? medium_gray : uq_purple} />
+            <Pressable onPress={send} disabled={sending || disabled} style={styles.sendButton}>
+              <MaterialIcons name='send' size={32} style={styles.padding4} color={sending || disabled ? medium_gray : uq_purple} />
             </Pressable>
           ) : (
             <>
-              {!isRecording && !isDm && <Pressable onPress={createPoll} style={styles.createPollButton}>
-                <MaterialIcons name='poll' size={32} style={{ padding: 4 }} color={uq_purple} />
+              {!isRecording && !isDm && <Pressable onPress={createPoll} style={styles.createPollButton} disabled={disabled}>
+                <MaterialIcons name='poll' size={32} style={styles.padding4} color={iconColor} />
               </Pressable>}
-              {!isRecording && showUqbarWallet && <Pressable onPress={sendTokens} style={styles.sendTokensButton}>
-                <MaterialIcons name='attach-money' size={32} style={{ padding: 4 }} color={uq_purple} />
+              {!isRecording && showUqbarWallet && <Pressable onPress={sendTokens} style={styles.sendTokensButton} disabled={disabled}>
+                <MaterialIcons name='attach-money' size={32} style={styles.padding4} color={iconColor} />
               </Pressable>}
-              {!isRecording && <Pressable onPress={pickImage} style={styles.attachButton}>
-                <Ionicons name='attach' size={32} style={{ padding: 4 }} color={uq_purple} />
+              {!isRecording && <Pressable onPress={pickImage} style={styles.attachButton} disabled={disabled}>
+                <Ionicons name='attach' size={32} style={styles.padding4} color={iconColor} />
               </Pressable>}
-              {!isWeb && <AudioRecorder {...{ storeAudio, setIsRecording }} />}
+              {!isWeb && <AudioRecorder {...{ storeAudio, setIsRecording, disabled }} />}
             </>
           )}
         </>

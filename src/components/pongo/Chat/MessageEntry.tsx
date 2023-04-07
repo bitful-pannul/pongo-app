@@ -59,8 +59,7 @@ const MessageEntry = React.memo(({
   const [quotedMsgNotFound, setQuotedMsgNotFound] = useState(false)
   const { cWidth } = useDimensions()
 
-  const onSwipeLeft = useCallback(() => {
-  }, [])
+  const onSwipeLeft = useCallback(() => {}, [])
 
   const { id, author, content, kind, reference } = message
   const isSelf = useMemo(() => deSig(author) === deSig(self), [author, self])

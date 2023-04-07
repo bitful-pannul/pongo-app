@@ -42,8 +42,9 @@ export interface NotifSettings {
 }
 
 export interface Message {
-  author: string;
+  conversation_id?: string
   id: string;
+  author: string;
   identifier?: string;
   timestamp: number;
   kind: MessageKind;

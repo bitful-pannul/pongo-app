@@ -1,7 +1,6 @@
 import { HeaderBackButton } from '@react-navigation/elements'
 import { useNavigation } from '@react-navigation/native'
 import usePongoStore from '../../state/usePongoState'
-import { uq_purple } from '../../constants/Colors'
 
 export default function NavBackButton() {
   const { set } = usePongoStore()
@@ -12,7 +11,7 @@ export default function NavBackButton() {
       labelVisible={false}
       tintColor={'white'}
       onPress={() => {
-        set({ isSearching: false, searchResults: [], messages: [] })
+        set({ isSearching: false, searchResults: [], messageSearchResults: [], searchTerm: '' })
         navigation.goBack()
       }}
     />

@@ -6,20 +6,19 @@ import { Gesture, GestureDetector, GestureUpdateEvent, PanGestureHandlerEventPay
 import AnimatedNode, { runOnJS, useAnimatedStyle, useSharedValue } from "react-native-reanimated"
 import * as Haptics from 'expo-haptics'
 
-import { uq_pink, uq_purple } from "../../../constants/Colors"
+import { medium_gray, uq_pink, uq_purple } from "../../../constants/Colors"
 import { formatRecordTime } from "../../../util/time"
 import useKeyboard from "../../../hooks/useKeyboard"
 import useDimensions from "../../../hooks/useDimensions"
 import { createPulse } from "../../../util/animation"
 
 interface AudioRecorderProps {
+  disabled: boolean
   setIsRecording: (value: boolean) => void
   storeAudio: (uri: string) => Promise<void>
 }
 
-
-
-const AudioRecorder: React.FC<AudioRecorderProps> = ({ storeAudio, setIsRecording }: AudioRecorderProps) => {
+const AudioRecorder: React.FC<AudioRecorderProps> = ({ disabled, storeAudio, setIsRecording }: AudioRecorderProps) => {
   const [androidGranted, setAndroidGranted] = useState(false)
   const [micTransform] = useState(new Animated.Value(1))
   const [cancelTranslate] = useState(new Animated.Value(-24))
@@ -179,8 +178,8 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ storeAudio, setIsRecordin
   const panGesture = Gesture.Pan()
     .activateAfterLongPress(600)
     .shouldCancelWhenOutside(true)
-    .onBegin((e: GestureUpdateEvent<PanGestureHandlerEventPayload>) => {
-      runOnJS(startRecording)(isKeyboardVisible)
+    .onStart((e: GestureUpdateEvent<PanGestureHandlerEventPayload>) => {
+      if (!disabled) runOnJS(startRecording)(isKeyboardVisible)
     })
     .onUpdate((e: GestureUpdateEvent<PanGestureHandlerEventPayload>) => {
       lastTranslationX.value = e.translationX
@@ -221,7 +220,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ storeAudio, setIsRecordin
         )}
 
         <View style={styles.buttonContainer}>
-          <Ionicons name='mic-outline' size={32} style={{ marginRight: 8, marginTop: 2, padding: 4 }} color={uq_purple} />
+          <Ionicons name='mic-outline' size={32} style={{ marginRight: 8, marginTop: 2, padding: 4 }} color={disabled ? medium_gray : uq_purple} />
           {isRecordingStuff.value && (
             <Animated.View style={[styles.recordingButton, { transform: [{ scale: micTransform }, {perspective: 1000}] }]}>
               <Ionicons name='mic' color='white' size={32} />

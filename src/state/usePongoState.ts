@@ -13,7 +13,6 @@ import { getPushNotificationToken } from "../util/notification"
 import { HAS_MENTION_REGEX } from "../constants/Regex"
 import { PongoStore } from './types/pongo'
 import { messageSub } from './subscriptions/pongoSubs'
-import { ALL_MESSAGES_UID } from '../constants/Pongo'
 import { isWeb } from '../constants/Layout'
 
 const usePongoStore = create(
@@ -39,27 +38,19 @@ const usePongoStore = create(
       notifLevel: 'medium',
       expoToken: '',
       init: async (api: Urbit, clearState = true) => {
-        resetSubscriptions(set, api, get().subscriptions, [
-          api.subscribe({
-            app: 'pongo',
-            path: '/updates',
-            event: messageSub(set, get)
-          }),
-          api.subscribe({ app: 'pongo', path: `/search-results/${ALL_MESSAGES_UID}`, event: (result) => {
-            console.log('MESSAGE SEARCH RESULTS:', result)
-            // set({ messageSearchResults: result })
-          } })
-        ])
-        
+        set({ api })
+
         await get().getChats(api, !clearState)
         // await get().getBlocklist(api)
         const notifSettings = await api.scry<{ 'notif-settings': NotifSettings }>({ app: 'pongo', path: '/notif-settings' })
         const { expo_token, level } = notifSettings['notif-settings']
-        if (level === 'off') {
-          get().setNotifLevel('medium', api)
-        }
-    
         set({ notifLevel: level, expoToken: expo_token, drafts: {}, replies: {}, edits: {} })
+
+        if (level === 'off') get().setNotifLevel('medium', api)
+
+        resetSubscriptions(set, api, get().subscriptions, [
+          api.subscribe({ app: 'pongo', path: '/updates', event: messageSub(set, get) })
+        ])
       },
       clearSubscriptions: async () => {
         const { api, subscriptions } = get()
@@ -114,11 +105,7 @@ const usePongoStore = create(
               app: 'pongo',
               path: '/updates',
               event: messageSub(set, get)
-            }),
-            api.subscribe({ app: 'pongo', path: `/search-results/${ALL_MESSAGES_UID}`, event: (result) => {
-              console.log('MESSAGE SEARCH RESULTS:', result)
-              // set({ messageSearchResults: result })
-            } })
+            })
           ])
         }
       },
@@ -145,7 +132,7 @@ const usePongoStore = create(
         Object.keys(chats || {}).forEach(ch => {
           chats[ch].messages = maintainMessages ? (existingChats[ch]?.messages || []) : []
     
-          if (deSig(chats[ch].last_message?.author || '') === deSig(api.ship)) {
+          if (deSig(chats[ch].last_message?.author || '') === deSig(api.ship || '')) {
             chats[ch].unreads = 0
           }
         })
@@ -193,10 +180,11 @@ const usePongoStore = create(
     
         if (api) {
           api.subscribeOnce('pongo', `/search-results/${uid}`, ONE_SECOND * 8).then((result: any) => {
-            console.log('SEARCH RESULT', result)
+            // {"search_result": [{"author": "~wet", "content": "1", "conversation_id": "0x3d90.050f.2f39.e76a.6906.2ceb.d42f.0673", "edited": false, "id": "4", "kind": "text", "mentions": [Array], "reactions": [Object], "reference": null, "timestamp": 1680590787}]}
+            const messageSearchResults: Message[] = result.search_result
+            set({ messageSearchResults })
           })
           const json = { search: { uid, phrase, 'only-in': onlyIn || null, 'only-author': onlyAuthor || null } }
-          console.log(0, json)
           await api.poke({ app: 'pongo', mark: 'pongo-action', json })
         }
       },
@@ -205,11 +193,11 @@ const usePongoStore = create(
         // make-conversation name=@t config=conversation-metadata]
         if (api) {
           const config = isOpen ? members.length === 1 ? {
-            'dm': { members: members.concat([addSig(api.ship)]) }
+            'dm': { members: members.concat([addSig(api.ship!)]) }
           } : {
-            'open': { members: members.concat([addSig(api.ship)]) }
+            'open': { members: members.concat([addSig(api.ship!)]) }
           } : {
-            'managed': { members: members.concat([addSig(api.ship)]), leaders: [addSig(api.ship)] }
+            'managed': { members: members.concat([addSig(api.ship!)]), leaders: [addSig(api.ship!)] }
           }
           const json = { 'make-conversation': { name: chatName, config } }
     
@@ -287,18 +275,21 @@ const usePongoStore = create(
           } as Message].concat(chat.messages)
     
         set({ chats })
-    
+
+        const { api } = get()
         setTimeout(async () => {
-          try {
-            const json = resend ?
-              { 'send-message': { ...resend, convo, identifier, reference: resend.reference?.replace(/\./g, ''), mentions } } :
-              { 'send-message': { convo, kind, content, identifier, reference, mentions } }
-            await get().api?.poke({ app: 'pongo', mark: 'pongo-action', json })
-          } catch (err) {
-            chat.messages = chat.messages.map(m => m.id === identifier ? { ...m, status: 'failed' } : m)
-            set({ chats })
+          if (api && deSig(api.ship) === deSig(self)) {
+            try {
+              const json = resend ?
+                { 'send-message': { ...resend, convo, identifier, reference: resend.reference?.replace(/\./g, ''), mentions } } :
+                { 'send-message': { convo, kind, content, identifier, reference, mentions } }
+              await api.poke({ app: 'pongo', mark: 'pongo-action', json })
+            } catch (err) {
+              chat.messages = chat.messages.map(m => m.id === identifier ? { ...m, status: 'failed' } : m)
+              set({ chats })
+            }
           }
-        }, 1000)
+        }, ONE_SECOND * 0.5)
       },
       editMessage: async (convo: string, msgId: string, edit: string) => {
         const json = { 'send-message-edit': { convo, on: msgId, edit } }
@@ -337,12 +328,11 @@ const usePongoStore = create(
           await api.poke({ app: 'pongo', mark: 'pongo-action', json: {
             'read-message': { convo, message: msgId }
           } })
-          await get().getChats(api, true)
         }
-        // const newChats = { ...get().chats }
-        // newChats[convo].unreads = 0
-        // newChats[convo].conversation.last_read = msgId
-        // set({ chats: newChats })
+        const newChats = { ...get().chats }
+        newChats[convo].unreads = 0
+        newChats[convo].conversation.last_read = msgId
+        set({ chats: newChats })
       },
       sendTokens: async (payload: SendTokensPayload) => {
         const { api } = get()

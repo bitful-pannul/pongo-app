@@ -1,19 +1,17 @@
-import { StatusBar } from "expo-status-bar"
 import React, { useCallback, useEffect, useState } from "react"
-import { Alert, Image, Linking, Platform, Pressable, StyleSheet, TouchableOpacity } from "react-native"
+import { Alert, Image, Pressable, StyleSheet, TouchableOpacity } from "react-native"
+import { configureApi } from "@uqbar/react-native-api/configureApi"
+import { Ionicons } from "@expo/vector-icons"
+import { DrawerContentComponentProps } from "@react-navigation/drawer/lib/typescript/src/types"
 
 import { Text, View } from "../components/Themed"
 import useStore from "../state/useStore"
-import { DrawerContentComponentProps } from "@react-navigation/drawer/lib/typescript/src/types"
 import Sigil from "../components/Sigil";
-import { Ionicons } from "@expo/vector-icons";
 import Button from "../components/form/Button"
 import { uq_darkpurple, uq_purple } from "../constants/Colors"
 import useColors from "../hooks/useColors"
-import { ESCAPE_APP_LINK } from "../constants/Escape"
 import usePongoStore from "../state/usePongoState"
 import { useApi } from "../hooks/useApi"
-import { configureApi } from "@uqbar/react-native-api/configureApi"
 import { isWeb } from "../constants/Layout"
 
 export default function DrawerContent({

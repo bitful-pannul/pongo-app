@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Image, KeyboardAvoidingView, StyleSheet, TextInput, TouchableOpacity, Text as DefaultText } from "react-native";
 
 import storage from "../util/storage";
@@ -11,6 +11,8 @@ import { isIos, keyboardAvoidBehavior, keyboardOffset } from "../constants/Layou
 import { medium_gray } from "../constants/Colors";
 import CreateAccountScreen from "./CreateAccount";
 import useColors from "../hooks/useColors";
+import useKeyboard from "../hooks/useKeyboard";
+import useDimensions from "../hooks/useDimensions";
 
 const SHIP_COOKIE_REGEX = /(~)[a-z\-]+?(\=)/;
 const getShipFromCookie = (cookie: string) => cookie.match(SHIP_COOKIE_REGEX)![0].slice(0, -1);
@@ -18,8 +20,12 @@ const getShipFromCookie = (cookie: string) => cookie.match(SHIP_COOKIE_REGEX)![0
 type LoginType = 'scan' | 'url' | 'create-account' | 'email-login' | null
 
 export default function LoginScreen({ inviteUrl }: { inviteUrl?: string }) {
-  const { ships, ship, shipUrl, authCookie, addShip, clearShip, setShipUrl, setShip, loadStore, setNeedLogin } = useStore();
+  const { ships, ship, shipUrl, authCookie, addShip, clearShip, setShipUrl, setShip } = useStore();
   const urlInputRef = useRef<any>(null)
+  const { color } = useColors()
+  const { isKeyboardVisible } = useKeyboard()
+  const { height } = useDimensions()
+
   const [shipUrlInput, setShipUrlInput] = useState('https://');
   const [accessKeyInput, setAccessKeyInput] = useState('');
   const [urlProblem, setUrlProblem] = useState<string | null>();
@@ -27,26 +33,6 @@ export default function LoginScreen({ inviteUrl }: { inviteUrl?: string }) {
   const [showPassword, setShowPassword] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
   const [loginType, setLoginType] = useState<LoginType>(null);
-  const { color } = useColors()
-
-  const loadStorage = useCallback(async () => {
-    try {
-      const res = await storage.load({ key: 'store' }).catch(console.error);
-      if (res?.shipUrl) {
-        const response = await fetch(res.shipUrl).catch(console.error);
-        const html = await response?.text();
-  
-        if (html && URBIT_HOME_REGEX.test(html)) {
-          loadStore(res);
-          setNeedLogin(false);
-        }
-      }
-    } catch (err) {}
-  }, []);
-
-  useEffect(() => {
-    loadStorage();
-  }, []);
 
   useEffect(() => {
     if (inviteUrl) {
@@ -137,12 +123,6 @@ export default function LoginScreen({ inviteUrl }: { inviteUrl?: string }) {
     setFormLoading(false);
   }, [accessKeyInput, setLoginProblem]);
 
-  if (formLoading) {
-    return <View style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
-      <ActivityIndicator size="large" color={color} />
-    </View>
-  }
-
   const handleScan = (result: string) => {
     fetch(result, { method: "POST" })
       .then((res) => res.json())
@@ -194,6 +174,57 @@ export default function LoginScreen({ inviteUrl }: { inviteUrl?: string }) {
       });
   }
 
+  const styles = useMemo(() => StyleSheet.create({
+    logo: {
+      height: height < 700 && isKeyboardVisible ? 60 : 120,
+      width: height < 700 && isKeyboardVisible ? 60 : 120,
+    },
+    input: {
+      height: 40,
+      marginTop: 12,
+      borderWidth: 1,
+      padding: 10,
+      backgroundColor: 'white'
+    },
+    shipInputView: {
+      padding: 20,
+      height: '100%',
+    },
+    welcome: {
+      marginTop: 16,
+      fontSize: 24,
+      fontWeight: "600",
+    },
+    label: {
+      fontSize: 20,
+      margin: 16,
+      alignSelf: 'center',
+    },
+    showPassword: {
+      padding: 4,
+      position: 'absolute',
+      right: 8,
+      top: 18,
+      color: 'gray',
+    },
+    showPasswordText: {
+      color: 'black',
+    },
+    changeHttp: {
+      backgroundColor: medium_gray,
+      borderRadius: 8,
+      padding: 4,
+      paddingHorizontal: 4,
+      width: 120,
+      elevation: 1,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.3,
+      shadowRadius: 1,
+    },
+    topMargin16: { marginTop: 16 },
+  }), [isKeyboardVisible, height])
+
   const renderContent = () => {
     if (!shipUrl && loginType === 'scan') {
       return (
@@ -202,7 +233,7 @@ export default function LoginScreen({ inviteUrl }: { inviteUrl?: string }) {
             Please scan your Urbit QR code:
           </Text>
           <QrCodeScanner onScan={handleScan} />
-          <Button style={{ marginTop: 16 }} title="Back" onPress={() => setLoginType(null)} />
+          <Button style={styles.topMargin16} title="Back" onPress={() => setLoginType(null)} />
         </>
       )
     } else if (!shipUrl && loginType === 'url') {
@@ -237,8 +268,8 @@ export default function LoginScreen({ inviteUrl }: { inviteUrl?: string }) {
               </Text>
             )}
           </View>
-          <Button style={{ marginTop: 16 }} title="Continue" onPress={handleSaveUrl} />
-          <Button style={{ marginTop: 16 }} title="Back" onPress={() => setLoginType(null)} />
+          <Button style={styles.topMargin16} title="Continue" onPress={handleSaveUrl} />
+          <Button style={styles.topMargin16} title="Back" onPress={() => setLoginType(null)} />
         </>
       )
     } else if (shipUrl) {
@@ -276,8 +307,8 @@ export default function LoginScreen({ inviteUrl }: { inviteUrl?: string }) {
               {loginProblem}
             </Text>
           )}
-          <Button style={{ marginTop: 16 }} title="Continue" onPress={handleLogin} />
-          <Button style={{ marginTop: 16 }} title="Log in with a different ID" onPress={changeUrl} />
+          <Button style={styles.topMargin16} title="Continue" onPress={handleLogin} />
+          <Button style={styles.topMargin16} title="Log in with a different ID" onPress={changeUrl} />
         </>
       )
     }
@@ -288,88 +319,33 @@ export default function LoginScreen({ inviteUrl }: { inviteUrl?: string }) {
         <Button style={{ marginTop: 8 }} title="Login with URL" onPress={() => setLoginType('url')} />
         <Text style={{ marginLeft: '10%', marginTop: 32, fontSize: 18 }}>Red Horizon Hosting:</Text>
         <Button style={{ marginTop: 8 }} title="Login with Email" onPress={() => setLoginType('email-login')} />
-        <Button style={{ marginTop: 16 }} title="Create Account" onPress={() => setLoginType('create-account')} />
-        {/* <Text style={{ marginTop: 16 }}>Already Logged In?</Text>
+        <Button style={styles.topMargin16} title="Create Account" onPress={() => setLoginType('create-account')} />
+        {/* <Text style={styles.topMargin16}>Already Logged In?</Text>
         <Button title="Refresh Connection" onPress={loadStorage} /> */}
       </>
     )
   }
 
-  if (loginType === 'create-account') {
-    return (
-      <CreateAccountScreen inviteUrl={inviteUrl} method="create" goBack={() => setLoginType(null)} />
-    )
+  if (formLoading) {
+    return <View style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
+      <ActivityIndicator size="large" color={color} />
+    </View>
+  } else if (loginType === 'create-account') {
+    return <CreateAccountScreen inviteUrl={inviteUrl} method="create" goBack={() => setLoginType(null)} />
   } else if (loginType === 'email-login') {
-    return (
-      <CreateAccountScreen method="login" goBack={() => setLoginType(null)} />
-    )
+    return <CreateAccountScreen method="login" goBack={() => setLoginType(null)} />
   }
 
   return (
     <KeyboardAvoidingView behavior={keyboardAvoidBehavior} style={styles.shipInputView} keyboardVerticalOffset={keyboardOffset}>
-      <View style={{ alignItems: 'center', marginTop: 60 }}>
-        <Image
-          style={styles.logo}
-          source={require('../../assets/images/pongo-logo.png')}
-        />
+      <View style={{ alignItems: 'center', marginTop: isKeyboardVisible ? 20 : 60 }}>
+        <Image style={styles.logo} source={require('../../assets/images/pongo-logo.png')} />
         <Text style={styles.welcome}>Pongo by Uqbar</Text>
       </View>
       {renderContent()}
       {(ships.length > 0 && !authCookie) && (
-        <>
-          <Button style={{ marginTop: 16 }} title="Cancel" onPress={() => setShip(ships[0].ship)} />
-        </>
+        <Button style={styles.topMargin16} title="Cancel" onPress={() => setShip(ships[0].ship)} />
       )}
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  logo: {
-    height: 120,
-    width: 120,
-  },
-  input: {
-    height: 40,
-    marginTop: 12,
-    borderWidth: 1,
-    padding: 10,
-    backgroundColor: 'white'
-  },
-  shipInputView: {
-    padding: 20,
-    height: '100%',
-  },
-  welcome: {
-    marginTop: 16,
-    fontSize: 24,
-    fontWeight: "600",
-  },
-  label: {
-    fontSize: 20,
-    margin: 16,
-    alignSelf: 'center',
-  },
-  showPassword: {
-    padding: 4,
-    position: 'absolute',
-    right: 8,
-    top: 18,
-    color: 'gray',
-  },
-  showPasswordText: {
-    color: 'black',
-  },
-  changeHttp: {
-    backgroundColor: medium_gray,
-    borderRadius: 8,
-    padding: 4,
-    paddingHorizontal: 4,
-    width: 120,
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 1,
-  }
-});

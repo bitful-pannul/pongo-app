@@ -72,24 +72,23 @@ export default function PongoStackNavigator() {
           }
         }).catch(console.error)
 
-      initContact(api).catch((err: any) => console.log('Contact:', err))
-      initSettings(api).catch((err: any) => console.log('Settings:', err))
       initPongo(api).catch((err: any) => console.log('Pongo:', err))
       initPosse(api).catch((err: any) => console.log('Posse:', err))
       initWallet(api, {}).catch((err: any) => console.log('INIT WALLET ERROR:', err))
-      // navigation.reset({ index: 0, routes: [ { name: 'Chats' } ] })
+      initSettings(api).catch((err: any) => console.log('Settings:', err))
+      // initContact(api).catch((err: any) => console.log('Contact:', err))
     }
 
     return () => {
       if (api) {
-        clearContact()
         clearSettings()
         clearPosse()
         clearPongo()
         clearWallet()
+        // clearContact()
       }
     }
-  }, [self, shipUrl])
+  }, [api, self, shipUrl])
 
   useEffect(() => {
     const initInstall = async () => {
@@ -102,13 +101,11 @@ export default function PongoStackNavigator() {
         ])
         .catch(async () => {
           // Only go here if one of the above apps is not installed
-          console.log(1)
           try {
             await api.scry({ app: 'social-graph', path: '/is-installed' })
           } catch {
             setLoadingText('Installing urbit apps...')
             try {
-              console.log(2)
               await api.poke({ app: 'hood', mark: 'kiln-install', json: { local: NECTAR_APP, desk: NECTAR_APP, ship: NECTAR_HOST } })
               setTimeout(() => initPosse(api), 20 * ONE_SECOND)
             } catch {}
@@ -117,15 +114,12 @@ export default function PongoStackNavigator() {
           await new Promise((resolve) => {
             const interval = setInterval(async () => {
               try {
-                console.log(3)
                 await api.scry({ app: 'pongo', path: '/conversations' })
               } catch {
                 setLoadingText('Installing urbit apps...')
                 try {
-                  console.log(4)
                   await api.scry({ app: 'social-graph', path: '/is-installed' })
                   await api.poke({ app: 'hood', mark: 'kiln-install', json: { local: PING_APP, desk: PING_APP, ship: PING_HOST } })
-                  console.log(5)
                   setTimeout(() => initPongo(api), 20 * ONE_SECOND)
                   clearInterval(interval)
                   resolve(true)
@@ -133,8 +127,6 @@ export default function PongoStackNavigator() {
               }
             }, 5 * ONE_SECOND)
           })
-
-          console.log(6)
 
           checkAppsInstalledInterval = setInterval(() => {
             Promise.all([
@@ -160,10 +152,12 @@ export default function PongoStackNavigator() {
     if (api) {
       setLoadingText('Checking installation...')
       try {
+        console.log(1)
         await Promise.all([
-          api.scry({ app: 'pongo', path: '/conversations' }),
           api.scry({ app: 'social-graph', path: '/is-installed' }),
+          api.scry({ app: 'pongo', path: '/conversations' }),
         ])
+        console.log(2)
 
         clearInterval(checkAppsInstalledInterval)
         setLoadingText(undefined)
@@ -180,7 +174,7 @@ export default function PongoStackNavigator() {
   , [self, shipUrl])
 
   const disconnectedIcon = useMemo(() =>
-    <MaterialIcons onPress={showDisconnectInfo} style={{ padding: 2, paddingBottom: 4 }} name='wifi-off' size={24} color='white' />
+    <MaterialIcons onPress={showDisconnectInfo} style={{ padding: 2, paddingBottom: 4, paddingRight: isWeb ? 20 : 4  }} name='wifi-off' size={24} color='white' />
   , [showDisconnectInfo])
 
   if (loadingText) {
@@ -204,7 +198,7 @@ export default function PongoStackNavigator() {
           </View>
           <Image style={{ marginLeft: 8, height: 24, width: 24, marginTop: 1 }} source={require('../../assets/images/pongo-logo.png')} />
         </View>,
-        headerRight: () => connected ? null : disconnectedIcon
+        headerRight: () => connected ? (isSearching ? <CloseSearch /> : <OpenSearch />) : disconnectedIcon
       })}
     />
     <Stack.Screen name="Chat" component={ChatScreen}

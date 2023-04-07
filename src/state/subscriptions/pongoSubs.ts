@@ -74,6 +74,7 @@ export const messageSub = (set: SetState<PongoStore>, get: GetState<PongoStore>)
       }
     } else if (update.message.message.kind === 'member-remove') {
       chat.conversation.members = chat.conversation.members.filter(m => deSig(m) !== deSig(update.message.message.content))
+      console.log("MEMBER REMOVE:", update.message.message.content, chat.conversation.members)
     } else if (update.message.message.kind === 'change-name') {
       chat.conversation.name = update.message.message.content
     }

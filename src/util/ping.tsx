@@ -1,6 +1,4 @@
-import { Text } from "react-native"
-import { DM_DIVIDER } from "../constants/Pongo"
-import { Chat, Chats, Message, MessageKind, Reactions } from "../types/Pongo"
+import { Chat, Chats, Message, MessageKind } from "../types/Pongo"
 import { displayTokenAmount } from "../wallet-ui/utils/number"
 import { fromUd } from "./number"
 import { addSig, AUDIO_URL_REGEX, deSig, IMAGE_URL_REGEX } from "./string"

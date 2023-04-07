@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons'
 import { NavigationProp, RouteProp } from '@react-navigation/native'
-import React, { useCallback, useMemo, useState } from 'react'
-import { StyleSheet, TouchableOpacity, ScrollView } from 'react-native'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { StyleSheet, TouchableOpacity, ScrollView, NativeSyntheticEvent, TextInputKeyPressEventData } from 'react-native'
 import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu'
 import { isValidPatp } from 'urbit-ob'
 import * as Clipboard from 'expo-clipboard'
@@ -22,6 +22,8 @@ import useStore from '../../state/useStore'
 import { MessageKind } from '../../types/Pongo'
 import { addSig, deSig } from '../../util/string'
 import useDimensions from '../../hooks/useDimensions'
+import { defaultOptions } from '../../util/toast'
+import Toast from 'react-native-root-toast'
 
 interface GroupScreenProps {
   navigation: NavigationProp<PongoStackParamList>
@@ -32,7 +34,7 @@ export default function GroupScreen({ navigation, route }: GroupScreenProps) {
   const { ship: self } = useStore()
   const { set, chats, sendMessage, makeInvite, toggleMute } = usePongoStore()
   const { color, backgroundColor } = useColors()
-  const { cWidth } = useDimensions()
+  const { cWidth, isLargeDevice } = useDimensions()
   const convo = route.params.id
   const chat = chats[route.params.id || '']
   const { conversation: { members, leaders } } = chat
@@ -44,21 +46,28 @@ export default function GroupScreen({ navigation, route }: GroupScreenProps) {
   const [groupNameError, setGroupNameError] = useState('')
   const [displayedMembers, setDisplayedMembers] = useState(members)
 
+  useEffect(() => {
+    if (newMember === '~' || newMember === '') {
+      setDisplayedMembers(members)
+    } else {
+      setDisplayedMembers(members.filter((m) => m.includes(newMember.replace('~', ''))))
+    }
+  }, [members, newMember])
+
   const updateShip = useCallback((ship: string, kind: MessageKind) => () => {
     sendMessage({ self, convo, kind, content: ship })
   }, [convo, self, sendMessage])
 
   const changeNewMember = useCallback((text: string) => {
     setNewMember(text)
-
-    if (!text.length || text === '~') {
-      setDisplayedMembers(members)
-    } else {
-      setDisplayedMembers(members.filter((m) => m.includes(text.replace('~', ''))))
-    }
-    
     setNewMemberError('')
   }, [members])
+
+  const removeMember = useCallback((ship: string) => () => {
+    updateShip(ship, 'member-remove')()
+    setDisplayedMembers(displayedMembers.filter((m) => deSig(m) !== deSig(ship)))
+    Toast.show(`${ship} removed!`, { ...defaultOptions, position: Toast.positions.CENTER })
+  }, [displayedMembers, updateShip])
 
   const changeNewGroupName = useCallback((text: string) => {
     setNewGroupName(text)
@@ -72,14 +81,16 @@ export default function GroupScreen({ navigation, route }: GroupScreenProps) {
       try {
         setNewMember('~')
         await makeInvite(convo, newMember)
+        Toast.show(`${addSig(newMember)} added!`, { ...defaultOptions, position: Toast.positions.CENTER })
       } catch {
         setNewMember(newMember)
         setNewMemberError('Error adding member')
       }
+      setDisplayedMembers(members)
     } else {
       setNewMemberError('Not a valid @p (username)')
     }
-  }, [convo, newMember])
+  }, [convo, newMember, members])
 
   const changeGroupName = useCallback(async () => {
     if (newGroupName.trim().length > 2) {
@@ -94,6 +105,18 @@ export default function GroupScreen({ navigation, route }: GroupScreenProps) {
       setGroupNameError('Must be at least 3 characters')
     }
   }, [convo, newGroupName])
+
+  const onKeyPress = useCallback((e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
+    if (e.nativeEvent.key === 'Enter' && !(e.nativeEvent as any).shiftKey && isLargeDevice) {
+      e.preventDefault()
+      e.stopPropagation()
+      addNewMember()
+
+      setTimeout(() => {
+        setNewMember('~')
+      }, 10)
+    }
+  }, [addNewMember, setNewMember, isLargeDevice])
 
   if (!chat) {
     return null
@@ -153,6 +176,7 @@ export default function GroupScreen({ navigation, route }: GroupScreenProps) {
                     autoCorrect={false}
                     autoCapitalize='none'
                     autoComplete='off'
+                    onKeyPress={onKeyPress}
                   />
                   {showAddButton ? (
                     <Button title='Add' onPress={addNewMember} style={{ width: 90, marginLeft: 8, marginRight: 0 }} />
@@ -181,7 +205,7 @@ export default function GroupScreen({ navigation, route }: GroupScreenProps) {
                           <Ionicons name='menu' size={24} color={color} style={{ padding: 4 }} />
                         </MenuTrigger>
                         <MenuOptions {...{ style: { backgroundColor } }}>
-                          <MenuOption onSelect={updateShip(addSig(mem), 'member-remove')}>
+                          <MenuOption onSelect={removeMember(addSig(mem))}>
                             <Row style={{ justifyContent: 'flex-end', alignItems: 'center', paddingRight: 12, paddingVertical: 4 }}>
                               <Text style={{ fontSize: 16, fontWeight: '600', marginRight: 8 }}>Remove</Text>
                               <Ionicons name='person-remove' size={24} color={color} style={{ padding: 4 }} />

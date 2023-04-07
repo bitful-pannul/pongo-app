@@ -10,6 +10,7 @@ import { SearchType } from "../../../types/Pongo"
 import { ONE_SECOND } from "../../../util/time"
 import Row from "../../spacing/Row"
 import { TextInput } from "../../Themed"
+import { isWeb } from "../../../constants/Layout"
 
 interface SearchHeaderProps {
   searchType?: SearchType
@@ -21,7 +22,7 @@ export function OpenSearch() {
 
   return (
     <Pressable onPress={() => set({ isSearching: true, searchResults: [] })}>
-      <Ionicons name='search' size={24} color='white' style={{ padding: 4 }} />
+      <Ionicons name='search' size={24} color='white' style={{ padding: 4, paddingRight: isWeb ? 20 : 4 }} />
     </Pressable>
   )
 }
@@ -31,7 +32,7 @@ export function CloseSearch() {
 
   return (
     <Pressable onPress={() => set({ isSearching: false, searchResults: [], searchTerm: '' })}>
-      <Ionicons name='close-circle-outline' color='white' style={{ padding: 4 }} size={24} />
+      <Ionicons name='close-circle-outline' color='white' style={{ padding: 4, paddingRight: isWeb ? 20 : 4  }} size={24} />
     </Pressable>
   )
 }
@@ -46,7 +47,7 @@ export default function SearchHeader({ searchType = 'ship', chatId }: SearchHead
     }
 
     return () => {
-      set({ isSearching: false, searchResults: [] })
+      set({ isSearching: false, searchResults: [], searchTerm: '', messageSearchResults: [] })
     }
   }, [])
 

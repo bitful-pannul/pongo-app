@@ -1,6 +1,7 @@
+import * as Notifications from 'expo-notifications';
 import { deSig } from '@urbit/api';
 import { configureApi } from '@uqbar/react-native-api/configureApi'
-import * as Notifications from 'expo-notifications';
+
 import { DM_DIVIDER } from '../constants/Pongo';
 import { NotifPayload } from '../types/Pongo';
 import { isWeb } from '../constants/Layout';

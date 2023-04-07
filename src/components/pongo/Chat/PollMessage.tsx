@@ -83,7 +83,7 @@ export default function PollMessage({
     <View style={styles.container}>
       <Text style={styles.title}>{title}</Text>
       {options.map((option, i) =>
-        <TouchableOpacity style={styles.vote} onPress={castVote(option)}>
+        <TouchableOpacity key={option} style={styles.vote} onPress={castVote(option)}>
           <View key={`poll-${i}`} style={styles.option}>
             <Text style={[styles.optionText, message.reactions[option]?.includes(deSig(self)) && styles.optionSelected]}>{i + 1}) {option}</Text>
             {showResults && (

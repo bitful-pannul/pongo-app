@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react'
-import { AppState, AppStateStatus, Pressable, RefreshControl, StyleSheet, View } from 'react-native'
+import { AppState, AppStateStatus, FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native'
 import { NavigationProp, useNavigation } from '@react-navigation/native'
 import { getPresentedNotificationsAsync, dismissNotificationAsync, setBadgeCountAsync, Notification } from 'expo-notifications'
 
@@ -15,10 +15,11 @@ import { light_gray, uq_darkpink, uq_pink, uq_purple } from '../../constants/Col
 import Button from '../../components/form/Button'
 import { isWeb } from '../../constants/Layout'
 import JoinChatModal from '../../components/pongo/Chats/JoinChatModal'
-import MessageSearchResults from '../../components/pongo/MessageSearchResults'
+import MessageSearchResults from './MessageSearch'
 import H3 from '../../components/text/H3'
 import Row from '../../components/spacing/Row'
 import useDimensions from '../../hooks/useDimensions'
+import { Chat } from '../../types/Pongo'
 
 interface ChatsScreenProps {
   drawerNavigator?: any
@@ -109,6 +110,8 @@ export default function ChatsScreen({ drawerNavigator }: ChatsScreenProps) {
     }
   }), [width, isLargeDevice])
 
+  const renderChat = useCallback(({ item }: { item: Chat }) => <ChatsEntry key={item.conversation.id} chat={item} navigation={navigation} />, [navigation])
+
   return (
     <Col style={styles.container}>
       {isLargeDevice && (
@@ -127,9 +130,11 @@ export default function ChatsScreen({ drawerNavigator }: ChatsScreenProps) {
           <Button title='New Chat' onPress={startNew} />
         </Col>
       ) : (
-        <ScrollView refreshControl={<RefreshControl refreshing={false} onRefresh={onRefresh} />} keyboardShouldPersistTaps='handled'>
-          {sortedChats.map(chat => <ChatsEntry key={chat.conversation.id} chat={chat} navigation={navigation} />)}
-        </ScrollView>
+        <FlatList
+          data={sortedChats} keyboardShouldPersistTaps='handled' renderItem={renderChat}
+          refreshControl={<RefreshControl refreshing={false} onRefresh={onRefresh} />}
+          windowSize={15}
+        />
       )}
 
       {!isLargeDevice && <>

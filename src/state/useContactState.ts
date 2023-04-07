@@ -43,7 +43,6 @@ const initial = (json: ContactUpdate, state: ContactState): ContactState => {
 const add = (json: ContactUpdate, state: ContactState): ContactState => {
   const data = _.get(json, 'add', false);
   if (data) {
-    console.log(2, data)
     state.contacts[data.ship] = data.contact;
   }
   return state;
@@ -62,7 +61,6 @@ export const edit = (
   state: ContactState
 ): ContactState => {
   const data = _.get(json, 'edit', false);
-  console.log(3, data)
   const ship = `~${deSig(data.ship)}`;
   if (data && ship in state.contacts) {
     const [field] = Object.keys(data['edit-field']);
@@ -178,7 +176,6 @@ export function useContact(ship: string) {
 }
 
 export function useOurContact() {
-  console.log(1, window)
   return useContact(`~${window.ship}`);
 }
 

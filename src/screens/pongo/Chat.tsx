@@ -38,6 +38,7 @@ import SendTokensModal from '../../components/pongo/SendTokensModal'
 import useDimensions from '../../hooks/useDimensions'
 import AudioHeader from '../../components/pongo/Chat/AudioHeader'
 import PollInput from '../../components/pongo/Inputs/PollInput'
+import MessageSearch from './MessageSearch'
 
 const RETRIEVAL_NUM = 50
 
@@ -54,7 +55,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
   const lastFetch = useRef<number>(0)
   const { ship, api } = useStore()
   const {
-    set, chats, edits, replies, chatPositions, getChats,
+    set, chats, edits, replies, chatPositions, isSearching, connected, getChats,
     setDraft, sendMessage, getMessages, setReply, setEdit, setLastReadMsg, editMessage, sendReaction, setChatPosition
   } = usePongoStore()
   const { color, chatBackground, backgroundColor } = useColors()
@@ -356,6 +357,8 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
       padding: 2,
     },
     goToEndButton: { position: 'absolute', right: 16 },
+    noMessages: { fontSize: 18, padding: 40, width: '100%', position: 'absolute', top: 0, textAlign: 'center', fontWeight: '600' },
+
   }), [])
 
   if (!chats || !chats[chatId]) {
@@ -368,78 +371,84 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
       behavior={keyboardAvoidBehavior}
       keyboardVerticalOffset={keyboardOffset}
     >
-      <AudioHeader chatId={chatId} />
-      <DefaultView style={{ flex: 1 }}>
-        <Image contentFit="cover"
-          source={require('../../../assets/images/retro-background-small.jpg')}
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.3, width: '100%', height: '100%' }}
-        />
+      {isSearching ? (
+        <MessageSearch focusMessage={focusReply} />
+      ) : (
+        <>
+          <AudioHeader chatId={chatId} />
+          <DefaultView style={{ flex: 1 }}>
+            <Image contentFit="cover"
+              source={require('../../../assets/images/retro-background-small.jpg')}
+              style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.3, width: '100%', height: '100%' }}
+            />
 
-        <MessagesList
-          messages={messages}
-          self={ship}
-          chatBackground={chatBackground}
-          color={color}
-          listRef={listRef}
-          highlighted={highlighted}
-          unreadInfo={unreadInfo}
-          initialNumToRender={initialNumToRender}
-          enableAutoscrollToTop={atEnd && !initialLoading}
-          isDm={chat?.conversation?.dm}
-          chatId={chatId}
-          onViewableItemsChanged={onViewableItemsChanged}
-          onScroll={onScroll}
-          getMessagesOnScroll={getMessagesOnScroll}
-          onPressMessage={onPressMessage}
-          addReaction={addReaction}
-          swipeToReply={swipeToReply}
-          focusReply={focusReply}
-        />
-        
-        {showMentions && <MentionSelector {...{ chatId, potentialMentions, color, backgroundColor, setShowMentions, onSelectMention }} />}
-        {!messages?.length && (
-          initialLoading ? (
-            <ActivityIndicator size="large" style={{ width: '100%', padding: 40, position: 'absolute' }} />
-          ) : (
-            <Text style={{ fontSize: 18, padding: 40, width: '100%', position: 'absolute', top: 0, textAlign: 'center', fontWeight: '600' }}>No messages yet</Text>
-          )
-        )}
-      </DefaultView>
+            <MessagesList
+              messages={messages}
+              self={ship}
+              chatBackground={chatBackground}
+              color={color}
+              listRef={listRef}
+              highlighted={highlighted}
+              unreadInfo={unreadInfo}
+              initialNumToRender={initialNumToRender}
+              enableAutoscrollToTop={atEnd && !initialLoading}
+              isDm={chat?.conversation?.dm}
+              chatId={chatId}
+              onViewableItemsChanged={onViewableItemsChanged}
+              onScroll={onScroll}
+              getMessagesOnScroll={getMessagesOnScroll}
+              onPressMessage={onPressMessage}
+              addReaction={addReaction}
+              swipeToReply={swipeToReply}
+              focusReply={focusReply}
+            />
+            
+            {showMentions && <MentionSelector {...{ chatId, potentialMentions, color, backgroundColor, setShowMentions, onSelectMention }} />}
+            {!messages?.length && (
+              initialLoading ? (
+                <ActivityIndicator size="large" style={{ width: '100%', padding: 40, position: 'absolute' }} />
+              ) : (
+                <Text style={styles.noMessages}>{!connected ? 'No internet connection' : 'No messages'}</Text>
+              )
+            )}
+          </DefaultView>
 
-      {showDownButton && (
-        <TouchableOpacity onPress={scrollToEnd} style={[styles.goToEndButton, { bottom: goToEndButtonBottom }]}>
-          <Col style={{ width: 48, height: 48, borderRadius: 36, justifyContent: 'center', alignItems: 'center' }}>
-            <Ionicons name='chevron-down' size={36} color={uq_purple} style={{ marginTop: 4 }} />
-            {!!chat?.unreads && chat.unreads > 0 && <View style={styles.unreadIndicator}>
-              <Text style={{ color: 'white', fontSize: 12, fontWeight: '600' }}>{chat.unreads}</Text>
-            </View>}
-          </Col>
-        </TouchableOpacity>
-      )}
-      
-      {chatId !== INBOX_CHAT_ID && <Col>
-        {Boolean(reply || edit) && (
-          <Row style={{ padding: 8, paddingHorizontal: 12 }}>
-            <TouchableOpacity onPress={removeEditReply} style={{ marginRight: 8 }}>
-              <Ionicons name='close-circle-outline' color={color} size={20} />
+          {showDownButton && (
+            <TouchableOpacity onPress={scrollToEnd} style={[styles.goToEndButton, { bottom: goToEndButtonBottom }]}>
+              <Col style={{ width: 48, height: 48, borderRadius: 36, justifyContent: 'center', alignItems: 'center' }}>
+                <Ionicons name='chevron-down' size={36} color={uq_purple} style={{ marginTop: 4 }} />
+                {!!chat?.unreads && chat.unreads > 0 && <View style={styles.unreadIndicator}>
+                  <Text style={{ color: 'white', fontSize: 12, fontWeight: '600' }}>{chat.unreads}</Text>
+                </View>}
+              </Col>
             </TouchableOpacity>
-            <Text style={{ marginRight: 8, fontSize: 16 }}>{edit ? 'Editing' : 'Reply to'}:</Text>
-            <Text numberOfLines={1} style={{ fontSize: 14, marginTop: 2, maxWidth: cWidth - 140 }}>"{(edit || reply).content}"</Text>
-          </Row>
-        )}
+          )}
+          
+          {chatId !== INBOX_CHAT_ID && <Col>
+            {Boolean(reply || edit) && (
+              <Row style={{ padding: 8, paddingHorizontal: 12 }}>
+                <TouchableOpacity onPress={removeEditReply} style={{ marginRight: 8 }}>
+                  <Ionicons name='close-circle-outline' color={color} size={20} />
+                </TouchableOpacity>
+                <Text style={{ marginRight: 8, fontSize: 16 }}>{edit ? 'Editing' : 'Reply to'}:</Text>
+                <Text numberOfLines={1} style={{ fontSize: 14, marginTop: 2, maxWidth: cWidth - 140 }}>"{(edit || reply).content}"</Text>
+              </Row>
+            )}
 
-        <ChatInput {...{ inputRef, chatId, showMentions, setShowMentions, setPotentialMentions, setShowSendTokensModal, setShowPollModal }} />
+            <ChatInput {...{ inputRef, chatId, showMentions, setShowMentions, setPotentialMentions, setShowSendTokensModal, setShowPollModal }} />
 
-      </Col>}
+          </Col>}
 
-      {Boolean(selected) && (
-        <TouchableOpacity onPress={clearSelected} style={{ width: '100%', height: '100%', position: 'absolute' }}>
-          <MessageMenu {...{ interactWithSelected, react, selected, color, isOwnMsg, canEdit, canResend, canDelete, backgroundColor, clearSelected }} />
-        </TouchableOpacity>
+          {Boolean(selected) && (
+            <TouchableOpacity onPress={clearSelected} style={{ width: '100%', height: '100%', position: 'absolute' }}>
+              <MessageMenu {...{ interactWithSelected, react, selected, color, isOwnMsg, canEdit, canResend, canDelete, backgroundColor, clearSelected }} />
+            </TouchableOpacity>
+          )}
+
+          {showSendTokensModal && <SendTokensModal convo={chatId} show={showSendTokensModal} hide={() => setShowSendTokensModal(false)} />}
+          {showPollModal && <PollInput convo={chatId} show={showPollModal} hide={() => setShowPollModal(false)} />}
+        </>
       )}
-
-      {showSendTokensModal && <SendTokensModal convo={chatId} show={showSendTokensModal} hide={() => setShowSendTokensModal(false)} />}
-      {showPollModal && <PollInput convo={chatId} show={showPollModal} hide={() => setShowPollModal(false)} />}
     </KeyboardAvoidingView>
   )
 }

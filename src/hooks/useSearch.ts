@@ -10,6 +10,8 @@ import { SearchType } from '../types/Pongo'
 import { preSig } from '../util/string'
 import { ONE_SECOND } from '../util/time'
 import { ALL_MESSAGES_UID } from '../constants/Pongo'
+import { genRanHex } from '../util/pokur/number'
+import { addHexDots } from '../wallet-ui/utils/format'
 
 interface UseSearchProps {
 }
@@ -58,9 +60,8 @@ export default function useSearch() {
   
         set({ searchResults })
       } else if (searchType === 'message') {
-        if (api && chatId) {
-          console.log(1, query, chatId)
-          const uid = '0x1234'
+        if (api) {
+          const uid = addHexDots(genRanHex(16).replace(/^0*/, ''))
           searchMessages({ uid, phrase: query, onlyIn: chatId })
         }
       }

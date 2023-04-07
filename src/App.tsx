@@ -6,16 +6,17 @@ import { ActivityIndicator, Alert, AppState, AppStateStatus, Button, StyleSheet,
 import { SafeAreaProvider } from "react-native-safe-area-context"
 import * as Notifications from 'expo-notifications'
 import * as TaskManager from 'expo-task-manager'
-import * as Network from 'expo-network'
-import { Ionicons } from "@expo/vector-icons"
 import { MenuProvider } from 'react-native-popup-menu'
 import { RootSiblingParent } from 'react-native-root-siblings'
 import Toast from 'react-native-root-toast'
+import { enableFreeze } from 'react-native-screens'
+import * as Network from 'expo-network'
+import { Ionicons } from "@expo/vector-icons"
 import dynamicLinks from '@react-native-firebase/dynamic-links'
 
 import useCachedResources from "./hooks/useCachedResources"
 import useStore from "./state/useStore"
-import Navigation, { navReset } from "./navigation"
+import Navigation, { navReset, navTo } from "./navigation"
 import LoginScreen from "./screens/Login"
 import storage from "./util/storage"
 import { URBIT_HOME_REGEX } from "./util/regex"
@@ -27,6 +28,10 @@ import { NotifPayload } from './types/Pongo'
 import { isWeb } from './constants/Layout'
 import { ONE_SECOND } from './util/time'
 import { defaultOptions } from './util/toast'
+
+if (!isWeb) {
+  enableFreeze(true)
+}
 
 // if (!window.ship) {
 //   window.ship = 'fabnev-hinmur'
@@ -69,11 +74,12 @@ export default function App() {
       if (ship !== self) {
         setShip(ship)
         // Navigating from another app doesn't work great
-        // setTimeout(() => navTo('Pongo'), 1000)
+        setTimeout(() => navTo('Pongo'), ONE_SECOND * 0.5)
         setTimeout(() => navReset({
           index: 0, routes: [{ name: 'Chats' }, { name: 'Chat', params: { id: conversation_id, msgId: message_id } } ]
         }), 1000)
       } else {
+        navTo('Pongo')
         navReset({ index: 0, routes: [{ name: 'Chats' }, { name: 'Chat', params: { id: conversation_id } } ] })
       }
     }
@@ -195,7 +201,16 @@ export default function App() {
 
   useEffect(() => {
     if (shipUrl) {
-      const checkShipInterval = setInterval(() => {
+      const checkShipInterval = setInterval(async () => {
+        const networkState = await Network.getNetworkStateAsync()
+        if ((!networkState.isInternetReachable && !shipConnected) || (networkState.isInternetReachable && shipConnected)) {
+          return
+        } else if (!networkState.isInternetReachable && shipConnected) {
+          set({ connected: false })
+          Toast.show('Ship connection lost', defaultOptions)
+          return
+        }
+
         fetch(shipUrl)
           .then(res => {
             const isConnected = res.status < 400
@@ -205,8 +220,10 @@ export default function App() {
             set({ connected: isConnected })
           })
           .catch(() => {
-            set({ connected: false })
-            Toast.show('Ship connection lost', defaultOptions)
+            if (shipConnected) {
+              set({ connected: false })
+              Toast.show('Ship connection lost', defaultOptions)
+            }
           })
       }, 10 * ONE_SECOND)
 

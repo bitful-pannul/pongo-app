@@ -1,16 +1,17 @@
-import Urbit from "@uqbar/react-native-api";
-import { configureApi } from "@uqbar/react-native-api/configureApi";
-import WebUrbit from "@urbit/http-api";
-import React from "react";
-import WebView from "react-native-webview";
-import { create, SetState } from "zustand";
-import { isWeb } from "../constants/Layout";
-import storage from "../util/storage";
-import { deSig } from "../util/string";
+import React from 'react';
+import WebView from 'react-native-webview';
+import { create, SetState } from 'zustand';
+import Urbit from '@uqbar/react-native-api';
+import { configureApi } from '@uqbar/react-native-api/configureApi'
+import WebUrbit from '@urbit/http-api';
+
+import { isWeb } from '../constants/Layout';
+import storage from '../util/storage';
+import { deSig } from '../util/string';
 
 const initializeApi = (ship: string, shipUrl: string) => {
   if (isWeb) {
-    const api = new WebUrbit("", "", "pongo")
+    const api = new WebUrbit('', '', 'pongo')
     api.ship = window.ship
     return api
   }
