@@ -18,12 +18,15 @@ import Modal from '../../popup/Modal'
 import Col from '../../spacing/Col'
 import { Text } from '../../Themed'
 import useDimensions from '../../../hooks/useDimensions'
+import { keyboardAvoidBehavior, keyboardOffset } from '../../../constants/Layout'
 
 interface PollInputProps {
   convo: string
   show: boolean
   hide: () => void
 }
+
+const MAX_POLL_OPTIONS = 8
 
 const PollInput = ({ convo, show, hide }: PollInputProps) => {
   const { ship: self } = useStore()
@@ -38,7 +41,7 @@ const PollInput = ({ convo, show, hide }: PollInputProps) => {
 
   const addOption = useCallback(() => {
     setError(null)
-    if (questions.length < 8) {
+    if (questions.length < MAX_POLL_OPTIONS) {
       setOptions([...questions, ''])
     }
   }, [questions])
@@ -46,6 +49,9 @@ const PollInput = ({ convo, show, hide }: PollInputProps) => {
   const removeOption = useCallback((index: number) => () => {
     const newOptions = questions.filter((_, i) => i !== index)
     setOptions(newOptions)
+    if (newOptions.length === 0) {
+      setOptions([''])
+    }
     setError(null)
   }, [questions])
 
@@ -60,8 +66,10 @@ const PollInput = ({ convo, show, hide }: PollInputProps) => {
   const handleSubmit = useCallback(async () => {
     if (!title) {
       setError('Title is required')
-    } else if (questions.find((question) => !question)) {
+    } else if (questions.find((question) => !question) !== undefined) {
       setError('Each option must have some text')
+    } else if (questions.length < 2) {
+      setError('A poll must have at least 2 options')
     } else {
       // Handle form submission here
       setSending(true)
@@ -85,6 +93,7 @@ const PollInput = ({ convo, show, hide }: PollInputProps) => {
       backgroundColor,
       flex: 1,
       flexShrink: 1,
+      maxHeight: height * 3 /4,
     },
     contentContainer: { alignItems: 'center', display: 'flex', flexDirection: 'column', width: '100%' },
     title: { marginTop: -4 },
@@ -116,11 +125,11 @@ const PollInput = ({ convo, show, hide }: PollInputProps) => {
       alignSelf: 'center',
     },
     error: { color: 'red' },
-  }), [])
+  }), [height])
 
   return (
     <Modal show={show} hide={hide}>
-      <KeyboardAvoidingView style={{ flex: 0 }}>
+      <KeyboardAvoidingView behavior={keyboardAvoidBehavior} keyboardVerticalOffset={keyboardOffset}>
         <ScrollView keyboardShouldPersistTaps="handled" style={styles.container} contentContainerStyle={styles.contentContainer}>
           {sending ? (
             <ActivityIndicator size='large' style={{ marginTop: 40 }} />
@@ -134,7 +143,7 @@ const PollInput = ({ convo, show, hide }: PollInputProps) => {
                   placeholder="Enter poll title"
                 />
 
-                <Text style={[styles.label, { marginTop: 16 }]}>Options (max 7):</Text>
+                <Text style={[styles.label, { marginTop: 16 }]}>Options (max {MAX_POLL_OPTIONS}):</Text>
                 {questions.map((question, index) => (
                   <View key={index} style={styles.questionContainer}>
                     <TextInput
@@ -150,9 +159,9 @@ const PollInput = ({ convo, show, hide }: PollInputProps) => {
                 ))}
               {Boolean(error) && <Text style={styles.error}>{error}</Text>}
 
-              {questions.length < 8 && <Button title='Add Option' onPress={addOption} small style={styles.button} />}
+              {questions.length < MAX_POLL_OPTIONS && <Button title='Add Option' onPress={addOption} small style={styles.button} />}
 
-              <Button title='Create Poll' onPress={handleSubmit} small style={styles.button} />
+              <Button title='Create Poll' onPress={handleSubmit} small style={[styles.button, { marginBottom: 32 }]} />
             </>
           )}
         </ScrollView>

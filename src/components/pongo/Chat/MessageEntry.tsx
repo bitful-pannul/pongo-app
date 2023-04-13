@@ -105,7 +105,7 @@ const MessageEntry = React.memo(({
             duration: 1 * ONE_SECOND / 4,
             useNativeDriver: false,
           }).start()
-        }, ONE_SECOND * 2)
+        }, ONE_SECOND * 6)
       })
     }
   }, [highlighted])
@@ -259,7 +259,7 @@ const MessageEntry = React.memo(({
     return null
   }
 
-  if (message.content === '' && message.edited) {
+  if (!message.content) {
     return null
   }
 
@@ -269,7 +269,9 @@ const MessageEntry = React.memo(({
         inputRange: [0, 1],
         outputRange: [blue_overlay_transparent, blue_overlay],
       })
-    }]}>
+    }]}
+      id={highlighted ? 'highlighted' : undefined}
+    >
       {renderContent()}
     </Animated.View>
   )

@@ -1,8 +1,11 @@
+import { isWeb } from "../constants/Layout"
 import { Chat, Chats, Message, MessageKind } from "../types/Pongo"
 import { displayTokenAmount } from "../wallet-ui/utils/number"
 import { fromUd } from "./number"
 import { addSig, AUDIO_URL_REGEX, deSig, IMAGE_URL_REGEX } from "./string"
 
+export const RETRIEVAL_NUM = 50
+export const MAX_MESSAGES_LENGTH = 150
 export const INBOX_CHAT_ID = '0x78.6f62.6e69'
 
 export const sortChats = (chats: Chats) =>
@@ -59,7 +62,7 @@ export const getAdminMsgText = (kind: MessageKind, content: string) => {
 
 export const getAppLinkText = (link: string) => `urbit:/${link}`
 
-export const idNum = (id: string) => Number(id.replace(/\./, ''))
+export const idNum = (id?: string) => id ? Number(id.replace(/\./, '')) : 0
 
 export function throttle(fn: Function, wait: number) {
   let time = Date.now();
@@ -73,7 +76,11 @@ export function throttle(fn: Function, wait: number) {
 
 export const dedupeMessages = (messages: Message[]) => {
   const messageMap = new Map<string, Message>()
-  messages.forEach(msg => messageMap.set(msg.id, { ...msg, status: 'delivered' }))
+  messages.forEach(msg => {
+    if (msg.content) {
+      messageMap.set(msg.id, { ...msg, status: 'delivered' })
+    }
+  })
   return Array.from(messageMap.values())
 }
 

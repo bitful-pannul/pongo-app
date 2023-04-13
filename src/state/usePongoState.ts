@@ -8,7 +8,7 @@ import { resetSubscriptions } from "./util"
 import { Chats, Message, NotifSettings, SendMessagePayload, SetNotifParams, GetMessagesParams, MessageStatus, SearchMessagesParams, SendTokensPayload, NotifLevel } from "../types/Pongo"
 import { addSig, deSig } from "../util/string"
 import { ONE_SECOND } from "../util/time"
-import { dedupeAndSort, sortChats } from "../util/ping"
+import { MAX_MESSAGES_LENGTH, dedupeAndSort, sortChats } from "../util/ping"
 import { getPushNotificationToken } from "../util/notification"
 import { HAS_MENTION_REGEX } from "../constants/Regex"
 import { PongoStore } from './types/pongo'
@@ -132,7 +132,7 @@ const usePongoStore = create(
         Object.keys(chats || {}).forEach(ch => {
           chats[ch].messages = maintainMessages ? (existingChats[ch]?.messages || []) : []
     
-          if (deSig(chats[ch].last_message?.author || '') === deSig(api.ship || '')) {
+          if (chats[ch].last_message?.author && api.ship && deSig(chats[ch].last_message?.author) === deSig(api.ship)) {
             chats[ch].unreads = 0
           }
         })
@@ -147,7 +147,7 @@ const usePongoStore = create(
           console.warn('NOT A MSG ID:', msgId)
           return []
         }
-    
+
         const { api, chats } = get()
         if (api) {
           const newChats = { ...chats }
@@ -161,11 +161,12 @@ const usePongoStore = create(
           }
           
           let newMessages: Message[] = message_list.map(msg => ({ ...msg, status: 'delivered' }))
-    
+          console.log('GOT MESSAGES')
+
           if (append) {
-            newMessages = dedupeAndSort((chat.messages.slice(-100) || []).concat(newMessages))
+            newMessages = dedupeAndSort((chat.messages || []).concat(newMessages).slice(-MAX_MESSAGES_LENGTH))
           } else if (prepend) {
-            newMessages = dedupeAndSort((newMessages).concat((chat.messages || []).slice(0, 100)))
+            newMessages = dedupeAndSort((newMessages).concat((chat.messages || [])).slice(0, MAX_MESSAGES_LENGTH))
           }
           
           chat.messages = newMessages
@@ -178,7 +179,7 @@ const usePongoStore = create(
       searchMessages: async ({ uid, phrase, onlyIn, onlyAuthor }: SearchMessagesParams) => {
         const { api } = get()
     
-        if (api) {
+        if (api && uid && uid !== '0x0') {
           api.subscribeOnce('pongo', `/search-results/${uid}`, ONE_SECOND * 8).then((result: any) => {
             // {"search_result": [{"author": "~wet", "content": "1", "conversation_id": "0x3d90.050f.2f39.e76a.6906.2ceb.d42f.0673", "edited": false, "id": "4", "kind": "text", "mentions": [Array], "reactions": [Object], "reference": null, "timestamp": 1680590787}]}
             const messageSearchResults: Message[] = result.search_result
@@ -237,7 +238,6 @@ const usePongoStore = create(
           set({ chats: newChats })
           try {
             const json = { [muted ? 'unmute-conversation' : 'mute-conversation']: { id } }
-            console.log('JSON:', json)
             await api.poke({ app: 'pongo', mark: 'pongo-action', json })
           } catch {
             newChats[id].conversation.muted = muted
@@ -332,7 +332,8 @@ const usePongoStore = create(
         const newChats = { ...get().chats }
         newChats[convo].unreads = 0
         newChats[convo].conversation.last_read = msgId
-        set({ chats: newChats })
+        const newSorted = sortChats(newChats)
+        set({ chats: newChats, sortedChats: newSorted })
       },
       sendTokens: async (payload: SendTokensPayload) => {
         const { api } = get()

@@ -1,5 +1,5 @@
 import { GetState, SetState } from "zustand"
-import { dedupeAndSort, idNum, sortChats } from "../../util/ping"
+import { dedupeAndSort, getChatName, idNum, sortChats } from "../../util/ping"
 import { deSig } from "../../util/string"
 import { Message, MessageStatus, Update } from "../../types/Pongo"
 import { PongoStore } from "../types/pongo"
@@ -23,14 +23,14 @@ export const messageSub = (set: SetState<PongoStore>, get: GetState<PongoStore>)
     const { id, kind, content, edited, reactions, reference, timestamp, author } = update.message.message
 
     chat.conversation.last_active = timestamp
-    const isMostRecent = chat.messages?.[0]?.id && idNum(id) > idNum(chat.messages[0]?.id || '0')
+    const isMostRecent = chat.last_message?.id && idNum(id) > idNum(chat.last_message.id)
 
     if (isMostRecent) {
       chat.last_message = update.message.message
     }
 
     // Check that the chat is the current chat and the message is the next one in order
-    if (deSig(author) === deSig(get().api?.ship || '')) {
+    if (api?.ship && deSig(author) === deSig(api?.ship)) {
       chat.unreads = 0
       get().setLastReadMsg(chatId, id)
     } else if (isMostRecent) {
@@ -58,9 +58,8 @@ export const messageSub = (set: SetState<PongoStore>, get: GetState<PongoStore>)
         chat.messages = [{ ...update.message.message, status: 'delivered' as MessageStatus } as Message].concat(messages)
       }
       chat.messages = dedupeAndSort(chat.messages)
-      set({ chats })
     } else if (deSig(author) !== deSig(get().api?.ship || '') && !chat.conversation.muted) {
-      showWebNotification(`Message in ${chat.conversation.name}`)
+      showWebNotification(getChatName(api?.ship || window.ship, chat), `${deSig(author)}: ${content}`)
     }
     
     // Handle admin message types
@@ -74,7 +73,6 @@ export const messageSub = (set: SetState<PongoStore>, get: GetState<PongoStore>)
       }
     } else if (update.message.message.kind === 'member-remove') {
       chat.conversation.members = chat.conversation.members.filter(m => deSig(m) !== deSig(update.message.message.content))
-      console.log("MEMBER REMOVE:", update.message.message.content, chat.conversation.members)
     } else if (update.message.message.kind === 'change-name') {
       chat.conversation.name = update.message.message.content
     }
@@ -83,10 +81,10 @@ export const messageSub = (set: SetState<PongoStore>, get: GetState<PongoStore>)
     set({ chats, sortedChats })
   } else if ('sending' in update) {
     const { chats } = get()
-    const existing = chats[update.sending.conversation_id]?.messages?.find(m => m.id === update.sending.identifier)
+    const existing = chats[update.sending.conversation_id]?.messages?.find(m => String(m.id) === update.sending.identifier)
     if (existing) {
       existing.status = 'sent'
-      existing.identifier = existing.id
+      existing.identifier = String(existing.id)
       chats[update.sending.conversation_id].messages = dedupeAndSort(chats[update.sending.conversation_id].messages)
     }
   } else if ('delivered' in update) {

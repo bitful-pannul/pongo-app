@@ -28,6 +28,7 @@ import { NotifPayload } from './types/Pongo'
 import { isWeb } from './constants/Layout'
 import { ONE_SECOND } from './util/time'
 import { defaultOptions } from './util/toast'
+import { fromUd } from './util/number'
 
 if (!isWeb) {
   enableFreeze(true)
@@ -59,7 +60,7 @@ Notifications.setNotificationHandler({
 export default function App() {
   const isLoadingComplete = useCachedResources()
   const { loading, setLoading, ship: self, shipUrl, authCookie, loadStore, needLogin, setNeedLogin, setShip, addShip } = useStore()
-  const { currentChat, set, connected: shipConnected } = usePongoStore()
+  const { currentChat, chats, connected: shipConnected, set } = usePongoStore()
   const { color, backgroundColor } = useColors()
   const colorScheme = useColorScheme()
   const [connected, setConnected] = useState(true)
@@ -87,11 +88,28 @@ export default function App() {
   }, [self, shipUrl, setShip])
 
   const lastNotificationResponse = Notifications.useLastNotificationResponse()
-  React.useEffect(() => {
+  useEffect(() => {
     if (lastNotificationResponse) {
       handleNotificationResponse(lastNotificationResponse)
     }
   }, [lastNotificationResponse])
+
+  useEffect(() => {
+    if (!isWeb) {
+      const totalUnreads = Object.values(chats).reduce((total, { unreads }) => total + unreads, 0)
+      Notifications.setBadgeCountAsync(totalUnreads).catch(console.warn)
+      Notifications.getPresentedNotificationsAsync()
+        .then((notifications: Notifications.Notification[]) => {
+          notifications.forEach(n => {
+            const convo = n.request?.content?.data?.conversation_id as any
+            const msgId = n.request?.content?.data?.message_id as any
+            if (convo && msgId && chats[convo] && fromUd(chats[convo].conversation.last_read || '0') >= fromUd(msgId)) {
+              Notifications.dismissNotificationAsync(n.request.identifier)
+            }
+          })
+        })
+    }
+  }, [chats])
 
   const checkNetwork = useCallback(async () => {
     try {
@@ -121,6 +139,7 @@ export default function App() {
   }, [self, currentChat])
 
   useEffect(() => {
+    set({ currentChat: undefined })
     responseListener.current = Notifications.addNotificationResponseReceivedListener(handleNotificationResponse)
     Notifications.setBadgeCountAsync(0)
     

@@ -38,6 +38,7 @@ interface ContentProps {
 export default function Content({ onLongPress, content, author, nextMessage, color, depth = 0, delayLongPress = 200 }: ContentProps) {
   const { cWidth } = useDimensions()
   const styles = useMemo(() => StyleSheet.create({
+    content: { maxWidth: '100%' },
     textStyle: { color, fontSize: 16, flexShrink: 1 },
     linkStyle: { color, fontSize: 16, flexShrink: 1, textDecorationLine: 'underline' },
     code: { fontFamily: isIos ? 'Courier New' : 'monospace', backgroundColor: 'rgba(127, 127, 127, 0.5)' },
@@ -137,7 +138,7 @@ export default function Content({ onLongPress, content, author, nextMessage, col
   }
 
   return (
-    <Text>
+    <Text style={styles.content}>
       {splitByRegex(content, SPLIT_BY_URL_REGEX).map((c, i) => SPLIT_BY_URL_REGEX.test(c) ?
         <A href={c} key={`${i}-${depth}`} style={styles.linkStyle} target='_blank'>{c}</A>:
         <Text {...{ onLongPress, delayLongPress }} style={styles.textStyle} key={`${i}-${depth}`}>{c}</Text>

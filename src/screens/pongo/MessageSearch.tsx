@@ -79,7 +79,7 @@ export default function MessageSearch({
 
   return (
     !messageSearchResults.length ? (
-      <Col style={{ alignSelf: 'center', alignItems: 'center', marginTop: 32 }}>
+      <Col style={{ alignSelf: 'center', alignItems: 'center', marginTop: 32, backgroundColor: 'transparent' }}>
         <H3 text='No Results' />
       </Col>
     ) : (

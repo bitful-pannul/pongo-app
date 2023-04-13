@@ -1,6 +1,7 @@
 const createExpoWebpackConfigAsync = require('@expo/webpack-config');
 
 const target = 'https://fabnev.labwet.art/'
+// const target = 'http://localhost:8080'
 
 module.exports = async function (env, argv) {
   const config = await createExpoWebpackConfigAsync(env, argv);
@@ -20,7 +21,6 @@ module.exports = async function (env, argv) {
         target,
         changeOrigin: true
       },
-      // '/': 'http://localhost:8080',
     },
     client: {
       overlay: {

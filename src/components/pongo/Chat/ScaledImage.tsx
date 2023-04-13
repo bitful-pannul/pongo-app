@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { ActivityIndicator, Image as DefaultImage } from "react-native"
 import { Image } from "expo-image"
+import { isWeb } from "../../../constants/Layout";
 
 interface ScaledImageProps {
   width: number;
@@ -9,7 +10,7 @@ interface ScaledImageProps {
 }
 
 const ScaledImage = ({ width, uri, ...props }: ScaledImageProps) => {
-  const [displayHeight, setDisplayHeight] = useState(props.height)
+  const [displayHeight, setDisplayHeight] = useState(isWeb ? undefined : props.height)
   const [displayWidth, setDisplayWidth] = useState(width)
   const [imageLoading, setImageLoading] = useState(true)
 

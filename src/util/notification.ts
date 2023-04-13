@@ -77,7 +77,6 @@ export const showNotification = async (payload: NotifPayload) => {
 }
 
 export const getNotificationData = (notification?: Notifications.Notification): NotifPayload => {
-  console.log('NOTIFICATION:', notification?.request?.content?.data)
   const ship = notification?.request?.content?.data?.ship as string;
   const ship_url = notification?.request?.content?.data?.ship_url as string;
   const conversation_id = notification?.request?.content?.data?.conversation_id as string;
@@ -85,15 +84,15 @@ export const getNotificationData = (notification?: Notifications.Notification): 
   return { ship, ship_url, conversation_id, message_id };
 }
 
-export const showWebNotification = async (message: string) => {
+export const showWebNotification = async (title: string, body: string) => {
   if (isWeb && window.Notification) {
     if (Notification.permission === 'granted') {
-      new Notification(message)
+      new Notification(title, { body })
     } else if (Notification.permission !== 'denied') {
       Notification.requestPermission().then((permission) => {
         // If the user accepts, let's create a notification
         if (permission === "granted") {
-          new Notification(message)
+          new Notification(title, { body })
         }
       })
     }

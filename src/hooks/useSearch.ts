@@ -60,9 +60,15 @@ export default function useSearch() {
   
         set({ searchResults })
       } else if (searchType === 'message') {
+        console.log(1, !!api)
         if (api) {
+          console.log(2, query, chatId)
           const uid = addHexDots(genRanHex(16).replace(/^0*/, ''))
-          searchMessages({ uid, phrase: query, onlyIn: chatId })
+          searchMessages({ uid, phrase: query, onlyIn: chatId?.replace(/\./g, '').replace('0x', '') })
+          // _.debounce(() => {
+          //   console.log(3)
+          
+          // }, ONE_SECOND)
         }
       }
     }

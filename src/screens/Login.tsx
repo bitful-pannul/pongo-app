@@ -52,41 +52,45 @@ export default function LoginScreen({ inviteUrl }: { inviteUrl?: string }) {
     const prefixedUrl = noPrefixRegex.test(shipUrlInput) && !leadingHttpRegex.test(shipUrlInput) ? `https://${shipUrlInput}` : shipUrlInput;
     const formattedUrl = (prefixedUrl.endsWith("/") ? prefixedUrl.slice(0, prefixedUrl.length - 1) : prefixedUrl).replace('/apps/escape', '');
 
-    if (!formattedUrl.match(leadingHttpRegex)) {
-      setUrlProblem('Please enter a valid ship URL.');
-    } else {
-      let isValid = false;
-      const response = await fetch(formattedUrl)
-        .then((res) => {
-          isValid = true;
-          return res;
-        })
-        .catch(console.error);
-
-      if (isValid) {
-        setShipUrl(formattedUrl);
-
-        const authCookieHeader = response?.headers.get('set-cookie') || 'valid';
-        if (typeof authCookieHeader === 'string' && authCookieHeader?.includes('urbauth-~')) {
-          // TODO: handle expired auth or determine if auth has already expired
-          const ship = getShipFromCookie(authCookieHeader);
-          addShip({ ship, shipUrl: formattedUrl, authCookie: authCookieHeader });
-        } else {
-          const html = await response?.text();
-          if (html) {
-            const stringMatch = html.match(/<input value="~.*?" disabled="true"/i) || [];
-            const ship = stringMatch[0]?.slice(14, -17);
-            if (ship) {
-              addShip({ ship, shipUrl: formattedUrl });
-            } else {
-              setShipUrl('')
-              setUrlProblem('Please ensure your ship is accessible and try again.')
+    try {
+      if (!formattedUrl.match(leadingHttpRegex)) {
+        setUrlProblem('Please enter a valid ship URL.');
+      } else {
+        let isValid = false;
+        const response = await fetch(formattedUrl)
+          .then((res) => {
+            isValid = true;
+            return res;
+          })
+          .catch(console.error);
+  
+        if (isValid) {
+          setShipUrl(formattedUrl);
+  
+          const authCookieHeader = response?.headers.get('set-cookie') || 'valid';
+          if (typeof authCookieHeader === 'string' && authCookieHeader?.includes('urbauth-~')) {
+            // TODO: handle expired auth or determine if auth has already expired
+            const ship = getShipFromCookie(authCookieHeader);
+            addShip({ ship, shipUrl: formattedUrl, authCookie: authCookieHeader });
+          } else {
+            const html = await response?.text();
+            if (html) {
+              const stringMatch = html.match(/<input value="~.*?" disabled="true"/i) || [];
+              const ship = stringMatch[0]?.slice(14, -17);
+              if (ship) {
+                addShip({ ship, shipUrl: formattedUrl });
+              } else {
+                setShipUrl('')
+                setUrlProblem('Please ensure your ship is accessible and try again.')
+              }
             }
           }
+        } else {
+          setUrlProblem('There was an error, please check the URL and try again.');
         }
-      } else {
-        setUrlProblem('There was an error, please check the URL and try again.');
       }
+    } catch (err) {
+      setUrlProblem('There was an error, please check the URL and try again.');
     }
     setFormLoading(false);
   }, [shipUrlInput, addShip, setUrlProblem]);

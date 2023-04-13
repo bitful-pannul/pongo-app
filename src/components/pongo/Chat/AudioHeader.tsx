@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { Pressable, StyleSheet, View } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import Slider from '@react-native-community/slider'
@@ -29,7 +29,6 @@ export default function AudioHeader({ chatId, ...props }: AudioHeaderProps) {
       if (messages[i].content === audioUri) break
       if (AUDIO_URL_REGEX.test(messages[i].content)) prevUri = messages[i].content
     }
-    console.log('prevUri', prevUri)
     if (prevUri) set({ playNextAudio: true, audioUri: prevUri })
   }, [audioUri, messages, set])
 
@@ -41,7 +40,6 @@ export default function AudioHeader({ chatId, ...props }: AudioHeaderProps) {
       if (messages[i].content === audioUri) break
       if (AUDIO_URL_REGEX.test(messages[i].content)) nextUri = messages[i].content
     }
-    console.log('nextUri', nextUri)
     if (nextUri) set({ playNextAudio: true, audioUri: nextUri })
   }, [audioUri, messages, set])
 

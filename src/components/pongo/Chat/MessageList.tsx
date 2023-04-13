@@ -22,6 +22,8 @@ interface MessagesListProps {
   enableAutoscrollToTop: boolean
   isDm: boolean
   chatId: string
+  scrollEnabled?: boolean
+  initialScrollIndex?: number
   onViewableItemsChanged: ({ viewableItems }: { viewableItems: any[] }) => void
   onScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => void
   getMessagesOnScroll: (options: { prepend?: boolean; append?: boolean }) => () => Promise<void>
@@ -43,6 +45,8 @@ const MessagesList = React.memo(({
   enableAutoscrollToTop,
   isDm,
   chatId,
+  scrollEnabled,
+  initialScrollIndex,
   onViewableItemsChanged,
   onScroll,
   getMessagesOnScroll,
@@ -73,8 +77,8 @@ const MessagesList = React.memo(({
         onSwipe={swipeToReply}
         chatId={chatId}
       />
-      {unreadInfo && unreadInfo?.unreads > 0 && Number(unreadInfo?.lastRead) === idNum(item.id) - 1 && (
-        <View style={{ maxWidth: '84%', alignSelf: 'center', marginHorizontal: '8%', marginVertical: 4, backgroundColor: blue_overlay, borderRadius: 8, padding: 4, paddingHorizontal: 32 }}>
+      {unreadInfo && unreadInfo?.unreads > 0 && idNum(unreadInfo?.lastRead) === idNum(item.id) - 1 && (
+        <View id='unread-indicator' style={{ maxWidth: '84%', alignSelf: 'center', marginHorizontal: '8%', marginVertical: 4, backgroundColor: blue_overlay, borderRadius: 8, padding: 4, paddingHorizontal: 32 }}>
           <Text style={{ fontSize: 16, color: 'white' }}>Unread Messages</Text>
         </View>
       )}
@@ -97,10 +101,12 @@ const MessagesList = React.memo(({
       left: 0,
       bottom: 0,
       backgroundColor: chatBackground,
+      height: '100%',
     },
     list: {
       backgroundColor: 'transparent',
       borderBottomWidth: 0,
+      height: '100%',
       // flexDirection: isWeb ? 'column-reverse' : undefined,
     },
     contentContainer: {
@@ -112,28 +118,56 @@ const MessagesList = React.memo(({
 
   return (
     <View style={styles.container}>
-      <BidirectionalFlatList
-        ref={listRef}
-        data={messages}
-        contentContainerStyle={styles.contentContainer}
-        style={styles.list}
-        inverted
-        scrollEventThrottle={50}
-        onScroll={onScroll}
-        windowSize={isWeb ? 25 : 15}
-        renderItem={renderMessage}
-        keyExtractor={keyExtractor}
-        keyboardShouldPersistTaps="handled"
-        onEndReached={getMessagesOnScroll({ append: true })}
-        onEndReachedThreshold={2}
-        initialNumToRender={initialNumToRender}
-        onViewableItemsChanged={onViewableItemsChanged}
-        onScrollToIndexFailed={onScrollToIndexFailed}
-        refreshControl={<RefreshControl refreshing={false} onRefresh={getMessagesOnScroll({ prepend: true })} />}
-        enableAutoscrollToTop={enableAutoscrollToTop}
-        autoscrollToTopThreshold={40}
-        activityIndicatorColor={color}
-      />
+      {/* {isWeb ? (
+        <FlatList
+          ref={listRef}
+          data={messages}
+          contentContainerStyle={styles.contentContainer}
+          style={styles.list}
+          inverted
+          scrollEventThrottle={50}
+          onScroll={onScroll}
+          windowSize={isWeb ? 31 : 21}
+          renderItem={renderMessage}
+          keyExtractor={keyExtractor}
+          keyboardShouldPersistTaps="handled"
+          onEndReached={getMessagesOnScroll({ append: true })}
+          onEndReachedThreshold={2}
+          initialNumToRender={initialNumToRender}
+          onViewableItemsChanged={onViewableItemsChanged}
+          onScrollToIndexFailed={onScrollToIndexFailed}
+          refreshControl={<RefreshControl refreshing={false} onRefresh={getMessagesOnScroll({ prepend: true })} />}
+          maxToRenderPerBatch={isWeb ? 20 : 10}
+          updateCellsBatchingPeriod={isWeb ? 40 : 50}
+        />
+      ) : ( */}
+        <BidirectionalFlatList
+          ref={listRef}
+          data={messages}
+          contentContainerStyle={styles.contentContainer}
+          style={styles.list}
+          inverted
+          scrollEventThrottle={50}
+          onScroll={onScroll}
+          windowSize={15}
+          renderItem={renderMessage}
+          keyExtractor={keyExtractor}
+          keyboardShouldPersistTaps="handled"
+          onEndReached={getMessagesOnScroll({ append: true })}
+          onEndReachedThreshold={2}
+          initialNumToRender={initialNumToRender}
+          initialScrollIndex={initialScrollIndex}
+          onViewableItemsChanged={onViewableItemsChanged}
+          onScrollToIndexFailed={onScrollToIndexFailed}
+          refreshControl={<RefreshControl refreshing={false} onRefresh={getMessagesOnScroll({ prepend: true })} />}
+          enableAutoscrollToTop={enableAutoscrollToTop}
+          autoscrollToTopThreshold={40}
+          activityIndicatorColor={color}
+          maxToRenderPerBatch={isWeb ? 20 : 10}
+          updateCellsBatchingPeriod={isWeb ? 40 : 50}
+          disableVirtualization={isWeb}
+        />
+      {/* )} */}
     </View>
   )
 }

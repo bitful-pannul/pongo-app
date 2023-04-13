@@ -11,6 +11,7 @@ import { PongoStackParamList } from '../../../types/Navigation';
 import { checkIsDm, getChatName } from '../../../util/ping';
 import Row from '../../spacing/Row';
 import { Text } from '../../Themed';
+import { Alert } from 'react-native';
 
 interface ChatMenuProps {
   id: string;
@@ -25,14 +26,19 @@ export default function ChatMenu({ id }: ChatMenuProps) {
   const chatName = getChatName(ship, chat)
   const isDm = checkIsDm(chat)
 
-  const leave = useCallback(async () => {
-    try {
-      await leaveConversation(id)
-      if (api) {
-        getChats(api)
-      }
-      navigation.goBack()
-    } catch {}
+  const leave = useCallback(() => {
+    Alert.alert('Leave Chat', 'Are you sure you want to leave this chat?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Leave', onPress: async () => {
+        try {
+          await leaveConversation(id)
+          if (api) {
+            getChats(api)
+          }
+          navigation.goBack()
+        } catch {}
+      } },
+    ])
   }, [id, api, leaveConversation])
 
   const changeMute = useCallback(() => toggleMute(id), [id])

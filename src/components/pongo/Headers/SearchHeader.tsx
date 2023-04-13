@@ -1,8 +1,8 @@
 import { Ionicons } from "@expo/vector-icons"
-import { useCallback, useEffect } from "react"
-import { Pressable } from "react-native"
+import { useCallback, useEffect, useMemo } from "react"
+import { NativeSyntheticEvent, Pressable, TextInputKeyPressEventData, View } from "react-native"
 
-import { uq_purple } from "../../../constants/Colors"
+import { uq_lightpink, uq_pink, uq_purple } from "../../../constants/Colors"
 import useDebounce from "../../../hooks/useDebounce"
 import useSearch from "../../../hooks/useSearch"
 import usePongoStore from "../../../state/usePongoState"
@@ -11,6 +11,8 @@ import { ONE_SECOND } from "../../../util/time"
 import Row from "../../spacing/Row"
 import { TextInput } from "../../Themed"
 import { isWeb } from "../../../constants/Layout"
+import { StyleSheet } from "react-native"
+import useDimensions from "../../../hooks/useDimensions"
 
 interface SearchHeaderProps {
   searchType?: SearchType
@@ -40,6 +42,7 @@ export function CloseSearch() {
 export default function SearchHeader({ searchType = 'ship', chatId }: SearchHeaderProps) {
   const { set, searchTerm } = usePongoStore()
   const { search } = useSearch()
+  const { isLargeDevice } = useDimensions()
 
   useEffect(() => {
     if (searchType === 'ship') {
@@ -51,9 +54,26 @@ export default function SearchHeader({ searchType = 'ship', chatId }: SearchHead
     }
   }, [])
 
-  useDebounce(() => search(searchType, searchTerm, chatId), [searchTerm, searchType, search], ONE_SECOND * 0.2)
+  const autoSearch = searchType !== 'message'
+
+  useDebounce(() => search(searchType, searchTerm, chatId), [searchTerm, searchType, chatId, search], ONE_SECOND, autoSearch)
+
+  const executeSearch = useCallback(() => search(searchType, searchTerm, chatId), [searchTerm, searchType, chatId, search])
+
+  const onKeyPress = useCallback((e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
+    if (e.nativeEvent.key === 'Enter' && !(e.nativeEvent as any).shiftKey && isLargeDevice) {
+      e.preventDefault()
+      e.stopPropagation()
+      executeSearch()
+    }
+  }, [executeSearch, isLargeDevice])
 
   const updateSearch = useCallback((searchTerm: string) => set({ searchTerm }), [])
+
+  const styles = useMemo(() => StyleSheet.create({
+    searchButtonContainer: {  },
+    searchButton: { width: 42, height: 42, padding: 9, paddingTop: 7, borderTopRightRadius: 4, borderBottomRightRadius: 4, backgroundColor: uq_pink }
+  }), [])
 
   const placeholder = searchType === 'chat' ? 'Search chats' :
     searchType === 'ship' ? 'Search users' :
@@ -61,7 +81,7 @@ export default function SearchHeader({ searchType = 'ship', chatId }: SearchHead
     searchType === 'tag' ? 'Search posse tags' : 'Search'
 
   return (
-    <Row style={{ width: '75%', right: 0 }}>
+    <Row style={{ width: '80%', right: 0, backgroundColor: uq_purple }}>
       <TextInput
         autoFocus
         value={searchTerm}
@@ -71,7 +91,15 @@ export default function SearchHeader({ searchType = 'ship', chatId }: SearchHead
         autoCorrect={false}
         autoCapitalize='none'
         autoComplete='off'
+        onKeyPress={onKeyPress}
       />
+      {!autoSearch &&
+        <Pressable onPress={executeSearch} style={styles.searchButtonContainer}>
+          <View style={styles.searchButton}>
+            <Ionicons name='search' size={24} color='white' />
+          </View>
+        </Pressable>
+      }
     </Row>
   )
 }

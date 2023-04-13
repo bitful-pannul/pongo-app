@@ -66,7 +66,7 @@ export default function PongoStackNavigator() {
     if (api) {
       getPushNotificationToken()
         .then((token) => {
-          console.log('TOKEN', token)
+          console.log('TOKEN:', token)
           if (token) {
             setNotifToken({ shipUrl, expoToken: token })
           }
