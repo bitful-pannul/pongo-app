@@ -24,9 +24,15 @@ export const messageSub = (set: SetState<PongoStore>, get: GetState<PongoStore>)
 
     chat.conversation.last_active = timestamp
     const isMostRecent = chat.last_message?.id && idNum(id) > idNum(chat.last_message.id)
+    const isCurrentChat = chatId === currentChat
 
     if (isMostRecent) {
       chat.last_message = update.message.message
+      
+      if (isCurrentChat) {
+        chat.conversation.last_read = id
+        get().setLastReadMsg(chatId, id)
+      }
     }
 
     // Check that the chat is the current chat and the message is the next one in order
@@ -37,28 +43,23 @@ export const messageSub = (set: SetState<PongoStore>, get: GetState<PongoStore>)
       chat.unreads = Number(chat.unreads) + 1
     }
     
-    if (chatId === currentChat) {
-      if (isMostRecent) {
-        chat.conversation.last_read = id
-        get().setLastReadMsg(chatId, id)
-      }
+    const existing = messages?.find(m =>
+      m && (m.id === id || (m.id[0] === '-' && m.kind === kind && m.content === content)))
 
-      const existing = messages?.find(m =>
-        m && (m.id === id || (m.id[0] === '-' && m.kind === kind && m.content === content)))
+    if (existing) {
+      existing.id = id
+      existing.content = content
+      existing.edited = edited
+      existing.reactions = reactions
+      existing.reference = reference
+      existing.timestamp = timestamp
+      existing.status = 'delivered'
+    } else if (isMostRecent && chat.messages?.length) {
+      chat.messages = [{ ...update.message.message, status: 'delivered' as MessageStatus } as Message].concat(messages || [])
+    }
+    // chat.messages = dedupeAndSort(chat.messages)
 
-      if (existing) {
-        existing.id = id
-        existing.content = content
-        existing.edited = edited
-        existing.reactions = reactions
-        existing.reference = reference
-        existing.timestamp = timestamp
-        existing.status = 'delivered'
-      } else if (isMostRecent || !chat.messages || chat.messages.length === 0) {
-        chat.messages = [{ ...update.message.message, status: 'delivered' as MessageStatus } as Message].concat(messages)
-      }
-      chat.messages = dedupeAndSort(chat.messages)
-    } else if (deSig(author) !== deSig(get().api?.ship || '') && !chat.conversation.muted) {
+    if (!isCurrentChat && deSig(author) !== deSig(get().api?.ship || '') && !chat.conversation.muted) {
       showWebNotification(getChatName(api?.ship || window.ship, chat), `${deSig(author)}: ${content}`)
     }
     

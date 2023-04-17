@@ -1,7 +1,9 @@
 import { Ionicons, MaterialIcons } from "@expo/vector-icons"
 import React, { useCallback, useEffect, useMemo, useState } from "react"
-import { Keyboard, ScrollView, StyleSheet } from "react-native"
-import { TextInput, NativeSyntheticEvent, Pressable, TextInputKeyPressEventData, ActivityIndicator, Text, View } from "react-native"
+import { Keyboard, StyleSheet } from "react-native"
+import { TextInput, NativeSyntheticEvent, Pressable, TextInputKeyPressEventData, ActivityIndicator, Text } from "react-native"
+import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu'
+
 import { light_gray, medium_gray, uq_purple } from "../../../constants/Colors"
 import { isIos, isWeb } from "../../../constants/Layout"
 import { MENTION_REGEX } from "../../../constants/Regex"
@@ -12,6 +14,7 @@ import useStore from "../../../state/useStore"
 import { checkIsDm } from "../../../util/ping"
 import Row from "../../spacing/Row"
 import AudioRecorder from "../Chat/AudioRecorder"
+import useColors from "../../../hooks/useColors"
 
 interface ChatInputProps {
   chatId: string
@@ -27,13 +30,14 @@ export default function ChatInput({
   chatId, inputRef, showMentions, setShowMentions, setPotentialMentions, setShowSendTokensModal, setShowPollModal
 }: ChatInputProps) {
   const { ship: self } = useStore()
-  const { chats, drafts, edits, replies, showUqbarWallet, connected, setDraft, sendMessage, setReply, setEdit, editMessage } = usePongoStore()
+  const { chats, drafts, edits, replies, showUqbarWallet, connected, setDraft, sendMessage, setReply, setEdit, editMessage, set } = usePongoStore()
 
   const chat = chats[chatId]
   const edit = useMemo(() => edits[chatId], [edits, chatId])
   const reply = useMemo(() => replies[chatId], [replies, chatId])
   const isDm = useMemo(() => checkIsDm(chat), [chat])
   const { isLargeDevice, cWidth } = useDimensions()
+  const { color, backgroundColor } = useColors()
 
   const [text, setText] = useState(drafts[chatId] || '')
   const [sending, setSending] = useState(false)
@@ -146,26 +150,12 @@ export default function ChatInput({
       paddingTop: 12,
       paddingBottom: 8,
     },
-    sendButton: {
-      position: 'absolute',
-      right: 4,
-      top: isWeb ? 4 : 2
-    },
-    attachButton: {
-      position: 'absolute',
-      right: isWeb ? 10 : 50,
-      top: 3,
-    },
-    sendTokensButton: {
-      position: 'absolute',
-      right: isWeb ? 50 : 90,
-      top: 4,
-    },
-    createPollButton: {
-      position: 'absolute',
-      right: isWeb ? 94 : 134,
-      top: 4,
-    },
+    sendButton: { position: 'absolute', right: 4, top: isWeb ? 4 : 2 },
+    menuButton: { position: 'absolute', right: 54, top: 4 },
+    menuText: { fontSize: 16, fontWeight: '600', marginRight: 8, color },
+    attachButton: { position: 'absolute', right: 12, top: 5 },
+    sendTokensButton: { position: 'absolute', right: 50, top: 6 },
+    createPollButton: { position: 'absolute', right: 90, top: 6 },
     padding4: { padding: 4 },
   }), [cWidth, isWeb])
 
@@ -191,18 +181,48 @@ export default function ChatInput({
               <MaterialIcons name='send' size={32} style={styles.padding4} color={sending || disabled ? medium_gray : uq_purple} />
             </Pressable>
           ) : (
-            <>
-              {!isRecording && !isDm && <Pressable onPress={createPoll} style={styles.createPollButton} disabled={disabled}>
-                <MaterialIcons name='poll' size={32} style={styles.padding4} color={iconColor} />
-              </Pressable>}
-              {!isRecording && showUqbarWallet && <Pressable onPress={sendTokens} style={styles.sendTokensButton} disabled={disabled}>
-                <MaterialIcons name='attach-money' size={32} style={styles.padding4} color={iconColor} />
-              </Pressable>}
-              {!isRecording && <Pressable onPress={pickImage} style={styles.attachButton} disabled={disabled}>
-                <Ionicons name='attach' size={32} style={styles.padding4} color={iconColor} />
-              </Pressable>}
-              {!isWeb && <AudioRecorder {...{ storeAudio, setIsRecording, disabled }} />}
-            </>
+            isLargeDevice ? (
+              <>
+                {!isRecording && !isDm && <Pressable onPress={createPoll} style={styles.createPollButton} disabled={disabled}>
+                  <MaterialIcons name='poll' size={32} style={styles.padding4} color={iconColor} />
+                </Pressable>}
+                {!isRecording && showUqbarWallet && <Pressable onPress={sendTokens} style={styles.sendTokensButton} disabled={disabled}>
+                  <MaterialIcons name='attach-money' size={32} style={styles.padding4} color={iconColor} />
+                </Pressable>}
+                {!isRecording && <Pressable onPress={pickImage} style={styles.attachButton} disabled={disabled}>
+                  <Ionicons name='attach' size={32} style={styles.padding4} color={iconColor} />
+                </Pressable>}
+              </>
+            ) : (
+              <>
+                {!isRecording && <Menu style={styles.menuButton}>
+                  <MenuTrigger>
+                    <Ionicons name='menu' size={32} color={uq_purple} style={{ padding: 4 }} />
+                  </MenuTrigger>
+                  <MenuOptions {...{ style: { backgroundColor } }}>
+                    <MenuOption onSelect={createPoll} >
+                      <Row style={{ justifyContent: 'flex-end', alignItems: 'center', paddingRight: 12, paddingVertical: 2 }}>
+                        <Text style={styles.menuText}>Create Poll</Text>
+                        <MaterialIcons name='poll' size={28} style={styles.padding4} color={iconColor} />
+                      </Row>
+                    </MenuOption>
+                    <MenuOption onSelect={sendTokens} >
+                      <Row style={{ justifyContent: 'flex-end', alignItems: 'center', paddingRight: 12, paddingVertical: 2 }}>
+                        <Text style={styles.menuText}>Send Tokens</Text>
+                        <MaterialIcons name='attach-money' size={28} style={styles.padding4} color={iconColor} />
+                      </Row>
+                    </MenuOption>
+                    <MenuOption onSelect={pickImage}>
+                      <Row style={{ justifyContent: 'flex-end', alignItems: 'center', paddingRight: 12, paddingVertical: 2 }}>
+                        <Text style={styles.menuText}>Send Image</Text>
+                        <Ionicons name='attach' size={28} style={styles.padding4} color={iconColor} />
+                      </Row>
+                    </MenuOption>
+                  </MenuOptions>
+                </Menu>}
+                <AudioRecorder {...{ storeAudio, setIsRecording, disabled }} />
+              </>
+            )
           )}
         </>
       )}

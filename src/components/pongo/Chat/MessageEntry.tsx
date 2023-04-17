@@ -40,6 +40,7 @@ interface MessageEntryProps {
   chatId: string;
   isDm?: boolean;
   selected?: string;
+  navigation: NavigationProp<any>
   addReaction: (emoji: string) => void;
   focusReply: (msgId: string | null) => void;
   onPress: (offsetY: number, height: number) => void;
@@ -47,17 +48,19 @@ interface MessageEntryProps {
 }
 
 const MessageEntry = React.memo(({
-  index, message, chatId, self, messages, highlighted, isDm = false, selected,
+  index, message, chatId, self, messages, highlighted, isDm = false, selected, navigation,
   onPress, focusReply, addReaction, onSwipe,
 }: MessageEntryProps) => {
   const msgRef = useRef<View | null>(null)
   const swipeRef = useRef<Swipeable | null>(null)
+
+  // TODO: pass these in as props
   const { color: defaultColor, backgroundColor, ownChatBackground } = useColors()
-  const navigation = useNavigation<NavigationProp<any>>()
   const { api } = usePongoStore()
+  const { cWidth } = useDimensions()
+
   const [quotedMsg, setQuotedMsg] = useState<Message | undefined>()
   const [quotedMsgNotFound, setQuotedMsgNotFound] = useState(false)
-  const { cWidth } = useDimensions()
 
   const onSwipeLeft = useCallback(() => {}, [])
 
@@ -224,6 +227,7 @@ const MessageEntry = React.memo(({
       return (
         <MessageWrapper {...messageWrapperProps}>
           <Content
+            navigation={navigation}
             onLongPress={measure} delayLongPress={200}
             color={textColor} author={message.author}
             nextMessage={messages[index - 1]}

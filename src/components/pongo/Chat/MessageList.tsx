@@ -1,14 +1,17 @@
 import moment from 'moment'
 import React, { useCallback, useMemo } from 'react'
 import { FlatList, RefreshControl, NativeSyntheticEvent, NativeScrollEvent, StyleSheet } from 'react-native'
+
+import { NavigationProp } from '@react-navigation/native'
 import { blue_overlay, gray_overlay } from '../../../constants/Colors'
-import { isWeb } from '../../../constants/Layout'
+import { isAndroid, isWeb } from '../../../constants/Layout'
 import { Message } from '../../../types/Pongo'
 import { idNum } from '../../../util/ping'
 import { getRelativeDate, ONE_SECOND } from '../../../util/time'
 import { Text, View } from '../../Themed'
 import { BidirectionalFlatList } from './Bidirectional'
 import MessageEntry from './MessageEntry'
+import { PongoStackParamList } from '../../../types/Navigation'
 
 interface MessagesListProps {
   messages: Message[]
@@ -24,6 +27,7 @@ interface MessagesListProps {
   chatId: string
   scrollEnabled?: boolean
   initialScrollIndex?: number
+  navigation: NavigationProp<PongoStackParamList>
   onViewableItemsChanged: ({ viewableItems }: { viewableItems: any[] }) => void
   onScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => void
   getMessagesOnScroll: (options: { prepend?: boolean; append?: boolean }) => () => Promise<void>
@@ -47,6 +51,7 @@ const MessagesList = React.memo(({
   chatId,
   scrollEnabled,
   initialScrollIndex,
+  navigation,
   onViewableItemsChanged,
   onScroll,
   getMessagesOnScroll,
@@ -76,6 +81,7 @@ const MessagesList = React.memo(({
         isDm={isDm}
         onSwipe={swipeToReply}
         chatId={chatId}
+        navigation={navigation}
       />
       {unreadInfo && unreadInfo?.unreads > 0 && idNum(unreadInfo?.lastRead) === idNum(item.id) - 1 && (
         <View id='unread-indicator' style={{ maxWidth: '84%', alignSelf: 'center', marginHorizontal: '8%', marginVertical: 4, backgroundColor: blue_overlay, borderRadius: 8, padding: 4, paddingHorizontal: 32 }}>
@@ -88,7 +94,7 @@ const MessagesList = React.memo(({
         </View>
       )}
     </>
-  }, [highlighted, messages, unreadInfo])
+  }, [highlighted, messages, unreadInfo, navigation])
 
   const keyExtractor = useCallback((item: Message) => `${item?.id || 'missing'}-${item?.timestamp}`, [])
 
@@ -149,7 +155,7 @@ const MessagesList = React.memo(({
           inverted
           scrollEventThrottle={50}
           onScroll={onScroll}
-          windowSize={15}
+          windowSize={isAndroid ? 21 : 15}
           renderItem={renderMessage}
           keyExtractor={keyExtractor}
           keyboardShouldPersistTaps="handled"

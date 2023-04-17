@@ -8,11 +8,10 @@ import Row from '../../spacing/Row'
 import { Text, View } from '../../Themed'
 import { gray_overlay } from '../../../constants/Colors'
 import Col from '../../spacing/Col'
-import { THUMB_UP, THUMB_DOWN, THANK_YOU, FIRE, LAUGHING, CLAPPING, EYES } from '../../../constants/Emojis'
+import { THUMB_UP, THUMB_DOWN, THANK_YOU, FIRE, LAUGHING, CLAPPING, EYES, HEART } from '../../../constants/Emojis'
 import { Message } from '../../../types/Pongo'
 import { isIos, isWeb } from '../../../constants/Layout'
 import useDimensions from '../../../hooks/useDimensions'
-import Modal from '../../popup/Modal'
 
 interface MessageMenuProps {
   selected?: { msg: Message; offsetY: number; height: number };
@@ -73,9 +72,9 @@ const MessageMenu = React.memo(({
       {!isOwnMsg && (
         <Row style={{ borderRadius: 8, marginBottom: 4, paddingHorizontal: 4 }}>
           {/* SHOW 6 EMOJIS */}
-          {[THUMB_UP, FIRE, EYES, LAUGHING, CLAPPING, THANK_YOU, THUMB_DOWN].map(emoji => (
+          {[THUMB_UP, FIRE, EYES, LAUGHING, CLAPPING, THANK_YOU, HEART, THUMB_DOWN].map(emoji => (
             <TouchableOpacity onPress={react(emoji)} style={{ padding: 4 }} key={emoji}>
-              <Text style={{ fontSize: 28 }}>{emoji}</Text>
+              <Text style={{ fontSize: 24 }}>{emoji}</Text>
             </TouchableOpacity>
           ))}
           <Ionicons

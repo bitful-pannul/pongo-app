@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons'
-import { NavigationProp, RouteProp } from '@react-navigation/native'
+import { NavigationProp, RouteProp, useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ActivityIndicator,
@@ -187,7 +187,6 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
           listRef.current?.scrollToItem({ item, animated: true, viewPosition: isWeb ? 0.9 : 0.3 })
           if (isWeb) {
             setTimeout(() => {
-              console.log(3, document?.getElementById('highlighted')?.scrollIntoView)
               document?.getElementById('highlighted')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
             }, 500)
           }
@@ -291,12 +290,12 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
   const scrollToEnd = useCallback(async () => {
     lastFetch.current = Date.now()
     setTimeout(() => setAtEnd(true), 100)
-    // listRef.current?.scrollToOffset({ offset: 0, animated: false })
+    listRef.current?.scrollToOffset({ offset: 0, animated: false })
     
     if (!(chat.last_message?.id === messages[0]?.id || !chat.last_message?.id)) {
       await getMessages({ chatId, msgId: chat.last_message.id, numBefore: RETRIEVAL_NUM, numAfter: 2 })
     }
-    listRef.current?.scrollToOffset({ offset: 0, animated: false })
+    // listRef.current?.scrollToOffset({ offset: 0, animated: false })
     scrollYRef.current = 0
     setChatPosition(chatId, 0, 0)
   }, [listRef, chatId, chat, messages])
@@ -324,13 +323,12 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
     const fetchedRecently = (Date.now() - lastFetch.current) < ONE_SECOND / 2
 
     if (!fetchedRecently && !atTheEnd && y <= (height * 2) && y <= scrollYRef.current) {
-      console.log('fetching to prepend')
       getMessagesOnScroll({ prepend: true })()
     }
     scrollYRef.current = y
   }, [getMessagesOnScroll])
 
-  console.log('messages', messages.length)
+  // console.log('messages', messages.length)
 
   const onViewableItemsChanged = useCallback(({ viewableItems }: { viewableItems: any[] }) => {
     indexRef.current = viewableItems[viewableItems.length - 1]?.index || 0
@@ -410,6 +408,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
               addReaction={addReaction}
               swipeToReply={swipeToReply}
               focusReply={focusReply}
+              navigation={navigation}
               // scrollEnabled={!(isWeb && gettingMessages)}
             />
             

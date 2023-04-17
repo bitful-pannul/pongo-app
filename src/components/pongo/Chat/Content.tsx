@@ -1,7 +1,8 @@
 import { useCallback, useMemo } from "react";
 import { Text, View, Pressable, Linking, StyleSheet } from "react-native";
-import { A } from '@expo/html-elements';
 import * as Clipboard from 'expo-clipboard'
+import { A } from '@expo/html-elements';
+import { NavigationProp } from "@react-navigation/native";
 
 import { isIos, isWeb } from "../../../constants/Layout";
 import {
@@ -21,12 +22,14 @@ import AudioPlayer from "./AudioPlayer";
 import ScaledImage from "./ScaledImage";
 import useDimensions from "../../../hooks/useDimensions";
 import { Message } from "../../../types/Pongo";
-import { uq_darkpink, uq_lightpurple, uq_pink, uq_purple } from "../../../constants/Colors";
+import { uq_pink } from "../../../constants/Colors";
 import Toast from "react-native-root-toast";
 import { defaultOptions } from "../../../util/toast";
+import { PongoStackParamList } from "../../../types/Navigation";
 
 interface ContentProps {
   onLongPress?: () => void;
+  navigation: NavigationProp<PongoStackParamList>
   content: string;
   author: string;
   color: string;
@@ -35,12 +38,14 @@ interface ContentProps {
   delayLongPress?: number;
 }
 
-export default function Content({ onLongPress, content, author, nextMessage, color, depth = 0, delayLongPress = 200 }: ContentProps) {
+export default function Content({
+  onLongPress, navigation, content, author, nextMessage, color, depth = 0, delayLongPress = 200
+}: ContentProps) {
   const { cWidth } = useDimensions()
   const styles = useMemo(() => StyleSheet.create({
     content: { maxWidth: '100%' },
     textStyle: { color, fontSize: 16, flexShrink: 1 },
-    linkStyle: { color, fontSize: 16, flexShrink: 1, textDecorationLine: 'underline' },
+    linkStyle: { color, fontSize: 16, flexShrink: 1, textDecorationLine: 'underline', overflowWrap: 'anywhere' },
     code: { fontFamily: isIos ? 'Courier New' : 'monospace', backgroundColor: 'rgba(127, 127, 127, 0.5)' },
     italic: { fontStyle: 'italic' },
     bold: { fontWeight: 'bold' },
@@ -56,6 +61,8 @@ export default function Content({ onLongPress, content, author, nextMessage, col
     Clipboard.setStringAsync(patp)
     Toast.show('Copied!', { ...defaultOptions, duration: Toast.durations.SHORT, position: Toast.positions.CENTER })
   }, [])
+
+  const longPressPatp = useCallback((patp: string) => () => navigation.navigate('Profile', { ship: patp }), [])
 
   if (AUDIO_URL_REGEX.test(content)) {
     // For some reason this console statement is necessary
@@ -85,7 +92,7 @@ export default function Content({ onLongPress, content, author, nextMessage, col
               </Pressable>
             ))
              :
-            <Content {...{ onLongPress, delayLongPress, author }} content={c} color={color} depth={depth + 1} key={`${i}-i-${depth}`} />
+            <Content {...{ onLongPress, delayLongPress, author, navigation }} content={c} color={color} depth={depth + 1} key={`${i}-i-${depth}`} />
         ))}
       </View>
     )
@@ -98,7 +105,7 @@ export default function Content({ onLongPress, content, author, nextMessage, col
           <Text key={`${i}-i-${depth}`} {...{ onLongPress }} onPress={copyCode(c)} style={[styles.textStyle, styles.code]}>
             {c.replace(REPLACE_CODE_REGEX, '')}
           </Text>:
-          <Content {...{ onLongPress, delayLongPress, author }} content={c} color={color} depth={depth + 1} key={`${i}-i-${depth}`} />
+          <Content {...{ onLongPress, delayLongPress, author, navigation }} content={c} color={color} depth={depth + 1} key={`${i}-i-${depth}`} />
         )}
       </Text>
     )
@@ -109,7 +116,7 @@ export default function Content({ onLongPress, content, author, nextMessage, col
       <Text>
         {splitByRegex(content, BOLD_REGEX).map((c, i) => BOLD_REGEX.test(c) ?
           <Text {...{ onLongPress, delayLongPress }} key={`${i}-i-${depth}`} style={[styles.textStyle, styles.bold]}>{c.replace(REPLACE_BOLD_REGEX, '')}</Text>:
-          <Content {...{ onLongPress, delayLongPress, author }} content={c} color={color} depth={depth + 1} key={`${i}-i-${depth}`} />
+          <Content {...{ onLongPress, delayLongPress, author, navigation }} content={c} color={color} depth={depth + 1} key={`${i}-i-${depth}`} />
         )}
       </Text>
     )
@@ -120,7 +127,7 @@ export default function Content({ onLongPress, content, author, nextMessage, col
       <Text>
         {splitByRegex(content, ITALIC_REGEX).map((c, i) => ITALIC_REGEX.test(c) ?
           <Text key={`${i}-i-${depth}`} {...{ onLongPress, delayLongPress }} style={[styles.textStyle, styles.italic]}>{c.replace(REPLACE_ITALIC_REGEX, '')}</Text>:
-          <Content {...{ onLongPress, delayLongPress, author }} content={c} color={color} depth={depth + 1} key={`${i}-i-${depth}`} />
+          <Content {...{ onLongPress, delayLongPress, author, navigation }} content={c} color={color} depth={depth + 1} key={`${i}-i-${depth}`} />
         )}
       </Text>
     )
@@ -130,8 +137,8 @@ export default function Content({ onLongPress, content, author, nextMessage, col
     return (
       <Text>
         {splitByRegex(content, PATP_REGEX).map((c, i) => PATP_REGEX.test(c) ?
-          <Text key={`${i}-i-${depth}`} {...{ onLongPress }} onPress={copyPatp(c)} style={[styles.textStyle, styles.patp]}>{c}</Text>:
-          <Content {...{ onLongPress, delayLongPress, author }} content={c} color={color} depth={depth + 1} key={`${i}-i-${depth}`} />
+          <Text key={`${i}-i-${depth}`} onLongPress={longPressPatp(c)} onPress={copyPatp(c)} style={[styles.textStyle, styles.patp]}>{c}</Text>:
+          <Content {...{ onLongPress, delayLongPress, author, navigation }} content={c} color={color} depth={depth + 1} key={`${i}-i-${depth}`} />
         )}
       </Text>
     )

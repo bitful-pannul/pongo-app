@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { useCallback } from 'react'
 import { Pressable, Text, View, Animated, ActivityIndicator, TouchableOpacity } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { NavigationProp } from '@react-navigation/native'
+import * as Clipboard from 'expo-clipboard'
 
 import ReactionsWrapper from './ReactionsWrapper'
 import { AUDIO_URL_REGEX, IMAGE_URL_REGEX } from "../../../util/string"
@@ -11,6 +12,8 @@ import ShipName from "../ShipName"
 import { getShipColor } from "../../../util/number"
 import { Message } from "../../../types/Pongo"
 import { isWeb } from '../../../constants/Layout'
+import Toast from 'react-native-root-toast'
+import { defaultOptions } from '../../../util/toast'
 
 interface MessageWrapperProps {
   isDm: boolean;
@@ -59,6 +62,11 @@ const MessageWrapper = ({
   measure,
   dismissKeyboard,
 }: MessageWrapperProps) => {
+  const copyPatp = useCallback(() => {
+    Clipboard.setStringAsync(author)
+    Toast.show('Copied!', { ...defaultOptions, duration: Toast.durations.SHORT, position: Toast.positions.CENTER })
+  }, [author])
+
   return (
     <View style={styles.authorWrapper}>
       {!isDm && !isSelf && (
@@ -77,7 +85,11 @@ const MessageWrapper = ({
               renderRightActions={() => <Ionicons name="chatbubble" color={backgroundColor} size={20} style={{ marginRight: 16 }} />}
               overshootFriction={8}
             > */}
-              {showAvatar && <ShipName name={author} style={{ fontSize: 16, fontWeight: '600', color: getShipColor(author) }} />}
+              {showAvatar && (
+                <Pressable onPress={copyPatp}>
+                  <ShipName name={author} style={{ fontSize: 16, fontWeight: '600', color: getShipColor(author) }} />
+                </Pressable>
+              )}
               {Boolean(reference) && (quotedMsg ? (
                 <TouchableOpacity onPress={pressReply}>
                   <Col style={styles.reply}>

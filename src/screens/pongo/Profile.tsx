@@ -1,8 +1,9 @@
-import { Ionicons } from '@expo/vector-icons'
 import { NavigationProp, RouteProp } from '@react-navigation/native'
-import { add } from 'lodash'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { KeyboardAvoidingView } from 'react-native'
+import { KeyboardAvoidingView, Pressable } from 'react-native'
+import * as Clipboard from 'expo-clipboard'
+import Toast from 'react-native-root-toast'
+import { Ionicons } from '@expo/vector-icons'
 import { useHeaderHeight } from '@react-navigation/elements'
 
 import { PongoStackParamList } from '../../types/Navigation'
@@ -23,6 +24,7 @@ import usePongoStore from '../../state/usePongoState'
 import usePosseState from '../../state/usePosseState'
 import useStore from '../../state/useStore'
 import { deSig } from '../../util/string'
+import { defaultOptions } from '../../util/toast'
 
 interface ProfileScreenProps {
   navigation: NavigationProp<PongoStackParamList>
@@ -82,6 +84,11 @@ export default function ProfileScreen({ navigation, route }: ProfileScreenProps)
     setError('')
   }, [setError, setTag])
 
+  const copyPatp = useCallback(() => {
+    Clipboard.setStringAsync(ship)
+    Toast.show('Copied!', { ...defaultOptions, duration: Toast.durations.SHORT, position: Toast.positions.CENTER })
+  }, [ship])
+
   if (!ship) {
     return null
   }
@@ -95,10 +102,12 @@ export default function ProfileScreen({ navigation, route }: ProfileScreenProps)
       <Col style={{ width: '100%', alignItems: 'center', padding: 12, marginTop: 12 }}>
         <Avatar ship={ship} size='quarter-screen' />
         <View style={{ height: 12 }} />
-        <Row>
-          <ShipName name={ship} style={{ fontSize: 24, fontWeight: '600', color }} />
-          {isSelf && <Text style={{ fontSize: 18, marginLeft: 8 }}>(you)</Text>}
-        </Row>
+        <Pressable onPress={copyPatp}>
+          <Row>
+            <ShipName name={ship} style={{ fontSize: 24, fontWeight: '600', color }} />
+            {isSelf && <Text style={{ fontSize: 18, marginLeft: 8 }}>(you)</Text>}
+          </Row>
+        </Pressable>
       </Col>
 
       {loading ? (

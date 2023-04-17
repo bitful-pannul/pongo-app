@@ -161,7 +161,6 @@ const usePongoStore = create(
           }
           
           let newMessages: Message[] = message_list.map(msg => ({ ...msg, status: 'delivered' }))
-          console.log('GOT MESSAGES')
 
           if (append) {
             newMessages = dedupeAndSort((chat.messages || []).concat(newMessages).slice(-MAX_MESSAGES_LENGTH))
