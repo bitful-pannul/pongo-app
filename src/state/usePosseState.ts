@@ -37,8 +37,10 @@ const usePosseState = create<PosseStore>((set, get) => ({
   },
   getTags: async (ship: string) => {
     const { api } = get()
-    if (api) {
-      const tagList = await api.scry<string[]>({ app: 'posse', path: `/contact/${addSig(ship)}` })
+    if (api?.ship) {
+      // /tags/[app]/[from-node]/[to-node]
+      const tagList = await api.scry<string[]>({ app: 'social-graph', path: `/tags/pongo/${addSig(api.ship)}/${addSig(ship)}` })
+      console.log('TAG LIST', tagList)
       const tags = { ...get().tags }
       tags[ship] = tagList
       set({ tags })
@@ -47,7 +49,7 @@ const usePosseState = create<PosseStore>((set, get) => ({
   addTag: async (who: string, tag: string) => {
     const { api } = get()
     if (api) {
-      await api.poke({ app: 'posse', mark: 'posse-action', json: { 'add-tag': { who, tag } } })
+      await api.poke({ app: 'social-graph', mark: 'posse-action', json: { 'add-tag': { who, tag } } })
       const tags = { ...get().tags }
       tags[who] = (tags[who] || []).concat([tag])
       set({ tags })
@@ -56,7 +58,7 @@ const usePosseState = create<PosseStore>((set, get) => ({
   deleteTag: async (who: string, tag: string) => {
     const { api } = get()
     if (api) {
-      await api.poke({ app: 'posse', mark: 'posse-action', json: { 'del-tag': { who, tag } } })
+      await api.poke({ app: 'social-graph', mark: 'posse-action', json: { 'del-tag': { who, tag } } })
       const tags = { ...get().tags }
       tags[who] = tags[who].filter(t => t !== tag)
       set({ tags })

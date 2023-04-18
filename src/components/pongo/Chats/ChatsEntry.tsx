@@ -17,6 +17,8 @@ import { addSig, deSig } from "../../../util/string"
 import { useCallback, useMemo } from "react"
 import useDimensions from "../../../hooks/useDimensions"
 import usePongoStore from "../../../state/usePongoState"
+import { getShipColor } from "../../../util/number"
+import useColors from "../../../hooks/useColors"
 
 interface ChatProps {
   chat: Chat
@@ -30,6 +32,7 @@ export default function ChatsEntry({ chat, navigation }: ChatProps) {
   const { unreads, last_message, conversation: { id, members, last_active, name, leaders, muted } } = chat
   const chatName = getChatName(ship, chat)
   const isDm = checkIsDm(chat)
+  const { theme } = useColors()
 
   const hasUnreads = unreads > 0
   const groupDisplayShip = addSig(last_message?.author || (leaders && leaders[0]) || ship)
@@ -74,9 +77,9 @@ export default function ChatsEntry({ chat, navigation }: ChatProps) {
     <TouchableOpacity onPress={goToChat}>
       <Row style={styles.chatsEntry}>
         {isDm ? (
-          <Avatar size='huge' ship={chatName} />
+          <Avatar size='huge' ship={chatName} color={getShipColor(chatName, theme)} />
         ) : (
-          <Avatar size='huge' ship={groupDisplayShip} />
+          <Avatar size='huge' ship={groupDisplayShip} color={getShipColor(groupDisplayShip, theme)} />
         )}
         <Col style={{ marginLeft: 12, flex: 1 }}>
           <Row style={{ flex: 1, justifyContent: 'space-between' }}>

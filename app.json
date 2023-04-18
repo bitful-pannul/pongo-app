@@ -62,7 +62,7 @@
       "supportsTablet": true,
       "googleServicesFile": "./GoogleService-Info.plist",
       "bundleIdentifier": "network.uqbar.ping",
-      "buildNumber": "6"
+      "buildNumber": "8"
     },
     "android": {
       "adaptiveIcon": {
@@ -70,7 +70,7 @@
         "backgroundColor": "#727bf2"
       },
       "googleServicesFile": "./google-services.json",
-      "versionCode": 25,
+      "versionCode": 26,
       "package": "network.uqbar.ping",
       "permissions": [
         "com.google.android.c2dm.permission.RECEIVE",

@@ -6,7 +6,7 @@ import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-m
 
 import { light_gray, medium_gray, uq_purple } from "../../../constants/Colors"
 import { isIos, isWeb } from "../../../constants/Layout"
-import { MENTION_REGEX } from "../../../constants/Regex"
+import { MENTION_REGEX, URBIT_APP_LINK,  } from "../../../constants/Regex"
 import useDimensions from "../../../hooks/useDimensions"
 import useMedia from "../../../hooks/useMedia"
 import usePongoStore from "../../../state/usePongoState"
@@ -65,12 +65,16 @@ export default function ChatInput({
   }, [])
 
   const send = useCallback(async () => {
-    if (text.trim().length > 0) {
+    const trimmed = text.trim()
+    if (trimmed.length > 0) {
       setSending(true)
       try {
         if (edit) {
           editMessage(chatId, edit.id, text)
           setEdit(chatId, undefined)
+        } else if (URBIT_APP_LINK.test(trimmed)) {
+          sendMessage({ self, convo: chatId, kind: 'app-link', content: trimmed.replace(/^urbit:\//, ''), ref: reply?.id, mentions: reply ? [reply.author] : [] })
+          return
         } else {
           sendMessage({ self, convo: chatId, kind: 'text', content: text, ref: reply?.id, mentions: reply ? [reply.author] : [] })
           setReply(chatId, undefined)
@@ -144,7 +148,7 @@ export default function ChatInput({
       fontSize: 16,
       flex: 1,
       width: cWidth,
-      minHeight: 48,
+      minHeight: isWeb ? 55 : 48,
       maxHeight: 120,
       paddingLeft: 12,
       paddingTop: 12,
@@ -189,18 +193,18 @@ export default function ChatInput({
                 {!isRecording && showUqbarWallet && <Pressable onPress={sendTokens} style={styles.sendTokensButton} disabled={disabled}>
                   <MaterialIcons name='attach-money' size={32} style={styles.padding4} color={iconColor} />
                 </Pressable>}
-                {!isRecording && <Pressable onPress={pickImage} style={styles.attachButton} disabled={disabled}>
+                {!isRecording && <Pressable onPress={pickImage(false)} style={styles.attachButton} disabled={disabled}>
                   <Ionicons name='attach' size={32} style={styles.padding4} color={iconColor} />
                 </Pressable>}
               </>
             ) : (
               <>
                 {!isRecording && <Menu style={styles.menuButton}>
-                  <MenuTrigger>
+                  <MenuTrigger onPress={() => isIos && Keyboard.dismiss()}>
                     <Ionicons name='menu' size={32} color={uq_purple} style={{ padding: 4 }} />
                   </MenuTrigger>
                   <MenuOptions {...{ style: { backgroundColor } }}>
-                    <MenuOption onSelect={createPoll} >
+                  <MenuOption onSelect={createPoll}>
                       <Row style={{ justifyContent: 'flex-end', alignItems: 'center', paddingRight: 12, paddingVertical: 2 }}>
                         <Text style={styles.menuText}>Create Poll</Text>
                         <MaterialIcons name='poll' size={28} style={styles.padding4} color={iconColor} />
@@ -212,7 +216,13 @@ export default function ChatInput({
                         <MaterialIcons name='attach-money' size={28} style={styles.padding4} color={iconColor} />
                       </Row>
                     </MenuOption>
-                    <MenuOption onSelect={pickImage}>
+                    <MenuOption onSelect={pickImage(true)}>
+                      <Row style={{ justifyContent: 'flex-end', alignItems: 'center', paddingRight: 12, paddingVertical: 2 }}>
+                        <Text style={styles.menuText}>Take Picture</Text>
+                        <Ionicons name='camera' size={28} style={styles.padding4} color={iconColor} />
+                      </Row>
+                    </MenuOption>
+                    <MenuOption onSelect={pickImage(false)}>
                       <Row style={{ justifyContent: 'flex-end', alignItems: 'center', paddingRight: 12, paddingVertical: 2 }}>
                         <Text style={styles.menuText}>Send Image</Text>
                         <Ionicons name='attach' size={28} style={styles.padding4} color={iconColor} />

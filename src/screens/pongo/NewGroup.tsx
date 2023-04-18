@@ -17,6 +17,7 @@ import useColors from '../../hooks/useColors'
 import useSearch from '../../hooks/useSearch'
 import useContactState from '../../state/useContactState'
 import usePongoStore from '../../state/usePongoState'
+import { getShipColor } from '../../util/number'
 
 interface NewGroupScreenProps {
   navigation: NavigationProp<PongoStackParamList>
@@ -24,7 +25,7 @@ interface NewGroupScreenProps {
 
 export default function NewGroupScreen({ navigation }: NewGroupScreenProps) {
   const { set, isSearching, searchResults, loading, createConversation, searchTerm } = usePongoStore()
-  const { color, shadedBackground, backgroundColor } = useColors()
+  const { color, shadedBackground, backgroundColor, theme } = useColors()
   const { contacts } = useContactState()
   const { search } = useSearch()
 
@@ -92,7 +93,7 @@ export default function NewGroupScreen({ navigation }: NewGroupScreenProps) {
                 {ships.map(ship => (
                   <Pressable onPress={removeShip(ship)} style={{ margin: 4 }} key={ship}>
                     <Row style={{ padding: 4 }}>
-                      <Avatar ship={ship} />
+                      <Avatar ship={ship} color={getShipColor(ship, theme)} />
                       <ShipName name={ship} style={{ marginLeft: 4, fontSize: 16, fontWeight: '600' }} />
                     </Row>
                   </Pressable>

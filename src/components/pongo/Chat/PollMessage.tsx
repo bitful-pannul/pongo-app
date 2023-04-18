@@ -1,9 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import React, { useCallback, useMemo } from "react"
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import * as Haptics from 'expo-haptics'
 
 import { Message } from "../../../types/Pongo"
-import Col from "../../spacing/Col";
 import { deSig } from "../../../util/string";
 import { uq_pink } from "../../../constants/Colors";
 import { isWeb } from "../../../constants/Layout";
@@ -49,6 +48,7 @@ export default function PollMessage({
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
+      flexWrap: 'wrap',
     },
     optionText: {
       color,

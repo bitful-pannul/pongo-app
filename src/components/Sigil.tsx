@@ -1,6 +1,5 @@
 import React, { memo } from 'react';
 import { Text, View } from 'react-native';
-import { getShipColor } from '../util/number';
 import { deSig } from '../util/string';
 
 export const foregroundFromBackground = (background: string) => {
@@ -16,7 +15,7 @@ export const foregroundFromBackground = (background: string) => {
 };
 
 interface SigilProps {
-  color?: string;
+  color: string;
   ship: string;
   size?: number;
   svgClass?: string;
@@ -30,7 +29,7 @@ export const Sigil = memo(
     foreground = '',
     ship,
     size = 24,
-    color = getShipColor(ship),
+    color,
     svgClass = '',
     icon = false,
     padding = size / 8,

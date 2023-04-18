@@ -25,7 +25,7 @@ interface AvatarProps {
     previewAvatar?: string
   }
   loadImage?: boolean
-  color?: string
+  color: string
 }
 
 interface AvatarMeta {
@@ -97,7 +97,7 @@ function getSigilElement(
   ship: string,
   sigilSize: number,
   icon: boolean,
-  bg?: string,
+  bg: string,
 ) {
   const citedShip = cite(ship)
   const { color } = useColors()

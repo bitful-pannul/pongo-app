@@ -25,6 +25,7 @@ import usePosseState from '../../state/usePosseState'
 import useStore from '../../state/useStore'
 import { deSig } from '../../util/string'
 import { defaultOptions } from '../../util/toast'
+import { getShipColor } from '../../util/number'
 
 interface ProfileScreenProps {
   navigation: NavigationProp<PongoStackParamList>
@@ -35,7 +36,7 @@ export default function ProfileScreen({ navigation, route }: ProfileScreenProps)
   const { ship: self } = useStore()
   const { set, createConversation, sortedChats, loading, blocklist } = usePongoStore()
   const { tags, getTags, addTag, deleteTag } = usePosseState()
-  const { color, backgroundColor, shadedBackground } = useColors()
+  const { color, backgroundColor, shadedBackground, theme } = useColors()
   const { ship } = route.params
   const shipTags = tags[ship] || []
   const isBlocked = useMemo(() => Boolean(blocklist.find(s => deSig(s) === deSig(ship))), [blocklist, ship])
@@ -45,9 +46,9 @@ export default function ProfileScreen({ navigation, route }: ProfileScreenProps)
   const [error, setError] = useState('')
   const isSelf = deSig(self) === deSig(ship)
 
-  useEffect(() => {
-    getTags(ship)
-  }, [ship])
+  // useEffect(() => {
+  //   getTags(ship)
+  // }, [ship])
 
   const startDm = useCallback(async () => {
     const existingChat = sortedChats.find(sc => sc.conversation.members.length === 2 && sc.conversation.members.includes(deSig(ship)))
@@ -100,7 +101,7 @@ export default function ProfileScreen({ navigation, route }: ProfileScreenProps)
       keyboardVerticalOffset={keyboardOffset + headerHeight}
     >
       <Col style={{ width: '100%', alignItems: 'center', padding: 12, marginTop: 12 }}>
-        <Avatar ship={ship} size='quarter-screen' />
+        <Avatar ship={ship} size='quarter-screen' color={getShipColor(ship, theme)} />
         <View style={{ height: 12 }} />
         <Pressable onPress={copyPatp}>
           <Row>
@@ -110,7 +111,7 @@ export default function ProfileScreen({ navigation, route }: ProfileScreenProps)
         </Pressable>
       </Col>
 
-      {loading ? (
+      {/* {loading ? (
         <Col style={{ justifyContent: 'center', alignItems: 'center', height: '100%', width: '100%', paddingBottom: '40%' }}>
           <Loader text={loading} />
         </Col>
@@ -146,7 +147,7 @@ export default function ProfileScreen({ navigation, route }: ProfileScreenProps)
             {Boolean(error) && <Text style={{ fontSize: 16, color: 'red', margin: 4 }}>{error}</Text>}
           </Col>
         </Col>
-      )}
+      )} */}
 
     </KeyboardAvoidingView>
   )

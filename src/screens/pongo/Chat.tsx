@@ -11,6 +11,8 @@ import {
   TextInput,
   TouchableOpacity,
   View as DefaultView,
+  AppStateStatus,
+  AppState,
 } from 'react-native'
 import * as Clipboard from 'expo-clipboard'
 import { Image } from "expo-image"
@@ -51,6 +53,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
   const scrollYRef = useRef<number>(0)
   const indexRef = useRef<number>(0)
   const lastFetch = useRef<number>(0)
+  const appState = useRef(AppState.currentState)
   const { ship, api } = useStore()
   const {
     set, chats, edits, replies, chatPositions, isSearching, connected, getChats,
@@ -94,6 +97,23 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
       navigation.goBack()
     } else {
       set({ currentChat: chatId })
+
+      if (!isWeb) {
+        const handleAppStateChange = (nextAppState: AppStateStatus) => {
+          if (appState.current.match(/inactive|background/) && nextAppState === "active" && scrollYRef.current < 50) {
+            if (chat?.conversation.last_read === messages[0]?.id) {
+              getMessagesOnScroll({ prepend: true })()
+              setUnreadIndicator({ unreads: chat?.unreads || 0, lastRead: chat.conversation.last_read })
+            }
+          }
+          appState.current = nextAppState
+        }
+        const appStateListener = AppState.addEventListener("change", handleAppStateChange)
+        return () => {
+          set({ currentChat: undefined })
+          appStateListener?.remove()
+        }
+      }
     }
 
     return () => set({ currentChat: undefined })
@@ -121,9 +141,10 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
           // come to msg from push notification
           if (msgId) {
             await getMessages({ chatId, msgId, numBefore: RETRIEVAL_NUM, numAfter: RETRIEVAL_NUM })
+            setUnreadIndicator({ unreads: chat?.unreads || 0, lastRead: chat.conversation.last_read })
           // open with no messages
           } else if (!messages || messages.length < 1) {
-            let msgs : Message[] | undefined
+            let msgs: Message[] | undefined = undefined
             if (chat.conversation.last_read === '0' && chat.last_message?.id) {
               msgs = await getMessages({ chatId, msgId: chat.last_message?.id, numBefore: 50, numAfter: 5 })
             } else {
@@ -145,7 +166,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
             setUnreadIndicator({ unreads: chat?.unreads || 0, lastRead: chat.conversation.last_read })
           // if we have fewer than 30 messages
           } else if (chat.last_message) {
-            const msgs = await getMessages({ chatId, msgId: chat.last_message.id, numBefore: 50, numAfter: 5 })
+            const msgs = await getMessages({ chatId, msgId: chat.last_message.id, numBefore: RETRIEVAL_NUM, numAfter: RETRIEVAL_NUM })
             const targetMsg = chat.conversation.last_read === msgs[0]?.id ? undefined : msgs.findIndex(({ id }) => id === chat.conversation.last_read)
             setUnreadIndicator({ unreads: chat.unreads, lastRead: chat.conversation.last_read }, targetMsg)
             msgs[0]?.id && setLastReadMsg(chatId, msgs[0].id).catch(console.warn)

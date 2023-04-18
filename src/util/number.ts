@@ -2,6 +2,7 @@ import 'intl';
 import 'intl/locale-data/jsonp/en';
 import 'intl/locale-data/jsonp/de';
 import { patp2dec, isValidPatp } from 'urbit-ob'
+import { darken, hasBadContrast, lighten, parseToHsla } from 'color2k';
 import { addSig } from './string';
 
 export const formatAmount = (amount: number) => new Intl.NumberFormat('en-US').format(amount);
@@ -21,8 +22,23 @@ export const intToRGB = (value: number) => {
   return "rgb(" + red + "," + green + "," + blue + ")";
 }
 
-export const getShipColor = (ship: string) => {
-  return isValidPatp(addSig(ship)) ? intToRGB(patp2dec(addSig(ship))) : 'black'
+export function themeAdjustColor(color: string, theme: string /* light | dark */): string {
+  const hsla = parseToHsla(color)
+  const lightness = hsla[2]
+
+  if (lightness <= 0.2 && theme === 'dark') {
+    return lighten(color, 0.2 - lightness)
+  }
+
+  if (lightness >= 0.8 && theme === 'light') {
+    return darken(color, lightness - 0.8)
+  }
+
+  return color
+}
+
+export const getShipColor = (ship: string, theme: string) => {
+  return isValidPatp(addSig(ship)) ? themeAdjustColor(intToRGB(patp2dec(addSig(ship))), theme) : 'black'
 }
 
 export const fromUd = (amount?: string) => amount ? Number(amount.replace(/\./g, '')) : 0

@@ -60,8 +60,6 @@ export default function PongoStackNavigator() {
   const [loadingText, setLoadingText] = useState<string | undefined>()
   const { isLargeDevice, cWidth } = useDimensions()
 
-  const drawerNavigator = navigation.getParent('drawer' as any)
-
   useEffect(() => {
     if (api) {
       getPushNotificationToken()
@@ -152,12 +150,10 @@ export default function PongoStackNavigator() {
     if (api) {
       setLoadingText('Checking installation...')
       try {
-        console.log(1)
         await Promise.all([
           api.scry({ app: 'social-graph', path: '/is-installed' }),
           api.scry({ app: 'pongo', path: '/conversations' }),
         ])
-        console.log(2)
 
         clearInterval(checkAppsInstalledInterval)
         setLoadingText(undefined)
@@ -297,7 +293,7 @@ export default function PongoStackNavigator() {
   if (isLargeDevice) {
     return (
       <Row style={{ flex: 1 }}>
-        <ChatsScreen drawerNavigator={drawerNavigator} />
+        <ChatsScreen />
         <View style={{ flex: 1, height: '100%', maxWidth: cWidth }}>
           {stack}
         </View>

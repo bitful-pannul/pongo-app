@@ -19,21 +19,26 @@ export default function useMedia({ ship, chatId, reply, setUploading } : UseMedi
   const { sendMessage, setReply } = usePongoStore()
   const { s3Creds, s3Config } = useSettingsState()
 
-  const pickImage = useCallback(async () => {
+  const pickImage = useCallback((useCamera?: boolean) => async () => {
     if (isIos) {
-      const cameraRollStatus = await ImagePicker.requestMediaLibraryPermissionsAsync()
-      const cameraStatus = await ImagePicker.requestCameraPermissionsAsync()
-      if (cameraRollStatus.status !== "granted" || cameraStatus.status !== "granted") {
+      const permission = await (useCamera ? ImagePicker.requestCameraPermissionsAsync() : ImagePicker.requestMediaLibraryPermissionsAsync()) 
+      if (permission.status !== "granted") {
         return
       }
     }
 
     try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        aspect: [4, 3],
-        quality: 1,
-      })
+      const result = await (
+        useCamera ? ImagePicker.launchCameraAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          aspect: [4, 3],
+          quality: 1,
+        }) : ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          aspect: [4, 3],
+          quality: 1,
+        })
+      )
 
       if (!result.canceled) {
         setUploading(true)

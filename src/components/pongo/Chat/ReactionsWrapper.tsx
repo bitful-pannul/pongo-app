@@ -16,6 +16,7 @@ import Avatar from "../Avatar"
 import { isIos, isWeb } from "../../../constants/Layout"
 import useColors from "../../../hooks/useColors"
 import { ScrollView, Text } from "../../Themed"
+import { getShipColor } from "../../../util/number"
 
 interface ReactionProps {
   color: string;
@@ -25,7 +26,7 @@ interface ReactionProps {
 }
 
 const Reaction = ({ color, emoji, reactions, addReaction }: ReactionProps) => {
-  const { color: textColor } = useColors()
+  const { color: textColor, theme } = useColors()
   const [showReactors, setShowReactors] = useState(false)
 
   const onPressReaction = useCallback((emoji: string) => () => {
@@ -52,7 +53,7 @@ const Reaction = ({ color, emoji, reactions, addReaction }: ReactionProps) => {
       <ScrollView>
         {reactions[emoji].map(ship => (
           <Row key={`react=${ship}`} style={{ alignSelf: 'flex-start', marginTop: 4 }}>
-            <Avatar ship={ship} />
+            <Avatar ship={ship} color={getShipColor(ship, theme)} />
             <ShipName name={ship} style={{ color: textColor, fontSize: 16, marginTop: 2 }} />
           </Row>
         ))}

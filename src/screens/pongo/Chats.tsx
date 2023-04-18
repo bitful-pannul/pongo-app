@@ -19,17 +19,16 @@ import Row from '../../components/spacing/Row'
 import useDimensions from '../../hooks/useDimensions'
 import { Chat } from '../../types/Pongo'
 import { ONE_SECOND } from '../../util/time'
+import { isWeb } from '../../constants/Layout'
 
-interface ChatsScreenProps {
-  drawerNavigator?: any
-}
-
-export default function ChatsScreen({ drawerNavigator }: ChatsScreenProps) {
-  const { chats, showJoinChatModal, set, init, refresh, getChats, sortedChats, isSearching } = usePongoStore()
+const ChatsScreen = () => {
+  const { showJoinChatModal, sortedChats, isSearching, set, init, refresh, getChats } = usePongoStore()
   const { api, shipUrl } = useStore()
   const appState = useRef(AppState.currentState)
   const navigation = useNavigation<NavigationProp<PongoStackParamList>>()
   const { isLargeDevice, width } = useDimensions()
+
+  const drawerNavigator: any = navigation?.getParent('drawer' as any)
 
   const onRefresh = useCallback(async () => {
     set({ currentChat: undefined })
@@ -48,6 +47,7 @@ export default function ChatsScreen({ drawerNavigator }: ChatsScreenProps) {
   }, [api])
 
   useEffect(() => {
+    if (!isWeb) {
       const handleAppStateChange = (nextAppState: AppStateStatus) => {
         if (appState.current.match(/inactive|background/) && nextAppState === "active") {
           refresh(shipUrl)
@@ -55,7 +55,8 @@ export default function ChatsScreen({ drawerNavigator }: ChatsScreenProps) {
         appState.current = nextAppState
       }
       const appStateListener = AppState.addEventListener("change", handleAppStateChange)
-      return appStateListener.remove
+      return appStateListener?.remove
+    }
   }, [shipUrl])
 
   const startNew = useCallback(() => {
@@ -139,3 +140,5 @@ export default function ChatsScreen({ drawerNavigator }: ChatsScreenProps) {
     </Col>
   )
 }
+
+export default ChatsScreen

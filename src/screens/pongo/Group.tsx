@@ -24,6 +24,7 @@ import { addSig, deSig } from '../../util/string'
 import useDimensions from '../../hooks/useDimensions'
 import { defaultOptions } from '../../util/toast'
 import Toast from 'react-native-root-toast'
+import { getShipColor } from '../../util/number'
 
 interface GroupScreenProps {
   navigation: NavigationProp<PongoStackParamList>
@@ -33,7 +34,7 @@ interface GroupScreenProps {
 export default function GroupScreen({ navigation, route }: GroupScreenProps) {
   const { ship: self } = useStore()
   const { set, chats, sendMessage, makeInvite, toggleMute } = usePongoStore()
-  const { color, backgroundColor } = useColors()
+  const { color, backgroundColor, theme } = useColors()
   const { cWidth, isLargeDevice } = useDimensions()
   const convo = route.params.id
   const chat = chats[route.params.id || '']
@@ -196,7 +197,7 @@ export default function GroupScreen({ navigation, route }: GroupScreenProps) {
                   <TouchableOpacity key={mem} onPress={() => navigation.navigate('Profile', { ship: addSig(mem) })} style={styles.member}>
                     <Row style={{ justifyContent: 'space-between', width: cWidth * 0.8 }}>
                       <Row style={{ width: cWidth * 0.8 - 40 }}>
-                        <Avatar ship={addSig(mem)} size={'large'} />
+                        <Avatar ship={addSig(mem)} size={'large'} color={getShipColor(mem, theme)} />
                         <ShipName numberOfLines={1} style={styles.shipName} name={addSig(mem)} />
                         {isAdmin && <Text style={{ fontSize: 18, marginLeft: 8 }}>(admin)</Text>}
                       </Row>

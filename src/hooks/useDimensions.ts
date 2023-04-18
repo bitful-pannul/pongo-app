@@ -17,7 +17,9 @@ export default function useDimensions() {
 
     const listener = Dimensions.addEventListener('change', onDimensionsChange)
     
-    return listener.remove
+    return () => {
+      listener?.remove()
+    }
   }, [])
  
   return { width, height, isLargeDevice, isSmallDevice, cWidth }

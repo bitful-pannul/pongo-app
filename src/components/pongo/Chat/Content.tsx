@@ -29,7 +29,7 @@ import { PongoStackParamList } from "../../../types/Navigation";
 
 interface ContentProps {
   onLongPress?: () => void;
-  navigation: NavigationProp<PongoStackParamList>
+  navigation: NavigationProp<any>
   content: string;
   author: string;
   color: string;
@@ -45,7 +45,7 @@ export default function Content({
   const styles = useMemo(() => StyleSheet.create({
     content: { maxWidth: '100%' },
     textStyle: { color, fontSize: 16, flexShrink: 1 },
-    linkStyle: { color, fontSize: 16, flexShrink: 1, textDecorationLine: 'underline', overflowWrap: 'anywhere' },
+    linkStyle: { color, fontSize: 16, flexShrink: 1, textDecorationLine: 'underline', overflowWrap: isWeb ? 'anywhere' : undefined },
     code: { fontFamily: isIos ? 'Courier New' : 'monospace', backgroundColor: 'rgba(127, 127, 127, 0.5)' },
     italic: { fontStyle: 'italic' },
     bold: { fontWeight: 'bold' },
@@ -66,7 +66,7 @@ export default function Content({
 
   if (AUDIO_URL_REGEX.test(content)) {
     // For some reason this console statement is necessary
-    console.log(1, `"${content}"`, AUDIO_URL_REGEX.test(content))
+    console.log(`"${content}"`, AUDIO_URL_REGEX.test(content))
     return <AudioPlayer
       author={author}
       color={color}

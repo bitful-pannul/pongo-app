@@ -56,6 +56,7 @@ export default {
     tabIconDefault: '#ccc',
     tabIconSelected: tintColorLight,
     ownChatBackground: uq_purple,
+    theme: 'light',
   },
   dark: {
     color: '#fff',
@@ -67,5 +68,6 @@ export default {
     tabIconDefault: '#ccc',
     tabIconSelected: tintColorDark,
     ownChatBackground: uq_darkpurple,
+    theme: 'dark',
   },
 };

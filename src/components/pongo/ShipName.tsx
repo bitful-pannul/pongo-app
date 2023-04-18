@@ -1,5 +1,5 @@
 import { cite } from '@urbit/api'
-import React, { HTMLAttributes } from 'react'
+import React from 'react'
 import { Text, TextStyle} from 'react-native'
 
 import { useContact } from '../../state/useContactState'

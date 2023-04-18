@@ -54,7 +54,7 @@ export const messageSub = (set: SetState<PongoStore>, get: GetState<PongoStore>)
       existing.reference = reference
       existing.timestamp = timestamp
       existing.status = 'delivered'
-    } else if (isMostRecent && chat.messages?.length) {
+    } else if (isMostRecent) {
       chat.messages = [{ ...update.message.message, status: 'delivered' as MessageStatus } as Message].concat(messages || [])
     }
     // chat.messages = dedupeAndSort(chat.messages)

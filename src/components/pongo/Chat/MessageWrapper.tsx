@@ -31,6 +31,7 @@ interface MessageWrapperProps {
   quotedMsgNotFound: boolean;
   children: React.ReactNode;
   message: Message;
+  theme: 'light' | 'dark';
   hideReactions?: boolean
   pressReply: () => void;
   addReaction: (emoji: string) => void;
@@ -51,6 +52,7 @@ const MessageWrapper = ({
   reference,
   quotedMsg,
   color,
+  theme,
   showStatus,
   quotedMsgNotFound,
   children,
@@ -73,7 +75,7 @@ const MessageWrapper = ({
         <View style={{ marginLeft: '2%', marginTop: 2, width: 40 }}>
           {showAvatar && (
             <Pressable onPress={() => navigation.navigate('Profile', { ship: author })}>
-              <Avatar ship={author} size="group-chat" />
+              <Avatar ship={author} size="group-chat" color={getShipColor(author, theme)} />
             </Pressable>
           )}
         </View>
@@ -87,7 +89,7 @@ const MessageWrapper = ({
             > */}
               {showAvatar && (
                 <Pressable onPress={copyPatp}>
-                  <ShipName name={author} style={{ fontSize: 16, fontWeight: '600', color: getShipColor(author) }} />
+                  <ShipName name={author} style={{ fontSize: 16, fontWeight: '600', color: getShipColor(author, theme) }} />
                 </Pressable>
               )}
               {Boolean(reference) && (quotedMsg ? (

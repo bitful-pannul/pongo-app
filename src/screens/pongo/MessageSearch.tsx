@@ -14,6 +14,7 @@ import Avatar from "../../components/pongo/Avatar";
 import ShipName from "../../components/pongo/ShipName";
 import { light_gray } from "../../constants/Colors";
 import useColors from "../../hooks/useColors";
+import { getShipColor } from "../../util/number";
 
 interface MessageSearchProps {
   focusMessage?: (msgId: string | null) => Promise<void>
@@ -24,7 +25,7 @@ export default function MessageSearch({
 }: MessageSearchProps) {
   const { messageSearchResults, set } = usePongoStore()
   const navigation = useNavigation<NavigationProp<PongoStackParamList>>()
-  const { backgroundColor } = useColors()
+  const { backgroundColor, theme } = useColors()
 
   const styles = useMemo(() => StyleSheet.create({
     message: {
@@ -62,7 +63,7 @@ export default function MessageSearch({
     return (
       <Pressable onPress={onPressMessage(item)}>
         <Row style={styles.message}>
-          <Avatar size='large' ship={item.author} />
+          <Avatar size='large' ship={item.author} color={getShipColor(item.author, theme)} />
           <Col style={styles.content}>
             <Row style={styles.header}>
               <ShipName name={item.author} style={{ fontWeight: '600' }} />

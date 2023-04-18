@@ -17,6 +17,7 @@ import usePongoStore from "../../../state/usePongoState"
 import useDimensions from "../../../hooks/useDimensions"
 import ReactionsWrapper from "./ReactionsWrapper"
 import PollMessage from "./PollMessage"
+import AppLinkDisplay from "./AppLinkDisplay"
 
 const processReference = (msg: { notification: { author: string, content: string } }, id: string): Message => {
   const { notification: { author, content } } = msg
@@ -55,7 +56,7 @@ const MessageEntry = React.memo(({
   const swipeRef = useRef<Swipeable | null>(null)
 
   // TODO: pass these in as props
-  const { color: defaultColor, backgroundColor, ownChatBackground } = useColors()
+  const { color: defaultColor, backgroundColor, ownChatBackground, theme } = useColors()
   const { api } = usePongoStore()
   const { cWidth } = useDimensions()
 
@@ -219,7 +220,7 @@ const MessageEntry = React.memo(({
   const renderContent = () => {
     const textColor = kind === 'send-tokens' ? 'black' : color
     const messageWrapperProps = {
-      isDm, showAvatar, isSelf, author, styles, navigation, msgRef, shakeAnimation, reference, quotedMsg, color: textColor,
+      isDm, showAvatar, isSelf, author, styles, navigation, msgRef, shakeAnimation, reference, quotedMsg, color: textColor, theme: theme as ('light' | 'dark'),
       showStatus,quotedMsgNotFound, message, pressReply, replyToMessage, addReaction, measure, dismissKeyboard,
     }
 
@@ -238,7 +239,7 @@ const MessageEntry = React.memo(({
     } else if (kind === 'app-link') {
       return (
         <MessageWrapper {...messageWrapperProps}>
-          {content.includes('/apps/pokur') && <Text style={styles.text}>Join my Pokur table: </Text>}
+          <AppLinkDisplay content={content} style={styles.text} />
           <Text onPress={goToAppLink(content)} style={[styles.text, { textDecorationLine: 'underline' }]}>{getAppLinkText(content)}</Text>
         </MessageWrapper>
       )

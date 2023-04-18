@@ -98,10 +98,11 @@ export const sortMessages = (messages: Message[]) =>
   })
 
 export const removePending = (messages: Message[]) =>
-  messages.filter(m => {
+  messages.filter((m, i, arr) => {
     if (m.id[0] === '-') {
-      return !Boolean(
+      return !(
         messages.find(t => t.id[0] !== '-' && m.kind === t.kind && m.content === t.content && m.author === t.author)
+          || m.timestamp < (Date.now() / 1000) - 5
       )
     }
 

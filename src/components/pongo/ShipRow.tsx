@@ -6,6 +6,7 @@ import ShipName from "./ShipName";
 import useColors from "../../hooks/useColors";
 import { addSig } from "../../util/string";
 import { useMemo } from "react";
+import { getShipColor } from "../../util/number";
 
 interface ShipRowProps {
   ship: string
@@ -14,7 +15,7 @@ interface ShipRowProps {
 }
 
 export default function ShipRow({ ship, noBorder = false, onPress }: ShipRowProps) {
-  const { color } = useColors()
+  const { color, theme } = useColors()
 
   const styles = useMemo(() => StyleSheet.create({
     container: {
@@ -31,7 +32,7 @@ export default function ShipRow({ ship, noBorder = false, onPress }: ShipRowProp
   return (
     <Pressable onPress={onPress(ship)} style={{ width: '100%' }}>
       <Row style={styles.container}>
-        <Avatar size="large" ship={addSig(ship)} />
+        <Avatar size="large" ship={addSig(ship)} color={getShipColor(ship, theme)} />
         <ShipName name={ship} showAlias style={styles.shipName} />
       </Row>
     </Pressable>
