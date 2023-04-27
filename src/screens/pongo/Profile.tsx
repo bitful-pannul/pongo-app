@@ -34,7 +34,7 @@ interface ProfileScreenProps {
 
 export default function ProfileScreen({ navigation, route }: ProfileScreenProps) {
   const { ship: self } = useStore()
-  const { set, createConversation, sortedChats, loading, blocklist } = usePongoStore()
+  const { set, createConversation, sortedChats, loading, blocklist, chats } = usePongoStore()
   const { tags, getTags, addTag, deleteTag } = usePosseState()
   const { color, backgroundColor, shadedBackground, theme } = useColors()
   const { ship } = route.params
@@ -46,16 +46,19 @@ export default function ProfileScreen({ navigation, route }: ProfileScreenProps)
   const [error, setError] = useState('')
   const isSelf = deSig(self) === deSig(ship)
 
+  const dmChatId = useMemo(() => {
+    const existingChat = sortedChats.find(sc => sc.conversation.members.length === 2 && sc.conversation.members.includes(deSig(ship)) && sc.conversation.dm)
+    return existingChat?.conversation.id
+  }, [chats, ship])
+
   // useEffect(() => {
   //   getTags(ship)
   // }, [ship])
 
   const startDm = useCallback(async () => {
-    const existingChat = sortedChats.find(sc => sc.conversation.members.length === 2 && sc.conversation.members.includes(deSig(ship)))
-
-    if (existingChat) {
+    if (dmChatId) {
       navigation.goBack()
-      navigation.navigate('Chat', { id: existingChat.conversation.id })
+      navigation.navigate('Chat', { id: dmChatId })
     } else {
       set({ loading: 'Creating Chat...' })
       try {
@@ -67,7 +70,7 @@ export default function ProfileScreen({ navigation, route }: ProfileScreenProps)
       } catch {}
       set({ loading: null })
     }
-  }, [ship, self])
+  }, [ship, self, dmChatId])
 
   const removeTag = useCallback((tagToDelete: string) => () => {
     deleteTag(ship, tagToDelete)
@@ -90,6 +93,10 @@ export default function ProfileScreen({ navigation, route }: ProfileScreenProps)
     Toast.show('Copied!', { ...defaultOptions, duration: Toast.durations.SHORT, position: Toast.positions.CENTER })
   }, [ship])
 
+  const startCall = useCallback(() => {
+    if (dmChatId) navigation.navigate('Call', { ship, chatId: dmChatId })
+  }, [navigation, dmChatId])
+
   if (!ship) {
     return null
   }
@@ -111,16 +118,19 @@ export default function ProfileScreen({ navigation, route }: ProfileScreenProps)
         </Pressable>
       </Col>
 
-      {/* {loading ? (
+      {loading ? (
         <Col style={{ justifyContent: 'center', alignItems: 'center', height: '100%', width: '100%', paddingBottom: '40%' }}>
           <Loader text={loading} />
         </Col>
       ) : (
         <Col style={{ width: '100%', alignItems: 'center', paddingHorizontal: 32, marginTop: 4 }}>
 
-          {!isSelf && <Button title='Send Message' onPress={startDm} style={{ marginBottom: 16 }} />}
+          {!isSelf && <>
+            <Button title='Send Message' onPress={startDm} style={{ marginBottom: 16 }} />
+            {Boolean(dmChatId) && <Button title='Call' onPress={startCall} style={{ marginBottom: 16 }} />}
+          </>}
 
-          <View style={{ marginTop: 16, padding: 2, borderBottomColor: uq_darkpink, borderBottomWidth: 2 }}>
+          {/* <View style={{ marginTop: 16, padding: 2, borderBottomColor: uq_darkpink, borderBottomWidth: 2 }}>
             <H3 text='Posse Tags' />
           </View>
           <Row style={{ marginTop: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -145,9 +155,9 @@ export default function ProfileScreen({ navigation, route }: ProfileScreenProps)
               <Button title='Add Tag' small onPress={saveTag} style={{ marginLeft: 8, marginRight: 0 }} />
             </Row>
             {Boolean(error) && <Text style={{ fontSize: 16, color: 'red', margin: 4 }}>{error}</Text>}
-          </Col>
+          </Col> */}
         </Col>
-      )} */}
+      )}
 
     </KeyboardAvoidingView>
   )

@@ -12,6 +12,7 @@ import { checkIsDm, getChatName } from '../../../util/ping';
 import Row from '../../spacing/Row';
 import { Text } from '../../Themed';
 import { Alert } from 'react-native';
+import { addSig } from '../../../util/string';
 
 interface ChatMenuProps {
   id: string;
@@ -30,11 +31,15 @@ export default function ChatMenu({ id }: ChatMenuProps) {
     Alert.alert('Leave Chat', 'Are you sure you want to leave this chat?', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Leave', onPress: async () => {
+        // console.log(1)
         try {
+          // console.log(2)
           await leaveConversation(id)
           if (api) {
+            // console.log(3)
             getChats(api)
           }
+          // console.log(4)
           navigation.goBack()
         } catch {}
       } },
@@ -42,6 +47,8 @@ export default function ChatMenu({ id }: ChatMenuProps) {
   }, [id, api, leaveConversation])
 
   const changeMute = useCallback(() => toggleMute(id), [id])
+
+  const call = useCallback(() => navigation.navigate('Call', { ship: addSig(chatName), chatId: id }), [id, chatName])
 
   const showInfo = useCallback(() => {
     set({ isSearching: false, searchResults: [] })
@@ -82,6 +89,12 @@ export default function ChatMenu({ id }: ChatMenuProps) {
             <Ionicons name={chat.conversation.muted ? 'volume-high' : 'volume-mute' } size={24} color={color} style={{ padding: 4 }} />
           </Row>
         </MenuOption>
+        {isDm && <MenuOption onSelect={call}>
+          <Row style={{ justifyContent: 'flex-end', alignItems: 'center', paddingRight: 12, paddingVertical: 2, paddingBottom: 4 }}>
+            <Text style={{ fontSize: 16, fontWeight: '600', marginRight: 8 }}>Call</Text>
+            <Ionicons name='videocam' size={24} color={color} style={{ padding: 4 }} />
+          </Row>
+        </MenuOption>}
       </MenuOptions>
     </Menu>
   )

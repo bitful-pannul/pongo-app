@@ -43,6 +43,7 @@ export default function ChatInput({
   const [sending, setSending] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [placeholder, setPlaceholder] = useState('Message')
 
   const { pickImage, storeAudio } = useMedia({ ship: self, chatId, reply, setUploading })
 
@@ -175,9 +176,9 @@ export default function ChatInput({
         </>
       ) : (
         <>
-          <TextInput ref={inputRef} placeholder='Message' value={text} onKeyPress={onKeyPress}
+          <TextInput ref={inputRef} placeholder={placeholder} value={text} onKeyPress={onKeyPress}
             onChangeText={onChangeTextInput} maxLength={1024} style={[styles.textInput, isWeb && { overflow: 'scroll' }]} multiline
-            autoFocus={isWeb}
+            autoFocus={isWeb} onFocus={() => setPlaceholder('')} onBlur={() => setPlaceholder('Message')}
           />
           
           {Boolean(text) ? (

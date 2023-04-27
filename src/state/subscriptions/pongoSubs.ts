@@ -1,6 +1,6 @@
 import { GetState, SetState } from "zustand"
 import { dedupeAndSort, getChatName, idNum, sortChats } from "../../util/ping"
-import { deSig } from "../../util/string"
+import { addSig, deSig } from "../../util/string"
 import { Message, MessageStatus, Update } from "../../types/Pongo"
 import { PongoStore } from "../types/pongo"
 import { showWebNotification } from "../../util/notification"
@@ -16,7 +16,7 @@ export const messageSub = (set: SetState<PongoStore>, get: GetState<PongoStore>)
     const chat = chats[chatId]
     const messages = chat?.messages || []
 
-    if (!chat) {
+    if (!chat || update.message.message.kind === 'pass-through') {
       return
     }
 
@@ -24,12 +24,18 @@ export const messageSub = (set: SetState<PongoStore>, get: GetState<PongoStore>)
 
     chat.conversation.last_active = timestamp
     const isMostRecent = chat.last_message?.id && idNum(id) > idNum(chat.last_message.id)
+    const isNextMsg = chat.last_message?.id && idNum(id) === idNum(chat.last_message.id) + 1
     const isCurrentChat = chatId === currentChat
 
     if (isMostRecent) {
       chat.last_message = update.message.message
+
+      if (kind === 'webrtc-call' && content === 'request' && deSig(author) !== deSig(api?.ship || '')) {
+        showWebNotification('Video Call', `Incoming call from ${addSig(author)}`)
+        set({ incomingCall: { chatId, msg: update.message.message } })
+      }
       
-      if (isCurrentChat) {
+      if (isCurrentChat && isNextMsg) {
         chat.conversation.last_read = id
         get().setLastReadMsg(chatId, id)
       }
@@ -54,7 +60,7 @@ export const messageSub = (set: SetState<PongoStore>, get: GetState<PongoStore>)
       existing.reference = reference
       existing.timestamp = timestamp
       existing.status = 'delivered'
-    } else if (isMostRecent) {
+    } else if (isNextMsg) {
       chat.messages = [{ ...update.message.message, status: 'delivered' as MessageStatus } as Message].concat(messages || [])
     }
     // chat.messages = dedupeAndSort(chat.messages)

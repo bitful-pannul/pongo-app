@@ -41,7 +41,7 @@ const ChatsScreen = () => {
 
   useEffect(() => {
     if (api) {
-      const getChatsInterval  = setInterval(() => getChats(api), ONE_SECOND * 10)
+      const getChatsInterval = setInterval(() => getChats(api), ONE_SECOND * 10)
       return () => clearInterval(getChatsInterval)
     }
   }, [api])

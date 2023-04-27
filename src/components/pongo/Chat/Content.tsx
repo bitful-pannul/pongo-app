@@ -25,7 +25,6 @@ import { Message } from "../../../types/Pongo";
 import { uq_pink } from "../../../constants/Colors";
 import Toast from "react-native-root-toast";
 import { defaultOptions } from "../../../util/toast";
-import { PongoStackParamList } from "../../../types/Navigation";
 
 interface ContentProps {
   onLongPress?: () => void;
@@ -45,7 +44,7 @@ export default function Content({
   const styles = useMemo(() => StyleSheet.create({
     content: { maxWidth: '100%' },
     textStyle: { color, fontSize: 16, flexShrink: 1 },
-    linkStyle: { color, fontSize: 16, flexShrink: 1, textDecorationLine: 'underline', overflowWrap: isWeb ? 'anywhere' : undefined },
+    linkStyle: { color, fontSize: 16, flexShrink: 1, textDecorationLine: 'underline' },
     code: { fontFamily: isIos ? 'Courier New' : 'monospace', backgroundColor: 'rgba(127, 127, 127, 0.5)' },
     italic: { fontStyle: 'italic' },
     bold: { fontWeight: 'bold' },
@@ -59,6 +58,11 @@ export default function Content({
 
   const copyPatp = useCallback((patp: string) => () => {
     Clipboard.setStringAsync(patp)
+    Toast.show('Copied!', { ...defaultOptions, duration: Toast.durations.SHORT, position: Toast.positions.CENTER })
+  }, [])
+
+  const copyLink = useCallback((link: string) => () => {
+    Clipboard.setStringAsync(link)
     Toast.show('Copied!', { ...defaultOptions, duration: Toast.durations.SHORT, position: Toast.positions.CENTER })
   }, [])
 
@@ -147,7 +151,9 @@ export default function Content({
   return (
     <Text style={styles.content}>
       {splitByRegex(content, SPLIT_BY_URL_REGEX).map((c, i) => SPLIT_BY_URL_REGEX.test(c) ?
-        <A href={c} key={`${i}-${depth}`} style={styles.linkStyle} target='_blank'>{c}</A>:
+        <A href={c} key={`${i}-${depth}`} style={[styles.linkStyle, isWeb ? { overflowWrap: 'anywhere' } as any : null]} target='_blank' onLongPress={copyLink(c)}>
+          {c}
+        </A>:
         <Text {...{ onLongPress, delayLongPress }} style={styles.textStyle} key={`${i}-${depth}`}>{c}</Text>
       )}
     </Text>

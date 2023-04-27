@@ -1,6 +1,6 @@
 import Urbit from "@uqbar/react-native-api";
 import { SetState } from "zustand";
-import { Chat, Chats, GetMessagesParams, Message, NotifLevel, SearchMessagesParams, SendMessagePayload, SendTokensPayload, SetNotifParams } from "../../types/Pongo";
+import { Chat, Chats, GetMessagesParams, Message, NotifLevel, SearchMessagesParams, SendMessagePayload, SendTokensPayload, SetNotifParams, IncomingCall } from "../../types/Pongo";
 import { DefaultStore } from "./types";
 
 export interface PongoStore extends DefaultStore {
@@ -23,6 +23,7 @@ export interface PongoStore extends DefaultStore {
   // Settings
   notifLevel: NotifLevel;
   expoToken: string;
+  incomingCall?: IncomingCall;
 
   setChatPosition: (chatId: string, offset: number, index: number) => void;
   setDraft: (chatId: string, text: string) => void;

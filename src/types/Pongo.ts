@@ -3,6 +3,8 @@ export interface NotifPayload {
   ship_url: string;
   conversation_id: string;
   message_id?: string;
+  kind?: MessageKind;
+  author?: string;
 }
 
 export interface Reactions {
@@ -92,6 +94,8 @@ export type MessageKind = 'text'
   | 'leader-remove'
   | 'change-router'
   | 'send-tokens'
+  | 'webrtc-call'
+  | 'pass-through'
 
 export interface ConversationsUpdate {
   conversations: Chat[]
@@ -162,4 +166,9 @@ export interface SendTokensPayload {
   to: string
   amount: string // ud
   item: string
+}
+
+export interface IncomingCall {
+  chatId: string
+  msg: Message
 }

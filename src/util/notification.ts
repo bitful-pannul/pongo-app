@@ -3,7 +3,7 @@ import { deSig } from '@urbit/api';
 import { configureApi } from '@uqbar/react-native-api/configureApi'
 
 import { DM_DIVIDER } from '../constants/Pongo';
-import { NotifPayload } from '../types/Pongo';
+import { MessageKind, NotifPayload } from '../types/Pongo';
 import { isWeb } from '../constants/Layout';
 import { Platform } from 'react-native';
 
@@ -81,7 +81,9 @@ export const getNotificationData = (notification?: Notifications.Notification): 
   const ship_url = notification?.request?.content?.data?.ship_url as string;
   const conversation_id = notification?.request?.content?.data?.conversation_id as string;
   const message_id = notification?.request?.content?.data?.message_id as (string | undefined);
-  return { ship, ship_url, conversation_id, message_id };
+  const kind = notification?.request?.content?.data?.author as (MessageKind | undefined);
+  const author = notification?.request?.content?.data?.author as (string | undefined);
+  return { ship, ship_url, conversation_id, message_id, kind, author };
 }
 
 export const showWebNotification = async (title: string, body: string) => {

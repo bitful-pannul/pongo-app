@@ -8,7 +8,7 @@ import { resetSubscriptions } from "./util"
 import { Chats, Message, NotifSettings, SendMessagePayload, SetNotifParams, GetMessagesParams, MessageStatus, SearchMessagesParams, SendTokensPayload, NotifLevel } from "../types/Pongo"
 import { addSig, deSig } from "../util/string"
 import { ONE_SECOND } from "../util/time"
-import { MAX_MESSAGES_LENGTH, dedupeAndSort, sortChats } from "../util/ping"
+import { MAX_MESSAGES_LENGTH, dedupeAndSort, isCallRequest, sortChats } from "../util/ping"
 import { getPushNotificationToken } from "../util/notification"
 import { HAS_MENTION_REGEX } from "../constants/Regex"
 import { PongoStore } from './types/pongo'
@@ -128,7 +128,7 @@ const usePongoStore = create(
       getChats: async (api: Urbit, maintainMessages = true) => {
         const existingChats = get().chats
         const chats = (await api.scry<{ conversations: Chats }>({ app: 'pongo', path: '/conversations' })).conversations
-    
+
         Object.keys(chats || {}).forEach(ch => {
           chats[ch].messages = maintainMessages ? (existingChats[ch]?.messages || []) : []
     
@@ -138,6 +138,28 @@ const usePongoStore = create(
         })
     
         const sortedChats = sortChats(chats)
+
+        const incomingChat = sortedChats.find((chat) => isCallRequest(api.ship!, chat.last_message))
+
+        if (incomingChat && !get().incomingCall) {
+          const chatId = incomingChat.conversation.id
+          set({ incomingCall: { chatId, msg: incomingChat.last_message! } })
+
+          const interval = setInterval(() => {
+            get().getMessages({ chatId: incomingChat.conversation.id, msgId: incomingChat.last_message!.id, numBefore: 0, numAfter: 1 })
+              .then(msgs => {
+                if (!get().incomingCall) {
+                  clearInterval(interval)
+                } else if (msgs[0].id !== incomingChat.last_message?.id) {
+                  set({ incomingCall: undefined })
+                  clearInterval(interval)
+                }
+              })
+          }, ONE_SECOND * 2)
+        } else if (!incomingChat) {
+          set({ incomingCall: undefined })
+        }
+        
         set({ chats, sortedChats })
         return chats
       },
@@ -258,37 +280,36 @@ const usePongoStore = create(
         const identifier = `-${timesent}`
         const mentions: string[] = (kind === 'text' ? content.match(HAS_MENTION_REGEX) || [] as string[] : []).concat(mens).map(m => addSig(m.trim())).filter(isValidPatp)
         chat.unreads = 0
-    
-        chat.messages = resend ? chat.messages.map(m => m.id === resend?.id ? { ...m, status: 'pending' } : m) :
-          [{
-            id: identifier,
-            author: self,
-            timestamp: Math.round(timesent / ONE_SECOND),
-            kind,
-            content,
-            reactions: {},
-            edited: false,
-            mentions,
-            reference: ref || null,
-            status: 'pending' as MessageStatus,
-          } as Message].concat(chat.messages)
-    
+
+        if (kind !== 'pass-through') {
+          chat.messages = resend ? chat.messages.map(m => m.id === resend?.id ? { ...m, status: 'pending' } : m) :
+            [{
+              id: identifier,
+              author: self,
+              timestamp: Math.round(timesent / ONE_SECOND),
+              kind,
+              content,
+              reactions: {},
+              edited: false,
+              mentions,
+              reference: ref || null,
+              status: 'pending' as MessageStatus,
+            } as Message].concat(chat.messages)
+        }
         set({ chats })
 
         const { api } = get()
-        setTimeout(async () => {
-          if (api && deSig(api.ship) === deSig(self)) {
-            try {
-              const json = resend ?
-                { 'send-message': { ...resend, convo, identifier, reference: resend.reference?.replace(/\./g, ''), mentions } } :
-                { 'send-message': { convo, kind, content, identifier, reference, mentions } }
-              await api.poke({ app: 'pongo', mark: 'pongo-action', json })
-            } catch (err) {
-              chat.messages = chat.messages.map(m => m.id === identifier ? { ...m, status: 'failed' } : m)
-              set({ chats })
-            }
+        if (api && deSig(api.ship) === deSig(self)) {
+          try {
+            const json = resend ?
+              { 'send-message': { ...resend, convo, identifier, reference: resend.reference?.replace(/\./g, ''), mentions } } :
+              { 'send-message': { convo, kind, content, identifier, reference, mentions } }
+            await api.poke({ app: 'pongo', mark: 'pongo-action', json })
+          } catch (err) {
+            chat.messages = chat.messages.map(m => m.id === identifier ? { ...m, status: 'failed' } : m)
+            set({ chats })
           }
-        }, ONE_SECOND * 0.5)
+        }
       },
       editMessage: async (convo: string, msgId: string, edit: string) => {
         const json = { 'send-message-edit': { convo, on: msgId, edit } }

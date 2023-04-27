@@ -66,6 +66,20 @@ const MessagesList = React.memo(({
     } catch {}
   }, [])
 
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      transform: isWeb ? [{scaleY: -1}] : undefined,
+      position: 'absolute', top: 0, right: 0, left: 0, bottom: 0,
+      backgroundColor: chatBackground,
+      height: '100%'
+    },
+    list: { backgroundColor: 'transparent', borderBottomWidth: 0, height: '100%' },
+    contentContainer: { paddingTop: 4, paddingBottom: 12 },
+    unread: { /*transform: [{scaleY: -1}],*/ maxWidth: '84%', alignSelf: 'center', marginHorizontal: '8%', marginVertical: 4, backgroundColor: blue_overlay, borderRadius: 8, padding: 4, paddingHorizontal: 32 },
+    date: { /*transform: [{scaleY: -1}],*/ maxWidth: '84%', alignSelf: 'center', marginHorizontal: '8%', marginBottom: 4, marginTop: 8, backgroundColor: gray_overlay, borderRadius: 8, padding: 4, paddingHorizontal: 32 },
+    indicatorText: { fontSize: 16, color: 'white' },
+  }), [])
+
   const renderMessage = useCallback(({ item, index }: { item: Message; index: number }) => {
     const daySent = moment(item.timestamp * ONE_SECOND).format('YYYYMMDD')
     const previous = messages[index + 1] && moment(messages[index + 1].timestamp * ONE_SECOND).format('YYYYMMDD')
@@ -84,43 +98,19 @@ const MessagesList = React.memo(({
         navigation={navigation}
       />
       {unreadInfo && unreadInfo?.unreads > 0 && idNum(unreadInfo?.lastRead) === idNum(item.id) - 1 && (
-        <View id='unread-indicator' style={{ maxWidth: '84%', alignSelf: 'center', marginHorizontal: '8%', marginVertical: 4, backgroundColor: blue_overlay, borderRadius: 8, padding: 4, paddingHorizontal: 32 }}>
-          <Text style={{ fontSize: 16, color: 'white' }}>Unread Messages</Text>
+        <View id='unread-indicator' style={styles.unread}>
+          <Text style={styles.indicatorText}>Unread Messages</Text>
         </View>
       )}
       {showDateIndicator && (
-        <View style={{ maxWidth: '84%', alignSelf: 'center', marginHorizontal: '8%', marginBottom: 4, marginTop: 8, backgroundColor: gray_overlay, borderRadius: 8, padding: 4, paddingHorizontal: 32 }}>
-          <Text style={{ fontSize: 16, color: 'white' }}>{getRelativeDate(item.timestamp * ONE_SECOND)}</Text>
+        <View style={styles.date}>
+          <Text style={styles.indicatorText}>{getRelativeDate(item.timestamp * ONE_SECOND)}</Text>
         </View>
       )}
     </>
   }, [highlighted, messages, unreadInfo, navigation])
 
   const keyExtractor = useCallback((item: Message) => `${item?.id || 'missing'}-${item?.timestamp}`, [])
-
-  const styles = useMemo(() => StyleSheet.create({
-    container: {
-      transform: isWeb ? [{scaleY: -1}] : undefined,
-      position: 'absolute',
-      top: 0,
-      right: 0,
-      left: 0,
-      bottom: 0,
-      backgroundColor: chatBackground,
-      height: '100%',
-    },
-    list: {
-      backgroundColor: 'transparent',
-      borderBottomWidth: 0,
-      height: '100%',
-      // flexDirection: isWeb ? 'column-reverse' : undefined,
-    },
-    contentContainer: {
-      paddingTop: 4,
-      paddingBottom: 12,
-      // flexDirection: isWeb ? 'column-reverse' : undefined,
-    },
-  }), [])
 
   return (
     <View style={styles.container}>

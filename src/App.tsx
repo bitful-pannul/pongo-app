@@ -34,10 +34,6 @@ if (!isWeb) {
   enableFreeze(true)
 }
 
-// if (!window.ship) {
-//   window.ship = 'fabnev-hinmur'
-// }
-
 const HANDLE_NOTIFICATION_BACKGROUND = 'HANDLE_NOTIFICATION_BACKGROUND'
 
 TaskManager.defineTask(HANDLE_NOTIFICATION_BACKGROUND, async ({ data, error, executionInfo }) => {
@@ -60,7 +56,7 @@ Notifications.setNotificationHandler({
 export default function App() {
   const isLoadingComplete = useCachedResources()
   const { loading, setLoading, ship: self, shipUrl, authCookie, loadStore, needLogin, setNeedLogin, setShip, addShip } = useStore()
-  const { currentChat, chats, connected: shipConnected, set } = usePongoStore()
+  const { currentChat, chats, connected: shipConnected, set, getMessages } = usePongoStore()
   const { color, backgroundColor } = useColors()
   const colorScheme = useColorScheme()
   const [connected, setConnected] = useState(true)
@@ -70,18 +66,20 @@ export default function App() {
   const [inviteUrl, setInviteUrl] = useState<string | undefined>()
 
   const handleNotificationResponse = useCallback((response: Notifications.NotificationResponse) => {
-    const { ship, conversation_id, message_id } = getNotificationData(response?.notification)
-    if (ship && self && shipUrl && conversation_id) {
+    const { ship, conversation_id, message_id, author, kind } = getNotificationData(response?.notification)
+    if (ship && self && shipUrl && conversation_id && message_id) {
+      const destination = kind === 'webrtc-call' ?
+        { name: 'Call', params: { chatId: conversation_id, ship: author } } :
+        { name: 'Chat', params: { id: conversation_id, msgId: message_id } }
+
       if (ship !== self) {
         setShip(ship)
-        // Navigating from another app doesn't work great
+        // Navigating from another app
         setTimeout(() => navTo('Pongo'), ONE_SECOND * 0.5)
-        setTimeout(() => navReset({
-          index: 0, routes: [{ name: 'Chats' }, { name: 'Chat', params: { id: conversation_id, msgId: message_id } } ]
-        }), 1000)
+        setTimeout(() => navReset({ index: 0, routes: [{ name: 'Chats' }, destination ] }), ONE_SECOND)
       } else {
         navTo('Pongo')
-        navReset({ index: 0, routes: [{ name: 'Chats' }, { name: 'Chat', params: { id: conversation_id } } ] })
+        navReset({ index: 0, routes: [{ name: 'Chats' }, destination ] })
       }
     }
     Notifications.setBadgeCountAsync(0)
@@ -125,7 +123,7 @@ export default function App() {
         Notifications.setBadgeCountAsync(0)
         const payload = getNotificationData(notification)
 
-        if (currentChat !== payload.conversation_id) {
+        if (currentChat !== payload.conversation_id && payload.kind !== 'webrtc-call') {
           if (notification.request.content.title?.length) {
             return { shouldShowAlert: true, shouldPlaySound: true, shouldSetBadge: true }
           }

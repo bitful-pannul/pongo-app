@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Alert, Image, View } from 'react-native'
+import * as Network from 'expo-network'
 import { createNativeStackNavigator } from "@react-navigation/native-stack"
 import { NavigationProp, RouteProp, useNavigation } from '@react-navigation/native'
 import { Ionicons, MaterialIcons } from '@expo/vector-icons'
-import * as Network from 'expo-network'
 
 import { PongoStackParamList } from "../types/Navigation"
 import useStore from '../state/useStore'
@@ -23,9 +24,8 @@ import ChatMenu from '../components/pongo/Chats/ChatMenu'
 import ChatHeader from '../components/pongo/Headers/ChatHeader'
 import GroupScreen from '../screens/pongo/Group'
 import usePosseState from '../state/usePosseState'
-import { getPushNotificationToken } from '../util/notification'
+import { getPushNotificationToken, showWebNotification } from '../util/notification'
 import NewPosseGroupScreen from '../screens/pongo/NewPosseGroup'
-import { Alert, Image, Pressable, View } from 'react-native'
 import { ONE_SECOND } from '../util/time'
 import { NECTAR_APP, NECTAR_HOST } from '../constants/Nectar'
 import { PING_APP, PING_HOST } from '../constants/Pongo'
@@ -40,6 +40,9 @@ import { useWalletStore } from '../wallet-ui'
 import Row from '../components/spacing/Row'
 import useSettingsState from '../state/useSettingsState'
 import useDimensions from '../hooks/useDimensions'
+import CallScreen from '../screens/pongo/Call'
+import IncomingCallModal from '../components/pongo/Call/IncomingCallModal'
+import { deSig } from '../util/string'
 
 let checkAppsInstalledInterval: NodeJS.Timer | undefined
 
@@ -54,11 +57,12 @@ export default function PongoStackNavigator() {
   const { init: initPosse, clearSubscriptions: clearPosse } = usePosseState()
   const { init: initContact, clearSubscriptions: clearContact } = useContactState()
   const { init: initSettings, clearSubscriptions: clearSettings } = useSettingsState()
-  const { init: initPongo, isSearching, connected, clearSubscriptions: clearPongo, setNotifToken } = usePongoStore()
+  const { init: initPongo, isSearching, connected, sortedChats, incomingCall, clearSubscriptions: clearPongo, setNotifToken, sendMessage, set } = usePongoStore()
   const { initWallet, clearSubscriptions: clearWallet } = useWalletStore()
   const { api, ship: self, shipUrl } = useStore()
-  const [loadingText, setLoadingText] = useState<string | undefined>()
   const { isLargeDevice, cWidth } = useDimensions()
+  const [loadingText, setLoadingText] = useState<string | undefined>()
+  const [acceptedCall, setAcceptedCall] = useState<string | undefined>()
 
   useEffect(() => {
     if (api) {
@@ -169,6 +173,21 @@ export default function PongoStackNavigator() {
     Alert.alert('Cannot connect to ship', `Unable to reach your ship '${self}' at ${shipUrl}.\n\n Please check your network connection and ${shipUrl}`)
   , [self, shipUrl])
 
+  const rejectCall = useCallback(() => {
+    if (incomingCall) {
+      sendMessage({ self, convo: incomingCall.chatId, kind: 'webrtc-call', content: 'end' })
+      set({ incomingCall: undefined })
+    }
+  }, [set, incomingCall, self, sendMessage])
+
+  const acceptCall = useCallback(() => {
+    if (incomingCall) {
+      set({ incomingCall: undefined })
+      setAcceptedCall(incomingCall.chatId + incomingCall.msg.id)
+      navigation.navigate('Call', { chatId: incomingCall.chatId, ship: deSig(incomingCall.msg.author) })
+    }
+  }, [set, navigation, incomingCall])
+
   const disconnectedIcon = useMemo(() =>
     <MaterialIcons onPress={showDisconnectInfo} style={{ padding: 2, paddingBottom: 4, paddingRight: isWeb ? 20 : 4  }} name='wifi-off' size={24} color='white' />
   , [showDisconnectInfo])
@@ -268,6 +287,16 @@ export default function PongoStackNavigator() {
         headerRight: () => !connected ? disconnectedIcon : null
       })}
     />
+    <Stack.Screen name="Call" component={CallScreen}
+      options={({ navigation } : NavHeaderProps) => ({
+        headerStyle: { backgroundColor: uq_purple },
+        headerBackVisible: false,
+        headerTitleAlign: 'center',
+        headerLeft: NavBackButton,
+        headerTitle: () => <H3 style={{ color: 'white' }} text='Call' />,
+        headerRight: () => !connected ? disconnectedIcon : null
+      })}
+    />
     <Stack.Screen name="Group" component={GroupScreen}
       options={({ navigation, route } : NavHeaderProps) => ({
         headerStyle: { backgroundColor: uq_purple },
@@ -290,6 +319,8 @@ export default function PongoStackNavigator() {
     />
   </Stack.Navigator>
 
+  const showIncomingCall = Boolean(incomingCall) && (!acceptedCall || acceptedCall !== ((incomingCall?.chatId || '') + incomingCall?.msg?.id))
+
   if (isLargeDevice) {
     return (
       <Row style={{ flex: 1 }}>
@@ -297,9 +328,13 @@ export default function PongoStackNavigator() {
         <View style={{ flex: 1, height: '100%', maxWidth: cWidth }}>
           {stack}
         </View>
+        {showIncomingCall && <IncomingCallModal {...{ incomingCall, rejectCall, acceptCall }} />}
       </Row>
     )
   }
 
-  return stack
+  return <View style={{ flex: 1 }}>
+    {stack}
+    {showIncomingCall && <IncomingCallModal {...{ incomingCall, rejectCall, acceptCall }} />}
+  </View>
 }

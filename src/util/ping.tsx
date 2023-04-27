@@ -3,6 +3,7 @@ import { Chat, Chats, Message, MessageKind } from "../types/Pongo"
 import { displayTokenAmount } from "../wallet-ui/utils/number"
 import { fromUd } from "./number"
 import { addSig, AUDIO_URL_REGEX, deSig, IMAGE_URL_REGEX } from "./string"
+import { ONE_SECOND } from "./time"
 
 export const RETRIEVAL_NUM = 50
 export const MAX_MESSAGES_LENGTH = 150
@@ -36,7 +37,7 @@ export const getChatName = (self: string, chat?: Chat) => {
   return chat.conversation.name
 }
 
-export const getAdminMsgText = (kind: MessageKind, content: string) => {
+export const getMsgText = (kind: MessageKind, content: string, author: string, self: string) => {
   if (kind === 'member-add') {
     return `${content} joined the chat`
   } else if (kind === 'member-remove') {
@@ -51,6 +52,16 @@ export const getAdminMsgText = (kind: MessageKind, content: string) => {
     return `Router changed to ${content}`
   } else if (kind === 'send-tokens') {
     return formatTokenContent(content)
+  } else if (kind === 'webrtc-call') {
+    switch (content) {
+      case 'request':
+        return deSig(author) === deSig(self) ? 'You started a call' : `${addSig(author)} called you` 
+      case 'start': return 'Call started'
+      case 'end': return `${deSig(author) === deSig(self) ? 'You' : addSig(author)} left the call`
+      default: return content
+    }
+  } else if (kind.includes('webrtc')) {
+    return 'Call Info'
   } else if (AUDIO_URL_REGEX.test(content)) {
     return 'Voice Message'
   } else if (IMAGE_URL_REGEX.test(content)) {
@@ -115,3 +126,8 @@ export const formatTokenContent = (text: string) => {
   const [amount, symbol, recipient] = text.split(' ')
   return `Sent ${displayTokenAmount(fromUd(amount), 18, 3)} ${symbol} to ${recipient}`
 }
+
+export const isCallRequest = (ship: string, msg: Message | null) => msg?.kind === 'webrtc-call'
+  && msg?.content === 'request'
+  && deSig(msg?.author) !== deSig(ship)
+  && msg.timestamp > ((Date.now() / ONE_SECOND) - 30)

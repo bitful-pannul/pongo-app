@@ -93,6 +93,18 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
   }, [])
 
   useEffect(() => {
+    const interval = setInterval(() => {
+      if (chat && !messages.length) {
+        getMessages({ chatId, msgId: chat.conversation.last_read, numBefore: RETRIEVAL_NUM, numAfter: RETRIEVAL_NUM })
+      } else if (chat && messages.length) {
+        clearInterval(interval)
+      }
+    }, ONE_SECOND * 3)
+
+    return () => clearInterval(interval)
+  }, [chatId, messages?.length])
+
+  useEffect(() => {
     if (!chatId || !chats[chatId]) {
       navigation.goBack()
     } else {
@@ -138,13 +150,13 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
     const getInitialMessages = async () => {
       if (chatId && chat && initialLoading) {
         try {
+          let msgs: Message[] | undefined = undefined
           // come to msg from push notification
           if (msgId) {
             await getMessages({ chatId, msgId, numBefore: RETRIEVAL_NUM, numAfter: RETRIEVAL_NUM })
-            setUnreadIndicator({ unreads: chat?.unreads || 0, lastRead: chat.conversation.last_read })
+            setUnreadIndicator({ unreads: chat?.unreads || 0, lastRead: msgId })
           // open with no messages
           } else if (!messages || messages.length < 1) {
-            let msgs: Message[] | undefined = undefined
             if (chat.conversation.last_read === '0' && chat.last_message?.id) {
               msgs = await getMessages({ chatId, msgId: chat.last_message?.id, numBefore: 50, numAfter: 5 })
             } else {
@@ -159,8 +171,9 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
             
           // if the most recent message in our chat is also the last one we read (i.e. we were previously caught up)
           } else if (messages[0]?.id === chat.conversation.last_read) {
-            await getMessagesOnScroll({ prepend: true })()
-            setUnreadIndicator({ unreads: chat?.unreads || 0, lastRead: chat.conversation.last_read })
+            msgs = await getMessages({ chatId, msgId: chat.conversation.last_read, numBefore: RETRIEVAL_NUM, numAfter: RETRIEVAL_NUM })
+            const targetMsg = chat.conversation.last_read === msgs[0]?.id ? undefined : msgs.findIndex(({ id }) => id === chat.conversation.last_read)
+            setUnreadIndicator({ unreads: chat?.unreads || 0, lastRead: chat.conversation.last_read }, targetMsg)
           // if we're near the bottom
           } else if (!chatPositions[0]?.offset || chatPositions[0].offset < 50) {
             setUnreadIndicator({ unreads: chat?.unreads || 0, lastRead: chat.conversation.last_read })
@@ -322,10 +335,10 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
   }, [listRef, chatId, chat, messages])
 
   const getMessagesOnScroll = useCallback(({ append, prepend }: { append?: boolean; prepend?: boolean }) => async () => {
-    const msgId = append ? messages[messages.length - 1].id : messages.find(({ id }) => id && id[0] !== '-')?.id
+    const msgId = append ? messages[messages.length - 1]?.id : messages.find(({ id }) => id && String(id)[0] !== '-')?.id
     const fetchedRecently = (Date.now() - lastFetch.current) < ONE_SECOND
 
-    if (!msgId || fetchedRecently || msgId === '0' || msgId === chat.last_message?.id) {
+    if (!msgId || String(msgId)[0] === '-' || fetchedRecently || msgId === '0' || msgId === chat.last_message?.id) {
       return
     }
 
@@ -341,7 +354,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
     const { nativeEvent: { contentOffset: { y } } } = event
     const atTheEnd = y <= 40
     setAtEnd(atTheEnd)
-    const fetchedRecently = (Date.now() - lastFetch.current) < ONE_SECOND / 2
+    const fetchedRecently = (Date.now() - lastFetch.current) < ONE_SECOND * 0.5
 
     if (!fetchedRecently && !atTheEnd && y <= (height * 2) && y <= scrollYRef.current) {
       getMessagesOnScroll({ prepend: true })()

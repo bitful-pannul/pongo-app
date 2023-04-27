@@ -7,7 +7,7 @@ import { blue_overlay, blue_overlay_transparent, medium_gray, uq_pink } from "..
 import { isWeb } from "../../../constants/Layout"
 import useColors from "../../../hooks/useColors"
 import { Message } from "../../../types/Pongo"
-import { formatTokenContent, getAdminMsgText, getAppLinkText, isAdminMsg } from "../../../util/ping"
+import { formatTokenContent, getMsgText, getAppLinkText, isAdminMsg } from "../../../util/ping"
 import { addSig, deSig } from "../../../util/string"
 import { ONE_SECOND } from "../../../util/time"
 import Content from "./Content"
@@ -124,17 +124,8 @@ const MessageEntry = React.memo(({
   const chatWidth = useMemo(() => cWidth, [cWidth])
 
   const styles = useMemo(() => StyleSheet.create({
-    container: {
-      marginTop: differentAuthor ? 6 : 0,
-      paddingVertical: 1,
-      paddingBottom: 1,
-      opacity: isSelected ? 0.2 : undefined,
-    },
-    authorWrapper: {
-      display: 'flex',
-      flexDirection: 'row',
-      justifyContent: isSelf ? 'flex-end' : 'flex-start'
-    },
+    container: { marginTop: differentAuthor ? 6 : 0, paddingVertical: 1, paddingBottom: 1, opacity: isSelected ? 0.2 : undefined, /*transform: [{scaleY: -1}],*/ },
+    authorWrapper: { display: 'flex', flexDirection: 'row', justifyContent: isSelf ? 'flex-end' : 'flex-start' },
     message: {
       display: 'flex',
       flexDirection: 'column',
@@ -171,18 +162,9 @@ const MessageEntry = React.memo(({
       marginBottom: 6,
       marginTop: 4,
     },
-    replyAuthor: {
-      color,
-      fontSize: 14,
-      fontWeight: '600',
-    },
-    text: {
-      fontSize: 16,
-      color,
-    },
-    image: {
-      width: '100%',
-    },
+    replyAuthor: { color, fontSize: 14, fontWeight: '600' },
+    text: { fontSize: 16, color },
+    image: { width: '100%' },
   }), [differentAuthor, isSelected, isSelf, ownChatBackground, backgroundColor, chatWidth, message])
 
   const pressReply = useCallback(() => {
@@ -254,10 +236,11 @@ const MessageEntry = React.memo(({
       kind === 'change-name' ||
       kind === 'leader-add' ||
       kind === 'leader-remove' ||
-      kind === 'change-router'
+      kind === 'change-router' ||
+      kind === 'webrtc-call'
     ) {
       return <ReactionsWrapper style={styles.adminMessage} {...{ message }} color='white'>
-        <Text style={[styles.text, { color: 'white' }]}>{getAdminMsgText(kind, content)}</Text>
+        <Text style={[styles.text, { color: 'white' }]}>{getMsgText(kind, content, author, self)}</Text>
       </ReactionsWrapper>
     }
 

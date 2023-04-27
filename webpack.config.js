@@ -1,7 +1,10 @@
 const createExpoWebpackConfigAsync = require('@expo/webpack-config');
 
 const target = 'https://fabnev.labwet.art/'
-// const target = 'http://localhost:8080'
+// const target = 'http://localhost:8080/'
+// const target = 'http://localhost:8081/'
+// const target = 'http://135.181.83.111:8081/'
+// const target = 'https://test-moon.labwet.art/'
 
 module.exports = async function (env, argv) {
   const config = await createExpoWebpackConfigAsync(env, argv);
@@ -10,14 +13,10 @@ module.exports = async function (env, argv) {
   config.devServer = {
     proxy: {
       '/session.js': {
-        target: `${target}session.js`,
-        changeOrigin: true,
+        target,
+        changeOrigin: true
       },
-      '/~/login': {
-        target: `${target}~/login`,
-        changeOrigin: true,
-      },
-      '/': {
+      '/~/': {
         target,
         changeOrigin: true
       },
