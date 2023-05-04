@@ -11,10 +11,11 @@ import { getShipColor } from "../../util/number";
 interface ShipRowProps {
   ship: string
   noBorder?: boolean
+  showPatp?: boolean
   onPress: (ship: string) => () => void
 }
 
-export default function ShipRow({ ship, noBorder = false, onPress }: ShipRowProps) {
+export default function ShipRow({ ship, noBorder = false, showPatp = false, onPress }: ShipRowProps) {
   const { color, theme } = useColors()
 
   const styles = useMemo(() => StyleSheet.create({
@@ -33,7 +34,7 @@ export default function ShipRow({ ship, noBorder = false, onPress }: ShipRowProp
     <Pressable onPress={onPress(ship)} style={{ width: '100%' }}>
       <Row style={styles.container}>
         <Avatar size="large" ship={addSig(ship)} color={getShipColor(ship, theme)} />
-        <ShipName name={ship} showAlias style={styles.shipName} />
+        <ShipName ship={ship} showBoth={showPatp} style={styles.shipName} />
       </Row>
     </Pressable>
   )

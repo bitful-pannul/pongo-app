@@ -13,6 +13,7 @@ import Row from '../../spacing/Row';
 import { Text } from '../../Themed';
 import { Alert } from 'react-native';
 import { addSig } from '../../../util/string';
+import useNimiState from '../../../state/useNimiState';
 
 interface ChatMenuProps {
   id: string;
@@ -21,10 +22,11 @@ interface ChatMenuProps {
 export default function ChatMenu({ id }: ChatMenuProps) {
   const navigation = useNavigation<NavigationProp<PongoStackParamList>>()
   const { api, ship } = useStore()
+  const profiles = useNimiState(s => s.profiles)
   const { chats, set, leaveConversation, getChats, toggleMute } = usePongoStore()
   const { color, backgroundColor } = useColors()
   const chat = chats[id]
-  const chatName = getChatName(ship, chat)
+  const chatName = getChatName(ship, chat, profiles)
   const isDm = checkIsDm(chat)
 
   const leave = useCallback(() => {
@@ -48,7 +50,7 @@ export default function ChatMenu({ id }: ChatMenuProps) {
 
   const changeMute = useCallback(() => toggleMute(id), [id])
 
-  const call = useCallback(() => navigation.navigate('Call', { ship: addSig(chatName), chatId: id }), [id, chatName])
+  const call = useCallback(() => navigation.navigate('Call', { chatId: id }), [id, chatName])
 
   const showInfo = useCallback(() => {
     set({ isSearching: false, searchResults: [] })

@@ -122,7 +122,8 @@ const useContactState = createState<BaseContactState>(
     isContactPublic: false,
     subscriptions: [],
     init: async (api: Urbit) => {
-      resetSubscriptions(set, api, get().subscriptions, [
+      await get().subscriptions.map(sub => api.unsubscribe(sub))
+      resetSubscriptions(set, api, [], [
         createSubscription('contact-pull-hook', '/nacks', (e) => {
           const data = e?.resource;
           if (data) {

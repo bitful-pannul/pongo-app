@@ -73,7 +73,8 @@ const useHandshakeStore = create<HandshakeStore>((set, get) => ({
       }
     }
 
-    resetSubscriptions(set, api, get().subscriptions, [
+    await get().subscriptions.map(sub => api.unsubscribe(sub))
+    resetSubscriptions(set, api, [], [
       api.subscribe(createSubscription('handshake', '/signer-updates', handleSignerUpdate)),
       api.subscribe(createSubscription('handshake', '/reader-updates', handleReaderUpdate)),
     ])

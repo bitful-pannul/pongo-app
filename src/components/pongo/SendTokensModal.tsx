@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { ActivityIndicator, KeyboardAvoidingView, StyleSheet, TextInput, ScrollView, View } from "react-native"
 import { Token } from "@uqbar/wallet-ui"
 
 import usePongoStore from "../../state/usePongoState"
@@ -8,17 +9,19 @@ import { NON_NUM_REGEX } from "../../wallet-ui/utils/regex"
 import Button from "../form/Button"
 import Modal from "../popup/Modal"
 import Col from "../spacing/Col"
-import { ScrollView, Text, TextInput } from "../Themed"
+import { Text } from "../Themed"
 import TokenDisplay from '../../wallet-ui/components/TokenDisplay'
 import { addSig, deSig } from "../../util/string"
 import { DEFAULT_TXN_COST, ZIGS_CONTRACT } from "../../wallet-ui/utils/constants"
 import { addDecimalDots } from "../../wallet-ui/utils/format"
 import useStore from "../../state/useStore"
-import { ActivityIndicator, StyleSheet, View } from "react-native"
 import useColors from "../../hooks/useColors"
 import { ONE_SECOND } from "../../util/time"
 import { fromUd } from "../../util/number"
 import ShipRow from "./ShipRow"
+import { keyboardAvoidBehavior, keyboardOffset } from "../../constants/Layout"
+import { light_gray } from "../../constants/Colors"
+import useDimensions from "../../hooks/useDimensions"
 
 interface SendTokensModalProps {
   show: boolean
@@ -27,11 +30,14 @@ interface SendTokensModalProps {
 }
 
 export default function SendTokensModal({ show, hide, convo }: SendTokensModalProps) {
+  const recipientRef = useRef<TextInput | null>(null)
+  const amountRef = useRef<TextInput | null>(null)
   const { ship: self } = useStore()
   const { sendTokens, chats } = usePongoStore()
   const { assets } = useWalletStore()
   const { color } = useColors()
   const chat = useMemo(() => chats[convo], [chats, convo])
+  const { height, isLargeDevice } = useDimensions()
   
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -123,71 +129,91 @@ export default function SendTokensModal({ show, hide, convo }: SendTokensModalPr
     setError('')
   }, [setRecipient, setShowMembersList, chat.conversation.members])
 
+  const onBack = useCallback(() => {
+    if (amount) {
+      setAmount('')
+      amountRef.current?.focus()
+    } else if (recipient) {
+      setRecipient('')
+      recipientRef.current?.focus()
+    } else {
+      setAsset(undefined)
+    }
+  }, [recipient, amount, setAmount, setRecipient, setAsset])
+
   const styles = useMemo(() => StyleSheet.create({
-    memberList: {
-      width: '100%',
-      height: 260,
-    },
-  }), [])
+    scrollList: { width: '100%', flex: 1, maxHeight: height - 240 },
+    textInput: { backgroundColor: 'white', padding: 2,
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: light_gray,
+    fontSize: 18,
+    height: 32,
+    borderRadius: 4,
+    marginTop: 4, width: '80%' }
+  }), [height])
 
   return (
-    <Modal show={show} hide={hide}>
-      <ScrollView style={{ minHeight: 200 }}>
-        <Col style={{ alignItems: "center", minHeight: 200, justifyContent: 'space-between' }}>
-          <Text style={{ fontSize: 18, fontWeight: '600' }}>
-            Send Tokens
-          </Text>
-          {Boolean(error) && <Text style={{ fontSize: 16, color: 'red', marginTop: 12, width: '80%' }}>{error}</Text>}
-          {loading ? (
-            <>
-              <ActivityIndicator size='large' color={color} style={{ marginTop: 48 }} />
-              <Text style={{ fontSize: 18, marginBottom: 24 }}>Sending tokens...</Text>
-            </>
-          ) : !asset ? (
-            <>
-              <Col style={{ width: '100%', alignItems: "center" }}>
-                {!allAssets.length && <Text style={{ fontSize: 16, marginHorizontal: '10%', textAlign: 'center' }}>No assets to show, please check your Uqbar Wallet.</Text>}
-                {allAssets.map(t => <TokenDisplay color={color} key={t.id} token={t} selectToken={selectToken} small />)}
-              </Col>
-              <Button title='Cancel' onPress={hide} style={{ marginVertical: 16 }} />
-            </>
-          ) : (
-            <>
-              <Text style={{ alignSelf: 'flex-start', fontSize: 16, marginTop: 12, marginLeft: '10%' }}>To:</Text>
-              <TextInput
-                placeholder="Recipient"
-                value={recipient}
-                onChangeText={changeRecipient}
-                autoFocus={!dm}
-                editable={!dm}
-                onFocus={displayMembersList}
-                style={{ marginTop: 4, width: '80%' }}
-              />
-              {!isNft && <Text style={{ alignSelf: 'flex-start', fontSize: 16, marginTop: 12, marginLeft: '10%' }}>Amount:</Text>}
-              {showMembersList ? (
-                <ScrollView style={styles.memberList} keyboardShouldPersistTaps='handled'>
-                  {displayedMembers.map(m => <ShipRow key={m} noBorder ship={m} onPress={selectRecipient} />)}
+    <Modal show={show} hide={hide} title='Send Tokens'>
+      <ScrollView style={styles.scrollList}>
+        <KeyboardAvoidingView behavior={keyboardAvoidBehavior} keyboardVerticalOffset={keyboardOffset} style={{ flex: 1 }}>
+          <Col style={{ alignItems: "center", minHeight: 200, justifyContent: 'space-between', flex: 1 }}>
+            {Boolean(error) && <Text style={{ fontSize: 16, color: 'red', marginTop: 12, width: '80%' }}>{error}</Text>}
+            {loading ? (
+              <>
+                <ActivityIndicator size='large' color={color} style={{ marginTop: 48 }} />
+                <Text style={{ fontSize: 18, marginBottom: 24 }}>Sending tokens...</Text>
+              </>
+            ) : !asset ? (
+              <>
+                <ScrollView style={styles.scrollList} contentContainerStyle={{ alignItems: "center" }}>
+                  {!allAssets.length && <Text style={{ fontSize: 16, marginHorizontal: '10%', textAlign: 'center' }}>No assets to show, please check your Uqbar Wallet.</Text>}
+                  {allAssets.map(t => <TokenDisplay color={color} key={t.id} token={t} selectToken={selectToken} small />)}
                 </ScrollView>
-              ) : (
-                <>
-                  <TextInput
-                    value={amount}
-                    onChangeText={(text) => { setAmount(text.replace(NON_NUM_REGEX, '')); setError('') }}
-                    style={{ marginTop: 4, width: '80%' }}
-                    autoFocus={!!recipient}
-                  />
-                  {Number(amount) <= 0 || isNaN(Number(amount)) ? null : amountDiff < 0 ? (
-                    <Text style={{ marginTop: 2, fontSize: 14, color: 'red' }}>Not enough assets: {displayTokenAmount(tokenBalance, 18, 18)}</Text>
-                  ) : (
-                    <Text style={{ marginTop: 2, fontSize: 14, color: '#444' }}>({addDecimalDots(Number(amount) * Math.pow(10, 18))})</Text>
-                  )}
-                  <Button title='Send' onPress={send} style={{ marginTop: 16 }} />
-                </>
-              )}
-              <Button title='Back' onPress={() => setAsset(undefined)} style={{ marginVertical: 16 }} />
-            </>
-          )}
-        </Col>
+                <Button title='Cancel' onPress={hide} style={{ marginVertical: 16 }} />
+              </>
+            ) : (
+              <>
+                <Text style={{ alignSelf: 'flex-start', fontSize: 16, marginTop: 12, marginLeft: '10%' }}>To:</Text>
+                <TextInput
+                  ref={recipientRef}
+                  placeholder="Recipient"
+                  value={recipient}
+                  onChangeText={changeRecipient}
+                  autoFocus={!dm}
+                  editable={!dm}
+                  onFocus={displayMembersList}
+                  style={styles.textInput}
+                />
+                {!isNft && <Text style={{ alignSelf: 'flex-start', fontSize: 16, marginTop: 12, marginLeft: '10%' }}>Amount:</Text>}
+                {showMembersList ? (
+                  // <ScrollView style={styles.scrollList}>
+                  <>
+                    {displayedMembers.map(m => <ShipRow key={m} noBorder ship={m} onPress={() => () => null} />)}
+                  </>
+                  // </ScrollView>
+                ) : (
+                  <>
+                    <TextInput
+                      ref={amountRef}
+                      value={amount}
+                      onChangeText={(text) => { setAmount(text.replace(NON_NUM_REGEX, '')); setError('') }}
+                      style={styles.textInput}
+                      autoFocus={!!recipient}
+                    />
+                    {Number(amount) <= 0 || isNaN(Number(amount)) ? null : amountDiff < 0 ? (
+                      <Text style={{ marginTop: 2, fontSize: 14, color: 'red' }}>Not enough assets: {displayTokenAmount(tokenBalance, 18, 18)}</Text>
+                    ) : (
+                      <Text style={{ marginTop: 2, fontSize: 14, color: '#444' }}>({addDecimalDots(Number(amount) * Math.pow(10, 18))})</Text>
+                    )}
+                    <Button title='Send' onPress={send} style={{ marginTop: 16 }} />
+                  </>
+                )}
+                <Button title='Back' onPress={onBack} style={{ marginVertical: 16 }} />
+              </>
+            )}
+          </Col>
+        </KeyboardAvoidingView>
       </ScrollView>
     </Modal>
   )

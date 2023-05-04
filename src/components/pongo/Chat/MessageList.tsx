@@ -162,6 +162,8 @@ const MessagesList = React.memo(({
           maxToRenderPerBatch={isWeb ? 20 : 10}
           updateCellsBatchingPeriod={isWeb ? 40 : 50}
           disableVirtualization={isWeb}
+          removeClippedSubviews
+          nestedScrollEnabled
         />
       {/* )} */}
     </View>

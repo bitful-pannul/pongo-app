@@ -32,15 +32,16 @@ const usePongoStore = create(
       drafts: {},
       replies: {},
       edits: {},
+      searchStatus: 'complete',
       searchResults: [],
       messageSearchResults: [],
       subscriptions: [],
       notifLevel: 'medium',
       expoToken: '',
-      init: async (api: Urbit, clearState = true) => {
+      init: async (api: Urbit, clearState = true, profiles = {}) => {
         set({ api })
 
-        await get().getChats(api, !clearState)
+        const chats = await get().getChats(api, !clearState)
         // await get().getBlocklist(api)
         const notifSettings = await api.scry<{ 'notif-settings': NotifSettings }>({ app: 'pongo', path: '/notif-settings' })
         const { expo_token, level } = notifSettings['notif-settings']
@@ -48,9 +49,13 @@ const usePongoStore = create(
 
         if (level === 'off') get().setNotifLevel('medium', api)
 
-        resetSubscriptions(set, api, get().subscriptions, [
-          api.subscribe({ app: 'pongo', path: '/updates', event: messageSub(set, get) })
+        await get().subscriptions.map(sub => api.unsubscribe(sub))
+
+        resetSubscriptions(set, api, [], [
+          api.subscribe({ app: 'pongo', path: '/updates', event: messageSub(set, get, profiles) })
         ])
+
+        return chats
       },
       clearSubscriptions: async () => {
         const { api, subscriptions } = get()
@@ -88,7 +93,7 @@ const usePongoStore = create(
         }
         set({ edits, drafts })
       },
-      refresh: async (shipUrl: string) => {
+      refresh: async (shipUrl: string, profiles = {}) => {
         const { api, setNotifToken, getChats } = get()
         if (api) {
           getPushNotificationToken()
@@ -100,12 +105,9 @@ const usePongoStore = create(
     
           await getChats(api)
     
-          resetSubscriptions(set, api, get().subscriptions, [
-            api.subscribe({
-              app: 'pongo',
-              path: '/updates',
-              event: messageSub(set, get)
-            })
+          await get().subscriptions.map(sub => api.unsubscribe(sub))
+          resetSubscriptions(set, api, [], [
+            api.subscribe({ app: 'pongo', path: '/updates', event: messageSub(set, get, profiles) })
           ])
         }
       },
@@ -201,13 +203,13 @@ const usePongoStore = create(
         const { api } = get()
     
         if (api && uid && uid !== '0x0') {
-          api.subscribeOnce('pongo', `/search-results/${uid}`, ONE_SECOND * 8).then((result: any) => {
-            // {"search_result": [{"author": "~wet", "content": "1", "conversation_id": "0x3d90.050f.2f39.e76a.6906.2ceb.d42f.0673", "edited": false, "id": "4", "kind": "text", "mentions": [Array], "reactions": [Object], "reference": null, "timestamp": 1680590787}]}
+          api.subscribeOnce('pongo', `/search-results/${uid}`, ONE_SECOND * 12).then((result: any) => {
             const messageSearchResults: Message[] = result.search_result
-            set({ messageSearchResults })
-          })
+            console.log(messageSearchResults.length, messageSearchResults[0])
+            set({ messageSearchResults, searchStatus: 'complete' })
+          }).catch(() => set({ searchStatus: 'error' }))
           const json = { search: { uid, phrase, 'only-in': onlyIn || null, 'only-author': onlyAuthor || null } }
-          await api.poke({ app: 'pongo', mark: 'pongo-action', json })
+          setTimeout(() => api.poke({ app: 'pongo', mark: 'pongo-action', json }), ONE_SECOND)
         }
       },
       createConversation: async (chatName: string, members: string[], isOpen = false) => {

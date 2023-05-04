@@ -25,8 +25,7 @@ interface NewGroupScreenProps {
 
 export default function NewGroupScreen({ navigation }: NewGroupScreenProps) {
   const { set, isSearching, searchResults, loading, createConversation, searchTerm } = usePongoStore()
-  const { color, shadedBackground, backgroundColor, theme } = useColors()
-  const { contacts } = useContactState()
+  const { theme } = useColors()
   const { search } = useSearch()
 
   const [chatName, setChatName] = useState('')
@@ -35,7 +34,7 @@ export default function NewGroupScreen({ navigation }: NewGroupScreenProps) {
 
   const selectShip = useCallback((ship: string) => () => {
     setError('')
-    search('ship', '~')
+    search('ship', '')
     setShips([...ships.filter(s => s !== ship), ship])
   }, [ships])
 
@@ -94,7 +93,7 @@ export default function NewGroupScreen({ navigation }: NewGroupScreenProps) {
                   <Pressable onPress={removeShip(ship)} style={{ margin: 4 }} key={ship}>
                     <Row style={{ padding: 4 }}>
                       <Avatar ship={ship} color={getShipColor(ship, theme)} />
-                      <ShipName name={ship} style={{ marginLeft: 4, fontSize: 16, fontWeight: '600' }} />
+                      <ShipName ship={ship} style={{ marginLeft: 4, fontSize: 16, fontWeight: '600' }} />
                     </Row>
                   </Pressable>
                 ))}
@@ -106,7 +105,7 @@ export default function NewGroupScreen({ navigation }: NewGroupScreenProps) {
           <ScrollView style={{ marginTop: 16 }} keyboardShouldPersistTaps='handled'>
             {isSearching ? (
               searchResults.length ?
-                searchResults.map(ship => <ShipRow key={ship as string} ship={ship as string} onPress={selectShip} />) :
+                searchResults.map(ship => <ShipRow showPatp key={ship as string} ship={ship as string} onPress={selectShip} />) :
                 Boolean(searchTerm) && <Text style={{ fontSize: 18, marginTop: 16, alignSelf: 'center' }}>No results</Text>
             ) : (
               null

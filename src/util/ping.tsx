@@ -1,4 +1,5 @@
 import { isWeb } from "../constants/Layout"
+import { Profiles } from "../types/Nimi"
 import { Chat, Chats, Message, MessageKind } from "../types/Pongo"
 import { displayTokenAmount } from "../wallet-ui/utils/number"
 import { fromUd } from "./number"
@@ -26,16 +27,19 @@ export const checkIsDm = (chat: Chat) => {
   return chat.conversation.dm
 }
 
-export const getChatName = (self: string, chat?: Chat) => {
+export const getChatName = (self: string, chat: Chat, profiles: Profiles) => {
   if (!chat) {
     return 'Unknown'
   }
   if (checkIsDm(chat)) {
-    return addSig(chat.conversation.members.find(m => m !== deSig(self)) || chat.conversation.name)
+    const counterparty = addSig(chat.conversation.members.find(m => m !== deSig(self)) || chat.conversation.name)
+    return profiles[counterparty]?.name || counterparty
   }
 
   return chat.conversation.name
 }
+
+export const getDmCounterparty = (self: string, chat: Chat) => addSig(chat.conversation.members.find(m => m !== deSig(self)) || chat.conversation.name)
 
 export const getMsgText = (kind: MessageKind, content: string, author: string, self: string) => {
   if (kind === 'member-add') {

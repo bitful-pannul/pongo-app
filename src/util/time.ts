@@ -1,6 +1,7 @@
 import moment from "moment"
 
 export const ONE_SECOND = 1000
+export const ONE_DAY = ONE_SECOND * 60 * 60 * 24
 
 export const getHoonDate = (d: Date) => `~${d.getFullYear()}.${d.getMonth()}.${d.getDate()}..${d.getHours()}.${d.getMinutes()}.${d.getSeconds()}..${d.getMilliseconds().toString(16)}`
 

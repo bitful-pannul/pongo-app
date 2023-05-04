@@ -1,7 +1,7 @@
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 import moment from "moment";
 import { useCallback, useMemo } from "react";
-import { FlatList, Pressable, StyleSheet } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, StyleSheet } from "react-native";
 import usePongoStore from "../../state/usePongoState";
 import { PongoStackParamList } from "../../types/Navigation";
 import { Message } from "../../types/Pongo";
@@ -23,9 +23,9 @@ interface MessageSearchProps {
 export default function MessageSearch({
   focusMessage,
 }: MessageSearchProps) {
-  const { messageSearchResults, set } = usePongoStore()
+  const { messageSearchResults, searchStatus, set } = usePongoStore()
   const navigation = useNavigation<NavigationProp<PongoStackParamList>>()
-  const { backgroundColor, theme } = useColors()
+  const { color, backgroundColor, theme } = useColors()
 
   const styles = useMemo(() => StyleSheet.create({
     message: {
@@ -66,7 +66,7 @@ export default function MessageSearch({
           <Avatar size='large' ship={item.author} color={getShipColor(item.author, theme)} />
           <Col style={styles.content}>
             <Row style={styles.header}>
-              <ShipName name={item.author} style={{ fontWeight: '600' }} />
+              <ShipName ship={item.author} style={{ fontWeight: '600', color }} />
               <Text>{getRelativeDate(item.timestamp * ONE_SECOND)}</Text>
             </Row>
             <Text style={styles.text} numberOfLines={2}>{item.content}</Text>
@@ -79,9 +79,15 @@ export default function MessageSearch({
   const keyExtractor = useCallback((item: Message) => `${item?.id || 'missing'}-${item?.timestamp}`, [])
 
   return (
-    !messageSearchResults.length ? (
-      <Col style={{ alignSelf: 'center', alignItems: 'center', marginTop: 32, backgroundColor: 'transparent' }}>
-        <H3 text='No Results' />
+     searchStatus !== 'complete' || !messageSearchResults.length ? (
+      <Col style={{ alignSelf: 'center', alignItems: 'center', marginTop: 32, paddingHorizontal: 16, backgroundColor: 'transparent' }}>
+        {searchStatus === 'loading' ? (
+          <ActivityIndicator size='large' />
+        ) : searchStatus === 'error' ? (
+          <H3 text='An error occurred, please try again' />
+        ) : (
+          <H3 text='No Results' />
+        )}
       </Col>
     ) : (
       <FlatList

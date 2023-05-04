@@ -42,7 +42,7 @@ export function CloseSearch() {
 export default function SearchHeader({ searchType = 'ship', chatId }: SearchHeaderProps) {
   const { set, searchTerm } = usePongoStore()
   const { search } = useSearch()
-  const { isLargeDevice } = useDimensions()
+  const { isLargeDevice, width } = useDimensions()
 
   useEffect(() => {
     if (searchType === 'ship') {
@@ -56,9 +56,12 @@ export default function SearchHeader({ searchType = 'ship', chatId }: SearchHead
 
   const autoSearch = searchType !== 'message'
 
-  useDebounce(() => search(searchType, searchTerm, chatId), [searchTerm, searchType, chatId, search], ONE_SECOND, autoSearch)
+  useDebounce(() => search(searchType, searchTerm, chatId), [searchTerm, searchType, chatId, search], ONE_SECOND * 0.5, autoSearch)
 
-  const executeSearch = useCallback(() => search(searchType, searchTerm, chatId), [searchTerm, searchType, chatId, search])
+  const executeSearch = useCallback(() => {
+    set({ searchStatus: 'loading', messageSearchResults: [] })
+    search(searchType, searchTerm, chatId)
+  }, [searchTerm, searchType, chatId, search])
 
   const onKeyPress = useCallback((e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
     if (e.nativeEvent.key === 'Enter' && !(e.nativeEvent as any).shiftKey && isLargeDevice) {
@@ -72,8 +75,9 @@ export default function SearchHeader({ searchType = 'ship', chatId }: SearchHead
 
   const styles = useMemo(() => StyleSheet.create({
     searchButtonContainer: {  },
+    textInput: { height: 44, width: width * 0.5, borderColor: uq_purple, borderRadius: 0 },
     searchButton: { width: 42, height: 42, padding: 9, paddingTop: 7, borderTopRightRadius: 4, borderBottomRightRadius: 4, backgroundColor: uq_pink }
-  }), [])
+  }), [width])
 
   const placeholder = searchType === 'chat' ? 'Search chats' :
     searchType === 'ship' ? 'Search users' :
@@ -87,7 +91,7 @@ export default function SearchHeader({ searchType = 'ship', chatId }: SearchHead
         value={searchTerm}
         placeholder={placeholder}
         onChangeText={updateSearch}
-        style={{ height: 44, width: '100%', borderColor: uq_purple, borderRadius: 0 }}
+        style={styles.textInput}
         autoCorrect={false}
         autoCapitalize='none'
         autoComplete='off'

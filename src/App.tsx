@@ -12,7 +12,7 @@ import Toast from 'react-native-root-toast'
 import { enableFreeze } from 'react-native-screens'
 import * as Network from 'expo-network'
 import { Ionicons } from "@expo/vector-icons"
-import dynamicLinks from '@react-native-firebase/dynamic-links'
+// import dynamicLinks from '@react-native-firebase/dynamic-links'
 
 import useCachedResources from "./hooks/useCachedResources"
 import useStore from "./state/useStore"
@@ -69,7 +69,7 @@ export default function App() {
     const { ship, conversation_id, message_id, author, kind } = getNotificationData(response?.notification)
     if (ship && self && shipUrl && conversation_id && message_id) {
       const destination = kind === 'webrtc-call' ?
-        { name: 'Call', params: { chatId: conversation_id, ship: author } } :
+        { name: 'Call', params: { chatId: conversation_id, answering: true } } :
         { name: 'Chat', params: { id: conversation_id, msgId: message_id } }
 
       if (ship !== self) {
@@ -192,13 +192,13 @@ export default function App() {
     // firebase dynamic link format
     // https://ping.page.link/?link=https%3A%2F%2Fuqbar.network%3Finvite-code%3D067B-CA90-8F0F&apn=network.uqbar.ping&amv=1.0.1&ibi=uqbar.network.ping&isi=1669043343&imv=1.0.1
     if (!isWeb && !__DEV__) {
-      dynamicLinks()
-        .getInitialLink()
-        .then(link => {
-          if (link?.url.includes('invite-code')) {
-            setInviteUrl(link.url)
-          }
-        })
+      // dynamicLinks()
+      //   .getInitialLink()
+      //   .then(link => {
+      //     if (link?.url.includes('invite-code')) {
+      //       setInviteUrl(link.url)
+      //     }
+      //   })
     }
 
     const handleAppStateChange = (nextAppState: AppStateStatus) => {

@@ -1,11 +1,12 @@
 import { GetState, SetState } from "zustand"
 import { dedupeAndSort, getChatName, idNum, sortChats } from "../../util/ping"
-import { addSig, deSig } from "../../util/string"
+import { addSig, deSig, preSig } from "../../util/string"
 import { Message, MessageStatus, Update } from "../../types/Pongo"
 import { PongoStore } from "../types/pongo"
 import { showWebNotification } from "../../util/notification"
+import { Profiles } from "../../types/Nimi"
 
-export const messageSub = (set: SetState<PongoStore>, get: GetState<PongoStore>) => (update: Update) => {
+export const messageSub = (set: SetState<PongoStore>, get: GetState<PongoStore>, profiles: Profiles) => (update: Update) => {
   console.log('UPDATE:', JSON.stringify(update))
   const { currentChat, api, getChats } = get()
   
@@ -65,8 +66,9 @@ export const messageSub = (set: SetState<PongoStore>, get: GetState<PongoStore>)
     }
     // chat.messages = dedupeAndSort(chat.messages)
 
+    const authorDisplay = profiles[preSig(author)]?.name || author
     if (!isCurrentChat && deSig(author) !== deSig(get().api?.ship || '') && !chat.conversation.muted) {
-      showWebNotification(getChatName(api?.ship || window.ship, chat), `${deSig(author)}: ${content}`)
+      showWebNotification(getChatName(api?.ship || window.ship, chat, profiles), `${chat.conversation.dm ? '' : `${authorDisplay}: `}${content}`)
     }
     
     // Handle admin message types

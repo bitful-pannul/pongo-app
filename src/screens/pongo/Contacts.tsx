@@ -44,7 +44,7 @@ export default function ContactsScreen({ navigation }: ContactsScreenProps) {
           <ScrollView style={{ marginTop: 16 }} keyboardShouldPersistTaps='handled'>
             {isSearching ? (
               searchResults.length ?
-                searchResults.map(ship => <ShipRow key={ship as string} ship={ship as string} onPress={selectShip} />) :
+                searchResults.map(ship => <ShipRow showPatp key={ship as string} ship={ship as string} onPress={selectShip} />) :
                 Boolean(searchTerm) ? (
                   <Text style={{ fontSize: 18, marginTop: 16, alignSelf: 'center' }}>No results</Text>
                 ) : (

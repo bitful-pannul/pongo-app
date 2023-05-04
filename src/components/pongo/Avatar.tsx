@@ -11,6 +11,7 @@ import useColorScheme from '../../hooks/useColorScheme'
 import Sigil from '../Sigil'
 import useColors from '../../hooks/useColors'
 import useDimensions from '../../hooks/useDimensions'
+import useNimiState from '../../state/useNimiState'
 
 export type AvatarSizes = 'xs' | 'small' | 'default' | 'large' | 'group-chat' | 'huge' | 'quarter-screen' | 'half-screen'
 
@@ -108,7 +109,6 @@ function getSigilElement(
     !isValidPatp(addSig(ship)) ||
     citedShip.match(/[_]/)
   ) {
-    console.log('HERE', ship)
     return null
   }
 
@@ -147,20 +147,15 @@ export default function Avatar({
   style,
   icon = true,
   loadImage = true,
-  previewData,
   color,
 }: AvatarProps) {
-  const currentTheme = useColorScheme()
-  const { previewColor, previewAvatar } = previewData ?? {}
-  const previewAvatarIsValid =
-    previewAvatar && previewAvatar !== null && isValidUrl(previewAvatar)
-  const { avatar } = emptyContact
+  const profiles = useNimiState(state => state.profiles)
+  const profile = profiles[addSig(ship)]
+  const showAvatar = Boolean(loadImage && profile && isValidUrl(profile.uri))
   const { cWidth } = useDimensions()
 
-  const showImage = loadImage
-
+  const iconStyle = sizeMap[size].style
   let sigilSize = sizeMap[size].size
-  let iconStyle = sizeMap[size].style
   if (size === 'quarter-screen') {
     sigilSize = cWidth / 4
   } else if (size == 'half-screen') {
@@ -168,31 +163,13 @@ export default function Avatar({
   }
   const sigilElement = getSigilElement(ship, Math.min(sigilSize, 200), icon, color)
 
-  if (
-    // !calm.disableRemoteContent &&
-    // !calm.disableAvatars &&
-    showImage &&
-    previewAvatarIsValid
-  ) {
-    return (
-      <Image source={{ uri: previewAvatar || '' }} style={[iconStyle, style]} />
-    )
+  // !calm.disableRemoteContent &&
+  // !calm.disableAvatars &&
+  if (showAvatar) {
+    return <Image source={{ uri: profile.uri }} style={[iconStyle, { height: sigilSize, width: sigilSize }, style]} />
   }
 
-  if (
-    // !calm.disableRemoteContent &&
-    // !calm.disableAvatars &&
-    avatar &&
-    showImage
-  ) {
-    return (
-      <Image source={{ uri: avatar }} style={[iconStyle, style]} />
-    )
-  }
-
-  return (
-    sigilElement
-  )
+  return sigilElement
 }
 
 export function useProfileColor(

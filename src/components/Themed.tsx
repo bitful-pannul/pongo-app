@@ -70,8 +70,7 @@ export function ScrollView(props: ScrollViewProps) {
 }
 
 export function TextInput(props: TextInputProps) {
-  const { style, lightColor, darkColor, ...otherProps } = props;
-  const { backgroundColor } = useColors()
+  const { style, ...otherProps } = props;
 
   return <DefaultTextInput style={[{ backgroundColor: 'white', padding: 2,
     paddingHorizontal: 8,

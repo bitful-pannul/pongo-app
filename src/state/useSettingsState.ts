@@ -62,7 +62,8 @@ const useSettingsState = create<SettingsState>((set, get) => ({
       }
     }
 
-    resetSubscriptions(set, api, get().subscriptions, [
+    await get().subscriptions.map(sub => api.unsubscribe(sub))
+    resetSubscriptions(set, api, [], [
       api.subscribe(createSubscription('s3-store', '/all', handleS3Update)),
     ])
 

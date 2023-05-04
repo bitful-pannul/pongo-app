@@ -121,7 +121,8 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
           }
         }
 
-        resetSubscriptions(set, api, get().subscriptions, newSubs)
+        await get().subscriptions.map(sub => api.unsubscribe(sub))
+        resetSubscriptions(set, api, [], newSubs)
       }
 
       set({ loadingText: null })

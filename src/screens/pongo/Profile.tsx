@@ -94,7 +94,7 @@ export default function ProfileScreen({ navigation, route }: ProfileScreenProps)
   }, [ship])
 
   const startCall = useCallback(() => {
-    if (dmChatId) navigation.navigate('Call', { ship, chatId: dmChatId })
+    if (dmChatId) navigation.navigate('Call', { chatId: dmChatId })
   }, [navigation, dmChatId])
 
   if (!ship) {
@@ -112,7 +112,7 @@ export default function ProfileScreen({ navigation, route }: ProfileScreenProps)
         <View style={{ height: 12 }} />
         <Pressable onPress={copyPatp}>
           <Row>
-            <ShipName name={ship} style={{ fontSize: 24, fontWeight: '600', color }} />
+            <ShipName ship={ship} showBoth style={{ fontSize: 24, fontWeight: '600', color }} />
             {isSelf && <Text style={{ fontSize: 18, marginLeft: 8 }}>(you)</Text>}
           </Row>
         </Pressable>

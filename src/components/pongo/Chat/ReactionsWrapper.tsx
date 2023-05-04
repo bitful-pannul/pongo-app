@@ -54,7 +54,7 @@ const Reaction = ({ color, emoji, reactions, addReaction }: ReactionProps) => {
         {reactions[emoji].map(ship => (
           <Row key={`react=${ship}`} style={{ alignSelf: 'flex-start', marginTop: 4 }}>
             <Avatar ship={ship} color={getShipColor(ship, theme)} />
-            <ShipName name={ship} style={{ color: textColor, fontSize: 16, marginTop: 2 }} />
+            <ShipName ship={ship} style={{ color: textColor, fontSize: 16, marginTop: 2 }} />
           </Row>
         ))}
       </ScrollView>

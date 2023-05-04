@@ -38,11 +38,11 @@ export default function IncomingCallModal({ incomingCall, rejectCall, acceptCall
   }
 
   return (
-    <Modal show={Boolean(incomingCall)} hide={rejectCall}>
+    <Modal show={Boolean(incomingCall)} hide={rejectCall} dismissable={false}>
       <Col style={{ alignItems: 'center', paddingHorizontal: 24 }}>
         <Avatar size="large" ship={addSig(incomingCall.msg.author)} color={getShipColor(incomingCall.msg.author, theme)} />
         <Text style={{ marginVertical: 16, fontSize: 16, textAlign: 'center' }}>
-          <ShipName name={incomingCall.msg.author} showAlias style={styles.shipName} />
+          <ShipName ship={incomingCall.msg.author} style={styles.shipName} />
           {" is calling you."}
         </Text>
         <Row style={{ justifyContent: 'center' }}>

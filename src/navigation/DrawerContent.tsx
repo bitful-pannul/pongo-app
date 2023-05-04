@@ -13,6 +13,8 @@ import useColors from "../hooks/useColors"
 import usePongoStore from "../state/usePongoState"
 import { useApi } from "../hooks/useApi"
 import { isWeb } from "../constants/Layout"
+import { ZIG_APP } from "../wallet-ui/utils/constants"
+import { ZIG_HOST } from "../wallet-ui/utils/constants"
 
 export default function DrawerContent({
   navigation,
@@ -22,12 +24,17 @@ export default function DrawerContent({
   const { set, showUqbarWallet } = usePongoStore()
   const backgroundShips = ships.filter((s) => s.ship !== ship)
   const [showManageShips, setShowManageShips] = useState(false)
+  const [showEditProfile, setShowEditProfile] = useState(false)
 
   useEffect(() => {
     if (api) {
       api.scry({ app: 'wallet', path: '/accounts' })
         .then(() => set({ showUqbarWallet: true }))
         .catch(() => set({ showUqbarWallet: false }))
+
+      api.scry({ app: 'nimi', path: '/profile' })
+        .then(() => setShowEditProfile(true))
+        .catch(() => setShowEditProfile(false))
     }
   }, [ship, api])
 
@@ -109,6 +116,32 @@ export default function DrawerContent({
 
   const { color, backgroundColor } = useColors()
   const styles = getStyles(color)
+  const editProfile = useCallback(() => {
+    
+    if (showUqbarWallet) {
+      navigation.navigate('EditProfile')
+    } else if (api) {
+      const installZig = () => {
+        api.poke({ app: 'hood', mark: 'kiln-install', json: { local: ZIG_APP, desk: ZIG_APP, ship: ZIG_HOST } })
+        if (isWeb) {
+          window.alert('Uqbar Wallet is being installed, please try again in a few minutes.')
+        } else {
+          Alert.alert('Installing Uqbar Wallet', 'Uqbar Wallet is being installed, please try again in a few minutes.')
+        }
+      }
+
+      if (isWeb) {
+        if (window.confirm('You need the Uqbar wallet to edit your profile, would you like to install it?')) {
+          installZig()
+        }
+      } else {
+        Alert.prompt('Install Uqbar Wallet', 'You need the Uqbar wallet to edit your profile, would you like to install it?', [
+          { text: 'Install', onPress: installZig, style: 'default' },
+          { text: 'Cancel', onPress: () => null, style: 'cancel' },
+        ])
+      }
+    }
+  }, [showUqbarWallet, api])
 
   return (
     <View style={styles.container}>
@@ -151,6 +184,12 @@ export default function DrawerContent({
           <Text style={styles.app}>Join Chat</Text>
         </View>
       </TouchableOpacity> */}
+      {showEditProfile && <TouchableOpacity onPress={editProfile} style={{ marginTop: 16 }}>
+        <View style={{ ...styles.row, ...styles.rowStart }}>
+          <Ionicons name="person-circle" size={24} color={color} />
+          <Text style={styles.app}>Edit Profile</Text>
+        </View>
+      </TouchableOpacity>}
       <TouchableOpacity onPress={() => navigation.navigate('Settings')} style={{ marginTop: 16 }}>
         <View style={{ ...styles.row, ...styles.rowStart }}>
           <Ionicons name="settings-outline" size={24} color={color} />

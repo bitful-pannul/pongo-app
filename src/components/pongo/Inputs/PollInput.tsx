@@ -26,7 +26,7 @@ interface PollInputProps {
   hide: () => void
 }
 
-const MAX_POLL_OPTIONS = 8
+const MAX_POLL_OPTIONS = 12
 
 const PollInput = ({ convo, show, hide }: PollInputProps) => {
   const { ship: self } = useStore()
@@ -93,7 +93,7 @@ const PollInput = ({ convo, show, hide }: PollInputProps) => {
       backgroundColor,
       flex: 1,
       flexShrink: 1,
-      maxHeight: height * 3 /4,
+      maxHeight: height - 240,
     },
     contentContainer: { alignItems: 'center', display: 'flex', flexDirection: 'column', width: '100%' },
     title: { marginTop: -4 },
@@ -129,8 +129,8 @@ const PollInput = ({ convo, show, hide }: PollInputProps) => {
 
   return (
     <Modal show={show} hide={hide}>
-      <KeyboardAvoidingView behavior={keyboardAvoidBehavior} keyboardVerticalOffset={keyboardOffset}>
-        <ScrollView keyboardShouldPersistTaps="handled" style={styles.container} contentContainerStyle={styles.contentContainer}>
+      <ScrollView keyboardShouldPersistTaps="handled" style={styles.container} contentContainerStyle={styles.contentContainer}>
+        <KeyboardAvoidingView behavior={keyboardAvoidBehavior} keyboardVerticalOffset={keyboardOffset}>
           {sending ? (
             <ActivityIndicator size='large' style={{ marginTop: 40 }} />
           ) : (
@@ -164,8 +164,8 @@ const PollInput = ({ convo, show, hide }: PollInputProps) => {
               <Button title='Create Poll' onPress={handleSubmit} small style={[styles.button, { marginBottom: 32 }]} />
             </>
           )}
-        </ScrollView>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </ScrollView>
     </Modal>
   )
 }

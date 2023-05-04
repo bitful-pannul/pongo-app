@@ -5,44 +5,49 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack"
 import { NavigationProp, RouteProp, useNavigation } from '@react-navigation/native'
 import { Ionicons, MaterialIcons } from '@expo/vector-icons'
 
-import { PongoStackParamList } from "../types/Navigation"
 import useStore from '../state/useStore'
 import useContactState from '../state/useContactState'
+import usePongoStore from '../state/usePongoState'
+import usePosseState from '../state/usePosseState'
+import useSettingsState from '../state/useSettingsState'
+import { useWalletStore } from '../wallet-ui'
+
+import useDimensions from '../hooks/useDimensions'
+import { PongoStackParamList } from "../types/Navigation"
+import { uq_purple } from '../constants/Colors'
+import { PING_APP, PING_HOST } from '../constants/Pongo'
+import { isWeb } from '../constants/Layout'
+import { getPushNotificationToken } from '../util/notification'
+import { deSig } from '../util/string'
+import { ONE_SECOND } from '../util/time'
+import { NECTAR_APP, NECTAR_HOST } from '../constants/Nectar'
+import H3 from '../components/text/H3'
+import SearchHeader, { CloseSearch, OpenSearch } from '../components/pongo/Headers/SearchHeader'
+import NavBackButton from '../components/pongo/BackButton'
+import ChatMenu from '../components/pongo/Chats/ChatMenu'
+import ChatHeader from '../components/pongo/Headers/ChatHeader'
+import Col from '../components/spacing/Col'
+import Loader from '../components/Loader'
+import Button from '../components/form/Button'
+import ShipTitle from '../components/header/ShipTitle'
+import Row from '../components/spacing/Row'
+import IncomingCallModal from '../components/pongo/Call/IncomingCallModal'
+
+import GroupScreen from '../screens/pongo/Group'
+import ContactsScreen from '../screens/pongo/Contacts'
+import CallScreen from '../screens/pongo/Call'
 import NewGroupScreen from '../screens/pongo/NewGroup'
 import NewChatScreen from '../screens/pongo/NewChat'
 import ChatScreen from '../screens/pongo/Chat'
 import ChatsPlaceholderScreen from '../screens/pongo/ChatsPlaceholder'
 import SearchResultsScreen from '../screens/pongo/SearchResults'
 import ChatsScreen from '../screens/pongo/Chats'
-import usePongoStore from '../state/usePongoState'
-import H3 from '../components/text/H3'
-import SearchHeader, { CloseSearch, OpenSearch } from '../components/pongo/Headers/SearchHeader'
 import ProfileScreen from '../screens/pongo/Profile'
-import NavBackButton from '../components/pongo/BackButton'
-import { uq_purple } from '../constants/Colors'
-import ChatMenu from '../components/pongo/Chats/ChatMenu'
-import ChatHeader from '../components/pongo/Headers/ChatHeader'
-import GroupScreen from '../screens/pongo/Group'
-import usePosseState from '../state/usePosseState'
-import { getPushNotificationToken, showWebNotification } from '../util/notification'
 import NewPosseGroupScreen from '../screens/pongo/NewPosseGroup'
-import { ONE_SECOND } from '../util/time'
-import { NECTAR_APP, NECTAR_HOST } from '../constants/Nectar'
-import { PING_APP, PING_HOST } from '../constants/Pongo'
-import Col from '../components/spacing/Col'
-import Loader from '../components/Loader'
-import { isWeb } from '../constants/Layout'
 import SettingsScreen from '../screens/pongo/Settings'
-import Button from '../components/form/Button'
-import ShipTitle from '../components/header/ShipTitle'
-import ContactsScreen from '../screens/pongo/Contacts'
-import { useWalletStore } from '../wallet-ui'
-import Row from '../components/spacing/Row'
-import useSettingsState from '../state/useSettingsState'
-import useDimensions from '../hooks/useDimensions'
-import CallScreen from '../screens/pongo/Call'
-import IncomingCallModal from '../components/pongo/Call/IncomingCallModal'
-import { deSig } from '../util/string'
+import useNimiState from '../state/useNimiState'
+import EditProfileScreen from '../screens/pongo/EditProfile'
+import { Chats } from '../types/Pongo'
 
 let checkAppsInstalledInterval: NodeJS.Timer | undefined
 
@@ -57,7 +62,8 @@ export default function PongoStackNavigator() {
   const { init: initPosse, clearSubscriptions: clearPosse } = usePosseState()
   const { init: initContact, clearSubscriptions: clearContact } = useContactState()
   const { init: initSettings, clearSubscriptions: clearSettings } = useSettingsState()
-  const { init: initPongo, isSearching, connected, sortedChats, incomingCall, clearSubscriptions: clearPongo, setNotifToken, sendMessage, set } = usePongoStore()
+  const { init: initNimi, clearSubscriptions: clearNimi, whodis, profiles } = useNimiState()
+  const { init: initPongo, isSearching, connected, incomingCall, clearSubscriptions: clearPongo, setNotifToken, sendMessage, set } = usePongoStore()
   const { initWallet, clearSubscriptions: clearWallet } = useWalletStore()
   const { api, ship: self, shipUrl } = useStore()
   const { isLargeDevice, cWidth } = useDimensions()
@@ -74,7 +80,22 @@ export default function PongoStackNavigator() {
           }
         }).catch(console.error)
 
-      initPongo(api).catch((err: any) => console.log('Pongo:', err))
+      initPongo(api, false, profiles)
+        .then(async (chats: Chats) => {
+          // Populate the Nimi data
+          try {
+            await api.scry({ app: 'nimi', path: '/profile' })
+            Object.values(chats).forEach(chat => {
+              chat.conversation.members.forEach(member => {
+                if (deSig(member) !== deSig(self)) {
+                  whodis(member, api)
+                }
+              })
+            })
+          } catch {}
+        })
+        .catch((err: any) => console.log('Pongo:', err))
+      initNimi(api).catch((err: any) => console.log('Nimi:', err))
       initPosse(api).catch((err: any) => console.log('Posse:', err))
       initWallet(api, {}).catch((err: any) => console.log('INIT WALLET ERROR:', err))
       initSettings(api).catch((err: any) => console.log('Settings:', err))
@@ -83,9 +104,10 @@ export default function PongoStackNavigator() {
 
     return () => {
       if (api) {
-        clearSettings()
-        clearPosse()
         clearPongo()
+        clearNimi()
+        clearPosse()
+        clearSettings()
         clearWallet()
         // clearContact()
       }
@@ -184,7 +206,7 @@ export default function PongoStackNavigator() {
     if (incomingCall) {
       set({ incomingCall: undefined })
       setAcceptedCall(incomingCall.chatId + incomingCall.msg.id)
-      navigation.navigate('Call', { chatId: incomingCall.chatId, ship: deSig(incomingCall.msg.author) })
+      navigation.navigate('Call', { chatId: incomingCall.chatId, answering: true })
     }
   }, [set, navigation, incomingCall])
 
@@ -304,6 +326,16 @@ export default function PongoStackNavigator() {
         headerTitleAlign: 'center',
         headerLeft: NavBackButton,
         headerTitle: () => <H3 style={{ color: 'white' }} text='Group Info' />,
+        headerRight: () => !connected ? disconnectedIcon : null
+      })}
+    />
+    <Stack.Screen name="EditProfile" component={EditProfileScreen}
+      options={({ navigation, route } : NavHeaderProps) => ({
+        headerStyle: { backgroundColor: uq_purple },
+        headerBackVisible: false,
+        headerTitleAlign: 'center',
+        headerLeft: NavBackButton,
+        headerTitle: () => <H3 style={{ color: 'white' }} text='Settings' />,
         headerRight: () => !connected ? disconnectedIcon : null
       })}
     />

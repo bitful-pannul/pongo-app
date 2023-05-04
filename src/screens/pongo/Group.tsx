@@ -41,7 +41,7 @@ export default function GroupScreen({ navigation, route }: GroupScreenProps) {
   const { conversation: { members, leaders } } = chat
 
   const [display, setDisplay] = useState<'members' | 'settings'>('members')
-  const [newMember, setNewMember] = useState('~')
+  const [newMember, setNewMember] = useState('')
   const [newGroupName, setNewGroupName] = useState('')
   const [newMemberError, setNewMemberError] = useState('')
   const [groupNameError, setGroupNameError] = useState('')
@@ -80,7 +80,7 @@ export default function GroupScreen({ navigation, route }: GroupScreenProps) {
   const addNewMember = useCallback(async () => {
     if (isValidPatp(addSig(newMember))) {
       try {
-        setNewMember('~')
+        setNewMember('')
         await makeInvite(convo, newMember)
         Toast.show(`${addSig(newMember)} added!`, { ...defaultOptions, position: Toast.positions.CENTER })
       } catch {
@@ -114,7 +114,7 @@ export default function GroupScreen({ navigation, route }: GroupScreenProps) {
       addNewMember()
 
       setTimeout(() => {
-        setNewMember('~')
+        setNewMember('')
       }, 10)
     }
   }, [addNewMember, setNewMember, isLargeDevice])
@@ -198,7 +198,7 @@ export default function GroupScreen({ navigation, route }: GroupScreenProps) {
                     <Row style={{ justifyContent: 'space-between', width: cWidth * 0.8 }}>
                       <Row style={{ width: cWidth * 0.8 - 40 }}>
                         <Avatar ship={addSig(mem)} size={'large'} color={getShipColor(mem, theme)} />
-                        <ShipName numberOfLines={1} style={styles.shipName} name={addSig(mem)} />
+                        <ShipName numberOfLines={1} style={styles.shipName} ship={addSig(mem)} />
                         {isAdmin && <Text style={{ fontSize: 18, marginLeft: 8 }}>(admin)</Text>}
                       </Row>
                       {selfIsAdmin && deSig(self) !== deSig(mem) && <Menu>

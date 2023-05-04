@@ -25,8 +25,7 @@ const usePosseState = create<PosseStore>((set, get) => ({
   subscriptions: [],
   init: async (api: Urbit) => {
     try {
-      resetSubscriptions(set, api, get().subscriptions, [
-      ])
+      resetSubscriptions(set, api, get().subscriptions, [])
     } catch {}
   },
   clearSubscriptions: async () => {

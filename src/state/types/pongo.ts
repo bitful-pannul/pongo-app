@@ -15,6 +15,7 @@ export interface PongoStore extends DefaultStore {
   isSearching: boolean;
   searchTerm: string;
   sortedChats: Chat[];
+  searchStatus: 'complete' | 'loading' | 'error';
   searchResults: string[];
   messageSearchResults: Message[];
   drafts: { [chatId: string]: string };

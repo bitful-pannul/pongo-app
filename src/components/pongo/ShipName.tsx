@@ -1,23 +1,27 @@
-import { cite } from '@urbit/api'
 import React from 'react'
 import { Text, TextStyle} from 'react-native'
+import { cite } from '@urbit/api'
 
 import { useContact } from '../../state/useContactState'
+import useNimiState from '../../state/useNimiState'
+import { preSig } from '../../util/string'
 
 type ShipNameProps = {
-  name: string
-  showAlias?: boolean
+  ship: string
+  hideNick?: boolean
+  showBoth?: boolean
   style?: TextStyle
 } & Text['props']
 
 export default function ShipName({
-  name,
-  showAlias = false,
+  ship,
+  hideNick = false,
+  showBoth = false,
   ...props
 }: ShipNameProps) {
-  const contact = useContact(name)
+  const profile = useNimiState(s => s.profiles[preSig(ship)])
   const separator = /([_^-])/
-  const citedName = cite(name)
+  const citedName = cite(ship)
 
   if (!citedName) {
     return null
@@ -27,8 +31,8 @@ export default function ShipName({
   const first = parts.shift()
 
   // Moons
-  if (name.length > 25 && name.length < 30) {
-    const patp = name.replace('~', '')
+  if (ship.length > 25 && ship.length < 30) {
+    const patp = ship.replace('~', '')
 
     return (
       <Text {...props}>
@@ -48,10 +52,10 @@ export default function ShipName({
 
   return (
     <Text {...props}>
-      {contact?.nickname && /* !calm.disableNicknames && */ showAlias ? (
-        <Text>{contact.nickname}</Text>
-      ) : (
+      {profile?.name && !hideNick && /* && !calm.disableNicknames */<Text>{profile.name}</Text>}
+      {(!profile?.name || showBoth) && (
         <>
+          {showBoth && profile?.name && <Text> (</Text>}
           <Text aria-hidden>~</Text>
           <Text>{first}</Text>
           {parts.length > 1 && (
@@ -66,6 +70,7 @@ export default function ShipName({
               ))}
             </>
           )}
+          {showBoth && profile?.name && <Text>)</Text>}
         </>
       )}
     </Text>
