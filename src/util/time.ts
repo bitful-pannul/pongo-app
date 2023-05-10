@@ -45,5 +45,13 @@ export const formatRecordTime = (rt: number) => {
   const minutes = Math.floor(rt / (60 * ONE_SECOND))
   const seconds = Math.floor((rt % (60 * ONE_SECOND)) / ONE_SECOND)
 
-  return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`
 }
+
+export const formatTime = (time: number) => {
+  const minutes = Math.floor(time / 6000);
+  const seconds = Math.floor((time % 6000) / 100);
+  const hundredths = time % 100;
+
+  return `${minutes}:${seconds.toString().padStart(2, '0')}.${hundredths.toString().padStart(2, '0')}`;
+};

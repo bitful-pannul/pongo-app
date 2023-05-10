@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AppState, AppStateStatus, FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native'
 import { NavigationProp, useNavigation } from '@react-navigation/native'
+import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu'
 
 import useStore from '../../state/useStore'
 import usePongoStore from '../../state/usePongoState'
@@ -20,6 +21,7 @@ import useDimensions from '../../hooks/useDimensions'
 import { Chat } from '../../types/Pongo'
 import { ONE_SECOND } from '../../util/time'
 import { isWeb } from '../../constants/Layout'
+import useColors from '../../hooks/useColors'
 
 const ChatsScreen = () => {
   const { showJoinChatModal, sortedChats, isSearching, set, init, refresh, getChats } = usePongoStore()
@@ -27,8 +29,14 @@ const ChatsScreen = () => {
   const appState = useRef(AppState.currentState)
   const navigation = useNavigation<NavigationProp<PongoStackParamList>>()
   const { isLargeDevice, width } = useDimensions()
+  const { color, backgroundColor } = useColors()
+  const [org, setOrg] = useState('All Chats')
+  const [showOrgSelector, setShowOrgSelector] = useState(false)
 
   const drawerNavigator: any = navigation?.getParent('drawer' as any)
+
+  const orgName = org === 'All Chats' ? 'All Chats' : 'org'
+  const orgs = ['Org 1', 'Org 2']
 
   const onRefresh = useCallback(async () => {
     set({ currentChat: undefined })
@@ -68,12 +76,7 @@ const ChatsScreen = () => {
   }, [])
 
   const styles = useMemo(() => StyleSheet.create({
-    container: {
-      height: '100%',
-      width: isLargeDevice ? Math.min(width / 3, 400) : '100%',
-      borderRightWidth: 1,
-      borderColor: light_gray
-    },
+    container: { height: '100%', width: isLargeDevice ? Math.min(width / 3, 400) : '100%', borderRightWidth: 1, borderColor: light_gray },
     floatButton: {
       width: 54,
       height: 54,
@@ -97,7 +100,9 @@ const ChatsScreen = () => {
       justifyContent: 'space-between',
       borderBottomColor: 'rgb(216,216,216)',
       borderBottomWidth: 1
-    }
+    },
+    orgsHeader: { height: 40, alignItems: 'center', justifyContent: 'space-between', borderBottomColor: light_gray, borderBottomWidth: 1, paddingHorizontal: 16 },
+    orgsHeaderText: { fontSize: 16, fontWeight: '600' },
   }), [width, isLargeDevice])
 
   const renderChat = useCallback(({ item }: { item: Chat }) => <ChatsEntry key={item.conversation.id} chat={item} navigation={navigation} />, [navigation])
@@ -111,6 +116,37 @@ const ChatsScreen = () => {
           <View style={{ width: 44 }} />
         </Row>
       )}
+      {/* <Row style={styles.orgsHeader}>
+        <View style={{ width: 32 }} />
+        <Text style={styles.orgsHeaderText}>{orgName}</Text>
+        <Menu>
+          <MenuTrigger>
+            <Ionicons name='menu' size={20} color={color} style={{ padding: 4 }} />
+          </MenuTrigger>
+          <MenuOptions {...{ style: { backgroundColor, borderWidth: 1, borderColor: light_gray } }}>
+            {org !== 'All Chats' && <MenuOption onSelect={() => setOrg('All Chats')}>
+              <Row style={{ justifyContent: 'flex-end', alignItems: 'center', paddingRight: 12, paddingVertical: 2, paddingTop: 4 }}>
+                <Text style={{ fontSize: 16, fontWeight: '600', marginRight: 8 }}>All Chats</Text>
+              </Row>
+            </MenuOption>}
+            {Boolean(orgs.length) && <MenuOption onSelect={() => setShowOrgSelector(true)}>
+              <Row style={{ justifyContent: 'flex-end', alignItems: 'center', paddingRight: 12, paddingVertical: 2, paddingTop: 4 }}>
+                <Text style={{ fontSize: 16, fontWeight: '600', marginRight: 8 }}>Select Org</Text>
+              </Row>
+            </MenuOption>}
+            <MenuOption onSelect={() => navigation.navigate('Orgs')}>
+              <Row style={{ justifyContent: 'flex-end', alignItems: 'center', paddingRight: 12, paddingVertical: 2, paddingTop: 4 }}>
+                <Text style={{ fontSize: 16, fontWeight: '600', marginRight: 8 }}>Manage Orgs</Text>
+              </Row>
+            </MenuOption>
+            <MenuOption onSelect={() => navigation.navigate('NewOrg')}>
+              <Row style={{ justifyContent: 'flex-end', alignItems: 'center', paddingRight: 12, paddingVertical: 2, paddingTop: 4 }}>
+                <Text style={{ fontSize: 16, fontWeight: '600', marginRight: 8 }}>Create Org</Text>
+              </Row>
+            </MenuOption>
+          </MenuOptions>
+        </Menu>
+      </Row> */}
       {isSearching ? (
         <MessageSearchResults />
       ) : !sortedChats.length ? (

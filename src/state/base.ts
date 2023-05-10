@@ -110,7 +110,7 @@ export function createSubscription(
   app: string,
   path: string,
   e: (data: any) => void
-): any {
+): { app: string; path: string, event: (data: any) => void; err: () => void; quit: () => void } {
   const request = {
     app,
     path,

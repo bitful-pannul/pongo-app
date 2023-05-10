@@ -3,11 +3,11 @@ import { Urbit } from "@uqbar/react-native-api";
 import { DefaultStore } from "../state/types/types";
 
 export interface MintPayload {
-  name: string,
-  uri: string,
-  nft: string, // %ux
-  address: string, // %ux
-  ship: boolean,
+  name: string;
+  uri: string;
+  nft: string; // %ux
+  address: string; // %ux
+  ship: boolean;
 }
 
 export interface Profile {
@@ -39,6 +39,7 @@ export interface NimiStore extends DefaultStore {
   mint: (mint: MintPayload) => Promise<void>;
   getProfile: () => Promise<void>;
   setProfile: (item: string, address: string) => Promise<void>;
+  searchForUser: (query: string) => Promise<{ ship: NimiShip } | undefined> | undefined;
 
   set: SetState<NimiStore>;
 }

@@ -56,7 +56,7 @@ export default function SearchHeader({ searchType = 'ship', chatId }: SearchHead
 
   const autoSearch = searchType !== 'message'
 
-  useDebounce(() => search(searchType, searchTerm, chatId), [searchTerm, searchType, chatId, search], ONE_SECOND * 0.5, autoSearch)
+  useDebounce(() => search(searchType, searchTerm, chatId), [searchTerm, searchType, chatId, search], ONE_SECOND * 0.75, autoSearch)
 
   const executeSearch = useCallback(() => {
     set({ searchStatus: 'loading', messageSearchResults: [] })

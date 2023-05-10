@@ -25,6 +25,7 @@ import useDimensions from '../../hooks/useDimensions'
 import { defaultOptions } from '../../util/toast'
 import Toast from 'react-native-root-toast'
 import { getShipColor } from '../../util/number'
+import useNimiState from '../../state/useNimiState'
 
 interface GroupScreenProps {
   navigation: NavigationProp<PongoStackParamList>
@@ -34,6 +35,7 @@ interface GroupScreenProps {
 export default function GroupScreen({ navigation, route }: GroupScreenProps) {
   const { ship: self } = useStore()
   const { set, chats, sendMessage, makeInvite, toggleMute } = usePongoStore()
+  const { profiles, searchForUser, set: setNimi } = useNimiState()
   const { color, backgroundColor, theme } = useColors()
   const { cWidth, isLargeDevice } = useDimensions()
   const convo = route.params.id
@@ -89,7 +91,21 @@ export default function GroupScreen({ navigation, route }: GroupScreenProps) {
       }
       setDisplayedMembers(members)
     } else {
-      setNewMemberError('Not a valid @p (username)')
+      const userMatch = await searchForUser(newMember)
+      if (userMatch) {
+        try {
+          setNewMember('')
+          setNimi({ profiles: { ...profiles, [userMatch.ship.ship]: userMatch.ship } })
+          await makeInvite(convo, userMatch.ship.ship)
+          Toast.show(`${newMember} added!`, { ...defaultOptions, position: Toast.positions.CENTER })
+        } catch {
+          setNewMember(newMember)
+          setNewMemberError('Error adding member')
+        }
+        setDisplayedMembers(members)
+      } else {
+        setNewMemberError('Not a valid @p or username')
+      }
     }
   }, [convo, newMember, members])
 

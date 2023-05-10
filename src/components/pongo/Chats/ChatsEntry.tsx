@@ -27,50 +27,22 @@ interface ChatProps {
 
 export default function ChatsEntry({ chat, navigation }: ChatProps) {
   const { ship: self } = useStore()
-  const { currentChat, sendMessage } = usePongoStore()
+  const { currentChat } = usePongoStore()
   const profiles = useNimiState(state => state.profiles)
   const { isLargeDevice } = useDimensions()
   const { unreads, last_message, conversation: { id, members, last_active, name, leaders, muted } } = chat
   const chatName = getChatName(self, chat, profiles)
   const isDm = checkIsDm(chat)
-  const { theme } = useColors()
-  const [showCallButtons, setShowCallButtons] = useState(false)
+  const { theme, backgroundColor } = useColors()
 
   const hasUnreads = unreads > 0
   const groupDisplayShip = isDm ? getDmCounterparty(self, chat) : addSig(last_message?.author || (leaders && leaders[0]) || self)
 
-  // useEffect(() => {
-  //   const callStarted = isCallRequest(self, last_message)
-  //   setShowCallButtons(callStarted)
-
-  //   if (callStarted) {
-  //     const interval = setInterval(() => {
-  //       setShowCallButtons(isCallRequest(self, last_message))
-  //     }, ONE_SECOND * 3)
-      
-  //     return () => clearInterval(interval)
-  //   }
-  // }, [self, last_message])
-
   const styles = useMemo(() => StyleSheet.create({
-    chatsEntry: { width: '100%', padding: 12, paddingVertical: 10, borderBottomWidth: 1, borderColor: uq_lightpurple },
-    unread: {
-      padding: 4, backgroundColor: muted ? medium_gray : uq_purple, borderRadius: 14, minWidth: 28, justifyContent: 'center'
-    },
-    unreadText: {
-      fontSize: 14, color: 'white', fontWeight: '600'
-    },
-    callButton: {
-      marginLeft: 16,
-      marginVertical: 8,
-      padding: 8,
-      paddingHorizontal: 12,
-      borderRadius: 8,
-    },
-    callButtonText: { fontWeight: '600', color: 'white' },
-    acceptButton: { backgroundColor: 'green' },
-    rejectButton: { backgroundColor: 'darkred' },
-  }), [muted])
+    chatsEntry: { width: '100%', padding: 12, paddingVertical: 10, borderBottomWidth: 1, borderColor: uq_lightpurple, backgroundColor: currentChat === id && isLargeDevice ? uq_lightpurple : backgroundColor },
+    unread: { padding: 4, backgroundColor: muted ? medium_gray : uq_purple, borderRadius: 14, minWidth: 28, justifyContent: 'center' },
+    unreadText: { fontSize: 14, color: 'white', fontWeight: '600' },
+  }), [muted, currentChat, id, backgroundColor, isLargeDevice])
 
   const goToChat = useCallback(() => {
     if (isWeb && currentChat !== id) {
@@ -82,7 +54,7 @@ export default function ChatsEntry({ chat, navigation }: ChatProps) {
   const lastAuthor = chat?.last_message?.author
 
   const messageDisplay = (
-    <Col style={{ maxWidth: '100%' }}>
+    <Col style={{ maxWidth: '100%', backgroundColor: 'transparent' }}>
       {last_message?.author && !isDm && (
         <Text style={{ fontWeight: '600' }}>
           {deSig(last_message?.author || '') === deSig(self) ? 'You' : lastAuthor ? profiles[lastAuthor]?.name || lastAuthor : 'unknown'}
@@ -104,14 +76,14 @@ export default function ChatsEntry({ chat, navigation }: ChatProps) {
     <TouchableOpacity onPress={goToChat}>
       <Row style={styles.chatsEntry}>
         <Avatar size='huge' ship={groupDisplayShip} color={getShipColor(groupDisplayShip, theme)} />
-        <Col style={{ marginLeft: 12, flex: 1 }}>
-          <Row style={{ flex: 1, justifyContent: 'space-between' }}>
+        <Col style={{ marginLeft: 12, flex: 1, backgroundColor: 'transparent' }}>
+          <Row style={{ flex: 1, justifyContent: 'space-between', backgroundColor: 'transparent' }}>
             <Text style={{ fontSize: 18, fontWeight: '600', marginRight: 4 }} numberOfLines={1}>{chatName}</Text>
             {/* FORMAT TIME: time if today, day of the week if last week, mmm DD if last year, DD.MM.YY otherwise */}
             <Text style={{ fontSize: 14, overflow: 'visible' }}>{getRelativeTime(last_active * ONE_SECOND)}</Text>
           </Row>
-          <Row style={{ flex: 1, justifyContent: 'space-between', marginTop: 4 }}>
-            <Row style={{ flex: 1 }}>
+          <Row style={{ flex: 1, justifyContent: 'space-between', marginTop: 4, backgroundColor: 'transparent' }}>
+            <Row style={{ flex: 1, backgroundColor: 'transparent' }}>
               {messageDisplay}
             </Row>
             {hasUnreads && (

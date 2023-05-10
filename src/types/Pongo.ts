@@ -107,7 +107,14 @@ export interface MessageListUpdate {
 
 export interface InviteUpdate {
   invite: {
-    conversation: string
+    name: string;
+    last_read: string;
+    last_active: number;
+    id: string;
+    members:  string[];
+    leaders: string[];
+    muted: boolean;
+    dm: boolean;
   }
 }
 

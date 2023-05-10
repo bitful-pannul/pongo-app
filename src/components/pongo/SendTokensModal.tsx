@@ -187,11 +187,9 @@ export default function SendTokensModal({ show, hide, convo }: SendTokensModalPr
                 />
                 {!isNft && <Text style={{ alignSelf: 'flex-start', fontSize: 16, marginTop: 12, marginLeft: '10%' }}>Amount:</Text>}
                 {showMembersList ? (
-                  // <ScrollView style={styles.scrollList}>
                   <>
-                    {displayedMembers.map(m => <ShipRow key={m} noBorder ship={m} onPress={() => () => null} />)}
+                    {displayedMembers.map(m => <ShipRow key={m} noBorder ship={m} onPress={selectRecipient} />)}
                   </>
-                  // </ScrollView>
                 ) : (
                   <>
                     <TextInput

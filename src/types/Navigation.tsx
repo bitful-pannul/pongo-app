@@ -37,6 +37,9 @@ export type PongoStackParamList = {
   Chats: undefined;
   Chat: { id: string; msgId?: string };
   Profile: { ship: string };
+  Orgs: undefined;
+  NewOrg: { parent: string } | undefined;
+  Org: { orgId: string };
   Call: { chatId: string, answering?: boolean };
   Group: { id: string };
   Contacts: undefined;

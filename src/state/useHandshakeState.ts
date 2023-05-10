@@ -5,6 +5,7 @@ import { Guest } from "../types/Handshake";
 import { hoonToJSDate, ONE_SECOND } from "../util/time";
 import { DefaultStore } from "./types/types";
 import { resetSubscriptions } from "./util";
+import { createSubscription } from "./subscriptions/util";
 
 interface CodeData {
   code: string
@@ -28,20 +29,6 @@ export interface HandshakeStore extends DefaultStore {
   verifyCode: (code: string) => Promise<void>,
   setPossePopupShip: (possePopupShip?: string) => void,
   set: SetState<HandshakeStore>;
-}
-
-export function createSubscription(app: string, path: string, e: (data: any) => void): any {
-  const request = {
-    app,
-    path,
-    event: e,
-    err: () => console.warn('SUBSCRIPTION ERROR'),
-    quit: () => {
-      throw new Error('subscription clogged');
-    }
-  };
-  // TODO: err, quit handling (resubscribe?)
-  return request;
 }
 
 const useHandshakeStore = create<HandshakeStore>((set, get) => ({
@@ -73,10 +60,9 @@ const useHandshakeStore = create<HandshakeStore>((set, get) => ({
       }
     }
 
-    await get().subscriptions.map(sub => api.unsubscribe(sub))
-    resetSubscriptions(set, api, [], [
-      api.subscribe(createSubscription('handshake', '/signer-updates', handleSignerUpdate)),
-      api.subscribe(createSubscription('handshake', '/reader-updates', handleReaderUpdate)),
+    resetSubscriptions(set, api, get().subscriptions, [
+      createSubscription('handshake', '/signer-updates', handleSignerUpdate),
+      createSubscription('handshake', '/reader-updates', handleReaderUpdate),
     ])
 
     get().createCode()

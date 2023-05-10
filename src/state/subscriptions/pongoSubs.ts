@@ -7,7 +7,7 @@ import { showWebNotification } from "../../util/notification"
 import { Profiles } from "../../types/Nimi"
 
 export const messageSub = (set: SetState<PongoStore>, get: GetState<PongoStore>, profiles: Profiles) => (update: Update) => {
-  console.log('UPDATE:', JSON.stringify(update))
+  if (__DEV__) console.log('PONGO UPDATE:', JSON.stringify(update))
   const { currentChat, api, getChats } = get()
   
   if ('message' in update) {
@@ -111,8 +111,15 @@ export const messageSub = (set: SetState<PongoStore>, get: GetState<PongoStore>,
   } else if ('message_list' in update) {
 
   } else if ('invite' in update) {
+    showWebNotification('New Invite', `You've been invited to ${update.invite.name}`)
     if (api) {
       getChats(api)
+
+      update.invite.members.forEach(m => {
+        if (deSig(m) !== deSig(api?.ship)) {
+          api.poke({ app: 'nimi', mark: 'nimi-action', json: { whodis: addSig(m) } }).catch(console.warn)
+        }
+      })
     }
   } else if ('search_result' in update) {
 

@@ -1,5 +1,5 @@
 import { Ionicons, MaterialIcons } from "@expo/vector-icons"
-import React, { useCallback, useEffect, useMemo, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Keyboard, StyleSheet } from "react-native"
 import { TextInput, NativeSyntheticEvent, Pressable, TextInputKeyPressEventData, ActivityIndicator, Text } from "react-native"
 import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu'
@@ -15,6 +15,7 @@ import { checkIsDm } from "../../../util/ping"
 import Row from "../../spacing/Row"
 import AudioRecorder from "../Chat/AudioRecorder"
 import useColors from "../../../hooks/useColors"
+import { formatRecordTime, formatTime } from "../../../util/time"
 
 interface ChatInputProps {
   chatId: string
@@ -29,6 +30,7 @@ interface ChatInputProps {
 export default function ChatInput({
   chatId, inputRef, showMentions, setShowMentions, setPotentialMentions, setShowSendTokensModal, setShowPollModal
 }: ChatInputProps) {
+  const sendingRef = useRef(false)
   const { ship: self } = useStore()
   const { chats, drafts, edits, replies, showUqbarWallet, connected, setDraft, sendMessage, setReply, setEdit, editMessage, set } = usePongoStore()
 
@@ -43,9 +45,10 @@ export default function ChatInput({
   const [sending, setSending] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [audioLength, setAudioLength] = useState(0)
   const [placeholder, setPlaceholder] = useState('Message')
 
-  const { pickImage, storeAudio } = useMedia({ ship: self, chatId, reply, setUploading })
+  const { pickImage, storeAudio } = useMedia({ ship: self, chatId, reply, setUploading, setAudioLength })
 
   useEffect(() => () => {
     setDraft(chatId, text)
@@ -69,6 +72,7 @@ export default function ChatInput({
     const trimmed = text.trim()
     if (trimmed.length > 0) {
       setSending(true)
+      sendingRef.current = true
       try {
         if (edit) {
           editMessage(chatId, edit.id, text)
@@ -87,6 +91,7 @@ export default function ChatInput({
         }
       } catch {}
       setSending(false)
+      sendingRef.current = false
     }
   }, [self, reply, edit, chatId, text, showMentions, setSending, setDraft])
 
@@ -103,14 +108,15 @@ export default function ChatInput({
     if (e.nativeEvent.key === 'Enter' && !(e.nativeEvent as any).shiftKey && isLargeDevice) {
       e.preventDefault()
       e.stopPropagation()
-      send()
-
-      setTimeout(() => {
-        setText('')
-        if (showMentions) {
-          setShowMentions(false)
-        }
-      }, 10)
+      if (!sendingRef.current) {
+        send()
+        setTimeout(() => {
+          setText('')
+          if (showMentions) {
+            setShowMentions(false)
+          }
+        }, 10)
+      }
     }
   }, [send, chatId, showMentions])
 
@@ -162,16 +168,21 @@ export default function ChatInput({
     sendTokensButton: { position: 'absolute', right: 50, top: 6 },
     createPollButton: { position: 'absolute', right: 90, top: 6 },
     padding4: { padding: 4 },
+    audioLength: { margin: 8, marginLeft: 16 },
+    uploadingIndicator: { margin: 8 },
   }), [cWidth, isWeb])
 
   const disabled = !connected
   const iconColor = disabled ? medium_gray : uq_purple
 
+  const formattedRecordTime = formatRecordTime(audioLength)
+
   return (
     <Row style={{ marginBottom: isIos ? 40 : 0, borderBottomWidth: 1, borderBottomColor: light_gray, backgroundColor: 'white', maxHeight: 120 }}>
       {uploading ? (
         <>
-          <ActivityIndicator size='large' style={{ margin: 8, marginLeft: 16 }} color='black' />
+          {audioLength > 0 && <Text style={styles.audioLength}>{formattedRecordTime}</Text>}
+          <ActivityIndicator size='large' style={styles.uploadingIndicator} color='black' />
           <Text style={{ color: 'black', margin: 8 }}>Uploading...</Text>
         </>
       ) : (
@@ -231,7 +242,7 @@ export default function ChatInput({
                     </MenuOption>
                   </MenuOptions>
                 </Menu>}
-                <AudioRecorder {...{ storeAudio, setIsRecording, disabled }} />
+                <AudioRecorder {...{ storeAudio, setIsRecording, isRecording, disabled }} />
               </>
             )
           )}

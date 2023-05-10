@@ -88,7 +88,7 @@ const MessageWrapper = ({
               overshootFriction={8}
             > */}
               {showAvatar && (
-                <Pressable onPress={copyPatp} style={{ flexShrink: 1 }}>
+                <Pressable onPress={copyPatp} style={{ flexShrink: 1, maxWidth: isWeb ? 'fit-content' : undefined }}>
                   <ShipName ship={author} style={{ fontSize: 16, fontWeight: '600', color: getShipColor(author, theme), flexShrink: 1 }} />
                 </Pressable>
               )}

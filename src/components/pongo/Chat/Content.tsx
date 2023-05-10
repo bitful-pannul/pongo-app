@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { Text, View, Pressable, Linking, StyleSheet } from "react-native";
+import { isValidPatp } from 'urbit-ob'
 import * as Clipboard from 'expo-clipboard'
 import { A } from '@expo/html-elements';
 import { NavigationProp } from "@react-navigation/native";
@@ -141,7 +142,7 @@ export default function Content({
     return (
       <Text>
         {splitByRegex(content, PATP_REGEX).map((c, i) => PATP_REGEX.test(c) ?
-          <Text key={`${i}-i-${depth}`} onLongPress={longPressPatp(c)} onPress={copyPatp(c)} style={[styles.textStyle, styles.patp]}>{c}</Text>:
+          <Text key={`${i}-i-${depth}`} onLongPress={isValidPatp(c) ? longPressPatp(c) : undefined} onPress={isValidPatp(c) ? copyPatp(c) : undefined} style={[styles.textStyle, isValidPatp(c) && styles.patp]}>{c}</Text>:
           <Content {...{ onLongPress, delayLongPress, author, navigation }} content={c} color={color} depth={depth + 1} key={`${i}-i-${depth}`} />
         )}
       </Text>

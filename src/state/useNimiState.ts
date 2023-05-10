@@ -9,6 +9,7 @@ import { addSig } from "../util/string";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { isWeb } from "../constants/Layout";
 import { ONE_DAY, ONE_SECOND } from "../util/time";
+import { createSubscription } from "./subscriptions/util";
 
 const useNimiState = create(
   persist<NimiStore>((set, get) => ({
@@ -23,7 +24,7 @@ const useNimiState = create(
         ])
 
         resetSubscriptions(set, api, get().subscriptions, [
-          api.subscribe({ app: 'nimi', path: '/updates', event: nimiSub(set, get) })
+          createSubscription('nimi', '/updates', nimiSub(set, get))
         ])
 
         const oldProfiles = get().profiles
@@ -65,10 +66,11 @@ const useNimiState = create(
     setProfile: async (item: string, address: string) => {
       await get().api?.poke({ app: 'nimi', mark: 'nimi-action', json: { 'set-profile': { item, address } } })
     },
+    searchForUser: (query: string) => get().api?.scry<{ ship: NimiShip } | undefined>({ app: 'nimi', path: `/user/full/${query}` }),
 
     set,
   }), {
-    name: 'pongo',
+    name: 'nimi',
     storage: createJSONStorage(() => isWeb ? sessionStorage : AsyncStorage),
   })
 );

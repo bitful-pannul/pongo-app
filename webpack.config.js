@@ -1,8 +1,8 @@
 const createExpoWebpackConfigAsync = require('@expo/webpack-config');
 
-// const target = 'https://fabnev.labwet.art/'
+const target = 'https://fabnev.labwet.art/'
 // const target = 'http://localhost:8080/'
-const target = 'http://localhost:8081/'
+// const target = 'http://localhost:8081/'
 // const target = 'http://135.181.83.111:8081/'
 // const target = 'https://test-moon.labwet.art/'
 

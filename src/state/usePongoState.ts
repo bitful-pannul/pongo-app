@@ -14,6 +14,7 @@ import { HAS_MENTION_REGEX } from "../constants/Regex"
 import { PongoStore } from './types/pongo'
 import { messageSub } from './subscriptions/pongoSubs'
 import { isWeb } from '../constants/Layout'
+import { createSubscription } from './subscriptions/util'
 
 const usePongoStore = create(
   persist<PongoStore>(
@@ -49,10 +50,8 @@ const usePongoStore = create(
 
         if (level === 'off') get().setNotifLevel('medium', api)
 
-        await get().subscriptions.map(sub => api.unsubscribe(sub))
-
-        resetSubscriptions(set, api, [], [
-          api.subscribe({ app: 'pongo', path: '/updates', event: messageSub(set, get, profiles) })
+        resetSubscriptions(set, api, get().subscriptions, [
+          createSubscription('pongo', '/updates', messageSub(set, get, profiles))
         ])
 
         return chats
@@ -105,9 +104,8 @@ const usePongoStore = create(
     
           await getChats(api)
     
-          await get().subscriptions.map(sub => api.unsubscribe(sub))
-          resetSubscriptions(set, api, [], [
-            api.subscribe({ app: 'pongo', path: '/updates', event: messageSub(set, get, profiles) })
+          resetSubscriptions(set, api, get().subscriptions, [
+            createSubscription('pongo', '/updates', messageSub(set, get, profiles))
           ])
         }
       },

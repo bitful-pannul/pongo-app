@@ -13,9 +13,10 @@ interface UseMediaProps {
   chatId: string
   reply: Message
   setUploading: (uploading: boolean) => void
+  setAudioLength: (length: number) => void
 }
 
-export default function useMedia({ ship, chatId, reply, setUploading } : UseMediaProps) {
+export default function useMedia({ ship, chatId, reply, setUploading, setAudioLength } : UseMediaProps) {
   const { sendMessage, setReply } = usePongoStore()
   const { s3Creds, s3Config } = useSettingsState()
 
@@ -72,7 +73,8 @@ export default function useMedia({ ship, chatId, reply, setUploading } : UseMedi
     setUploading(false)
   }, [ship, reply, chatId, s3Creds, s3Config])
 
-  const storeAudio = useCallback(async (audioUri: string) => {
+  const storeAudio = useCallback(async (audioUri: string, audioLength: number) => {
+    setAudioLength(audioLength)
     setUploading(true)
     try {
       const imgBlob = await fetchFileFromUri(audioUri)
@@ -85,7 +87,8 @@ export default function useMedia({ ship, chatId, reply, setUploading } : UseMedi
       console.log('UPLOAD ERROR:', e)
     }
     setUploading(false)
-  }, [ship, reply, chatId, s3Creds, s3Config])
+    setAudioLength(0)
+  }, [ship, reply, chatId, s3Creds, s3Config, setAudioLength, setUploading])
 
   return { pickImage, storeAudio }
 }

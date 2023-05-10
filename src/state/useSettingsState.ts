@@ -3,6 +3,7 @@ import Urbit from "@uqbar/react-native-api"
 
 import { DefaultStore } from "./types/types"
 import { resetSubscriptions } from "./util"
+import { createSubscription } from "./subscriptions/util"
 
 export interface S3Creds {
   credentials: {
@@ -34,20 +35,6 @@ export interface SettingsState extends DefaultStore {
   set: SetState<SettingsState>;
 }
 
-export function createSubscription(app: string, path: string, e: (data: any) => void): any {
-  const request = {
-    app,
-    path,
-    event: e,
-    err: () => console.warn('SUBSCRIPTION ERROR'),
-    quit: () => {
-      throw new Error('subscription clogged');
-    }
-  };
-  // TODO: err, quit handling (resubscribe?)
-  return request;
-}
-
 const useSettingsState = create<SettingsState>((set, get) => ({
   loading: true,
   api: null,
@@ -62,9 +49,9 @@ const useSettingsState = create<SettingsState>((set, get) => ({
       }
     }
 
-    await get().subscriptions.map(sub => api.unsubscribe(sub))
+    await Promise.all(get().subscriptions.map(sub => api.unsubscribe(sub)))
     resetSubscriptions(set, api, [], [
-      api.subscribe(createSubscription('s3-store', '/all', handleS3Update)),
+      createSubscription('s3-store', '/all', handleS3Update),
     ])
 
     set({ loading: false })

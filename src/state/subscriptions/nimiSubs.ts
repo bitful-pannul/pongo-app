@@ -3,6 +3,7 @@ import { NimiStore, NimiShip } from "../../types/Nimi"
 import { addSig, deSig } from "../../util/string"
 
 export const nimiSub = (set: SetState<NimiStore>, get: GetState<NimiStore>) => (update: { ship: NimiShip }) => {
+  if (__DEV__) console.log('NIMI UPDATE:', JSON.stringify(update))
   const { ship, name, uri, item } = update.ship
 
   if (deSig(ship) === (get().api?.ship) || '') {

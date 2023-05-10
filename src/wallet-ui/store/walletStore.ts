@@ -13,10 +13,11 @@ import { addHexDots } from "../utils/format"
 import { generateSendTokenPayload } from "../utils/wallet"
 import { parseRawTransaction, processTransactions } from "../utils/transactions"
 import { Alert } from "react-native"
+import { SubParams } from "../../state/subscriptions/util"
 
-const resetSubscriptions = async (set: SetState<any>, api: Urbit, oldSubs: number[], newSubs: Promise<number>[]) => {
+const resetSubscriptions = async (set: SetState<any>, api: Urbit, oldSubs: number[], newSubs: SubParams[]) => {
   await Promise.all(oldSubs.map(os => api.unsubscribe(os)))
-  const subscriptions = await Promise.all(newSubs)
+  const subscriptions = await Promise.all(newSubs.map(ns => api.subscribe(ns)))
   set({ api, subscriptions })
 }
 
@@ -101,17 +102,17 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
           }
         }
 
-        const newSubs = []
+        const newSubs: SubParams[] = []
   
         try {
           if (assets) {
-            newSubs.push(api.subscribe(createSubscription('wallet', '/book-updates', handleBookUpdate(get, set)))) // get asset list
-            newSubs.push(api.subscribe(createSubscription('wallet', '/metadata-updates', handleMetadataUpdate(get, set))))
+            newSubs.push(createSubscription('wallet', '/book-updates', handleBookUpdate(get, set))) // get asset list
+            newSubs.push(createSubscription('wallet', '/metadata-updates', handleMetadataUpdate(get, set)))
           }
           if (transactions) {
             getTransactions(api)
             getUnsignedTransactions(api)
-            newSubs.push(api.subscribe(createSubscription('wallet', '/tx-updates', handleTxnUpdate(get, set, onReceiveTransaction))))
+            newSubs.push(createSubscription('wallet', '/tx-updates', handleTxnUpdate(get, set, onReceiveTransaction)))
           }
           await getAccounts(api)
         } catch (error) {
@@ -121,8 +122,7 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
           }
         }
 
-        await get().subscriptions.map(sub => api.unsubscribe(sub))
-        resetSubscriptions(set, api, [], newSubs)
+        resetSubscriptions(set, api, get().subscriptions, newSubs)
       }
 
       set({ loadingText: null })

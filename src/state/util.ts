@@ -1,9 +1,10 @@
 import { SetState } from "zustand";
 import Urbit from "@uqbar/react-native-api";
+import { SubParams } from "./subscriptions/util";
 
-export const resetSubscriptions = async (set: SetState<any>, api: Urbit, oldSubs: number[], newSubs: Promise<number>[]) => {
+export const resetSubscriptions = async (set: SetState<any>, api: Urbit, oldSubs: number[], newSubs: SubParams[]) => {
   await Promise.all(oldSubs.map(os => api.unsubscribe(os)))
-  const subscriptions = await Promise.all(newSubs)
+  const subscriptions = await Promise.all(newSubs.map(ns => api.subscribe(ns)))
   set({ api, subscriptions })
 }
 

@@ -30,22 +30,34 @@ export default function ChatMenu({ id }: ChatMenuProps) {
   const isDm = checkIsDm(chat)
 
   const leave = useCallback(() => {
-    Alert.alert('Leave Chat', 'Are you sure you want to leave this chat?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Leave', onPress: async () => {
-        // console.log(1)
-        try {
-          // console.log(2)
-          await leaveConversation(id)
-          if (api) {
-            // console.log(3)
-            getChats(api)
-          }
-          // console.log(4)
-          navigation.goBack()
-        } catch {}
-      } },
-    ])
+    if (isWeb) {
+      if (window.confirm('Are you sure you want to leave this chat?')) {
+        leaveConversation(id)
+          .then(() => {
+            if (api) {
+              getChats(api)
+            }
+            navigation.goBack()
+          })
+      }
+    } else {
+      Alert.alert('Leave Chat', 'Are you sure you want to leave this chat?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Leave', onPress: async () => {
+          // console.log(1)
+          try {
+            // console.log(2)
+            await leaveConversation(id)
+            if (api) {
+              // console.log(3)
+              getChats(api)
+            }
+            // console.log(4)
+            navigation.goBack()
+          } catch {}
+        } },
+      ])
+    }
   }, [id, api, leaveConversation])
 
   const changeMute = useCallback(() => toggleMute(id), [id])

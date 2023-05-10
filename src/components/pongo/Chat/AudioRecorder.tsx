@@ -1,24 +1,29 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { PermissionsAndroid, Platform, StyleSheet, Text, View, Animated, Easing } from "react-native"
-import { Ionicons } from "@expo/vector-icons"
-import { Audio } from 'expo-av'
 import { Gesture, GestureDetector, GestureUpdateEvent, PanGestureHandlerEventPayload } from "react-native-gesture-handler"
 import AnimatedNode, { runOnJS, useAnimatedStyle, useSharedValue } from "react-native-reanimated"
+import { Audio } from 'expo-av'
 import * as Haptics from 'expo-haptics'
+import { Ionicons } from "@expo/vector-icons"
 
 import { medium_gray, uq_pink, uq_purple } from "../../../constants/Colors"
-import { formatRecordTime } from "../../../util/time"
+import { formatRecordTime, formatTime } from "../../../util/time"
 import useKeyboard from "../../../hooks/useKeyboard"
 import useDimensions from "../../../hooks/useDimensions"
 import { createPulse } from "../../../util/animation"
 
+
+
+let recording: Audio.Recording | undefined;
+
 interface AudioRecorderProps {
   disabled: boolean
+  isRecording: boolean
   setIsRecording: (value: boolean) => void
-  storeAudio: (uri: string) => Promise<void>
+  storeAudio: (uri: string, length: number) => Promise<void>
 }
 
-const AudioRecorder: React.FC<AudioRecorderProps> = ({ disabled, storeAudio, setIsRecording }: AudioRecorderProps) => {
+const AudioRecorder: React.FC<AudioRecorderProps> = ({ disabled, isRecording, storeAudio, setIsRecording }: AudioRecorderProps) => {
   const [androidGranted, setAndroidGranted] = useState(false)
   const [micTransform] = useState(new Animated.Value(1))
   const [cancelTranslate] = useState(new Animated.Value(-24))
@@ -28,11 +33,12 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ disabled, storeAudio, set
   const [recordAnimation, setRecordAnimation] = useState(createPulse(recordOpacity, 1, 0, Easing.linear))
   const lastTranslationX = useSharedValue(0)
   const isRecordingStuff = useSharedValue(false)
+  const [timerInterval, setTimerInterval] = useState<NodeJS.Timer | undefined>()
+  const [time, setTime] = useState(0)
   const { cWidth } = useDimensions()
 
-  const { isKeyboardVisible, keyboardHeight } = useKeyboard()
+  const { isKeyboardVisible } = useKeyboard()
 
-  const [recording, setRecording] = useState<Audio.Recording | undefined>()
   const [recordingStatus, setRecordingStatus] = useState<Audio.RecordingStatus | undefined>()
 
   const onRecordingStatusUpdate = useCallback((status: Audio.RecordingStatus) => {
@@ -41,33 +47,43 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ disabled, storeAudio, set
 
   const startRecording = useCallback(async function(cancel: boolean) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)
-    setIsRecording(true)
-    isRecordingStuff.value = true
-    const newMicAnimation = createPulse(micTransform, 1.4, 1, Easing.linear)
-    const newCancelAnimation = createPulse(cancelTranslate, 0, -24, Easing.linear)
-    const newRecordAnimation = createPulse(recordOpacity, 1, 0, Easing.linear)
-    setMicAnimation(newMicAnimation)
-    setCancelAnimation(newCancelAnimation)
-    setRecordAnimation(newRecordAnimation)
-    newMicAnimation.start()
-    newCancelAnimation.start()
-    newRecordAnimation.start()
-    
     try {
       console.log('Requesting permissions..')
       await Audio.requestPermissionsAsync()
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
-      })
+      await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true })
 
       console.log('Starting recording..')
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY,
-        onRecordingStatusUpdate
-      )
-      setRecording(recording)
+
+      if (recording) {
+        try {
+          await recording.stopAndUnloadAsync()
+        } catch {}
+      }
+      recording = undefined
+
+      recording = new Audio.Recording()
+      await recording.prepareToRecordAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY)
+      await recording.setOnRecordingStatusUpdate(onRecordingStatusUpdate)
+      await recording.startAsync()
       console.log('Recording started')
+      setTime(0)
+      setTimerInterval(
+        setInterval(() => {
+          setTime((prevTime) => prevTime + 1)
+        }, 9)
+      )
+
+      setIsRecording(true)
+      isRecordingStuff.value = true
+      const newMicAnimation = createPulse(micTransform, 1.4, 1, Easing.linear)
+      const newCancelAnimation = createPulse(cancelTranslate, 0, -24, Easing.linear)
+      const newRecordAnimation = createPulse(recordOpacity, 1, 0, Easing.linear)
+      setMicAnimation(newMicAnimation)
+      setCancelAnimation(newCancelAnimation)
+      setRecordAnimation(newRecordAnimation)
+      newMicAnimation.start()
+      newCancelAnimation.start()
+      newRecordAnimation.start()
     } catch (err) {
       console.error('Failed to start recording', err)
     }
@@ -80,34 +96,34 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ disabled, storeAudio, set
     micAnimation.stop()
     cancelAnimation.stop()
     recordAnimation.stop()
+    clearInterval(timerInterval)
+    setTimerInterval(undefined)
     console.log('Stopping recording...', cancel)
-    if (recording) {
-      try {
-        const newStatus = await recording.stopAndUnloadAsync()
-        setRecordingStatus(newStatus)
+    try {
+      if (recording) {
+        const finalStatus = await recording.getStatusAsync()
+        const endedStatus = await recording.stopAndUnloadAsync()
+        setRecordingStatus(endedStatus)
         if (!cancel) {
-          await Audio.setAudioModeAsync({
-            allowsRecordingIOS: false,
-          })
           const uri = recording.getURI()
           console.log('Recording stopped and stored at', uri)
           if (uri) {
-            storeAudio(uri)
+            storeAudio(uri, finalStatus.durationMillis)
           }
         }
-      } catch {
-        setRecordingStatus(undefined)
-      } finally {
-        setRecording(undefined)
       }
+    } catch {
+      setRecordingStatus(undefined)
     }
-    setRecording(undefined)
-  }, [recording, micAnimation, cancelAnimation, recordAnimation, setIsRecording])
 
-  const recordTime = (recordingStatus?.durationMillis || 0)
-  const formattedRecordTime = formatRecordTime(recordTime)
+    setTimeout(() => {
+      Audio.setAudioModeAsync({ allowsRecordingIOS: false })
+    }, 100)
+  }, [micAnimation, cancelAnimation, recordAnimation, timerInterval, setIsRecording])
 
-  // Effects
+  // const recordTime = (recordingStatus?.durationMillis || 0)
+  // const formattedRecordTime = formatRecordTime(recordTime, true)
+
   useEffect(() => {
     (async () => {
       if (Platform.OS === 'android') {
@@ -136,9 +152,6 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ disabled, storeAudio, set
       backgroundColor: 'white',
       minHeight: 48,
       height: '100%'
-    },
-    buttonContainer: {
-      
     },
     recordingButton: {
       backgroundColor: uq_pink,
@@ -176,7 +189,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ disabled, storeAudio, set
   }), [recordingStatus, cWidth])
 
   const panGesture = Gesture.Pan()
-    .activateAfterLongPress(600)
+    .activateAfterLongPress(200)
     .shouldCancelWhenOutside(true)
     .onStart((e: GestureUpdateEvent<PanGestureHandlerEventPayload>) => {
       if (!disabled) runOnJS(startRecording)(isKeyboardVisible)
@@ -185,7 +198,6 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ disabled, storeAudio, set
       lastTranslationX.value = e.translationX
     })
     .onEnd((e: GestureUpdateEvent<PanGestureHandlerEventPayload>) => {
-      console.log('X', e.translationX)
       runOnJS(stopRecording)(Math.abs(e.translationX) > (cWidth / 4))
     })
     .onTouchesUp(() => {
@@ -195,6 +207,8 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ disabled, storeAudio, set
   const animatedStyle = useAnimatedStyle(() => ({
     flex: isRecordingStuff.value ? 1 : undefined,
   }))
+
+  const formattedRecordTime = formatTime(time)
 
   // Renders
   return (
@@ -219,7 +233,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ disabled, storeAudio, set
           </>
         )}
 
-        <View style={styles.buttonContainer}>
+        <View>
           <Ionicons name='mic-outline' size={32} style={{ marginRight: 8, marginTop: 2, padding: 4 }} color={disabled ? medium_gray : uq_purple} />
           {isRecordingStuff.value && (
             <Animated.View style={[styles.recordingButton, { transform: [{ scale: micTransform }, {perspective: 1000}] }]}>

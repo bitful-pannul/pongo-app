@@ -17,19 +17,26 @@ interface UseSearchProps {
 
 export default function useSearch() {
   const { api, set, searchMessages } = usePongoStore()
-  const profiles = useNimiState(s => s.profiles)
+  const { profiles, searchForUser, set: setNimi } = useNimiState()
   // Contacts state is not currently working
   // const { contacts } = useContactState()
 
-  const search = useCallback((searchType: SearchType, query: string, chatId?: string) => {
+  const search = useCallback(async (searchType: SearchType, query: string, chatId?: string) => {
     set({ searchTerm: query })
 
     if (query) {
       if (searchType === 'ship') {
-        const searchResults = isValidPatp(preSig(query)) ? [preSig(query)] : 
-          Object.keys(profiles).filter(ship => ship.includes(query) || profiles[ship].name.includes(query) && ship !== preSig(window.ship))
-  
-        set({ searchResults })
+        if (isValidPatp(preSig(query))) {
+          set({ searchResults: [preSig(query)] })
+        } else {
+          const userMatch = await searchForUser(query)
+          if (userMatch) {
+            setNimi({ profiles: { ...profiles, [userMatch.ship.ship]: userMatch.ship } })
+            set({ searchResults: [userMatch.ship.ship] })
+          } else {
+            set({ searchResults: Object.keys(profiles).filter(ship => ship.includes(query) || profiles[ship].name.includes(query) && ship !== preSig(window.ship)) })
+          }
+        }
       } else if (searchType === 'message') {
         if (api) {
           const uid = addHexDots(genRanHex(16).replace(/^0*/, ''))

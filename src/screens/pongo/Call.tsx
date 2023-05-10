@@ -12,8 +12,8 @@ import {
 	MediaStreamTrack,
 	mediaDevices,
 	registerGlobals
-} from 'react-native-webrtc-web-shim'
-// } from 'react-native-webrtc'
+// } from 'react-native-webrtc-web-shim'
+} from 'react-native-webrtc'
 import { Device } from 'mediasoup-client'
 import { NavigationProp, RouteProp } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
